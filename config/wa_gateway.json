@@ -1,0 +1,7 @@
+{
+  "enabled": false,
+  "base_url": "",
+  "token": "",
+  "sender": "",
+  "template": "Halo {nama}, antrean Anda di Barber.co sudah diperbarui."
+}
