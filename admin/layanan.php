@@ -384,8 +384,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
             icon: 'error', title: 'Gagal', text: <?= json_encode($modalError); ?>,
             background: '#1e2020', color: '#e2e2e2', confirmButtonColor: '#f2ca50', iconColor: '#ffb4ab'
         });
-        // Re-open modal on error
-        document.getElementById('modalTambahLayanan').classList.remove('hidden');
+        
+        <?php if (isset($_POST['action']) && $_POST['action'] === 'edit_layanan'): ?>
+            document.getElementById('modalEditLayanan').classList.remove('hidden');
+        <?php elseif (isset($_POST['action']) && $_POST['action'] === 'add_layanan'): ?>
+            document.getElementById('modalTambahLayanan').classList.remove('hidden');
+        <?php elseif ($_SERVER['REQUEST_METHOD'] === 'POST' && empty($_POST) && $_SERVER['CONTENT_LENGTH'] > 0): ?>
+            document.getElementById('modalTambahLayanan').classList.remove('hidden');
+        <?php endif; ?>
     });
     <?php endif; ?>
     <?php if ($modalSuccess): ?>

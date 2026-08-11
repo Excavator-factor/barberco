@@ -47,9 +47,9 @@ if (!empty($col_a_user)) {
     $select_fields = ["a.*"];
     $joins = [];
 
-    if (!empty($col_a_barber) && !empty($pk_users) && !empty($col_u_name)) {
-        $select_fields[] = "u.`$col_u_name` as nama_barber";
-        $joins[] = "LEFT JOIN users u ON a.`$col_a_barber` = u.`$pk_users`";
+    if (!empty($col_a_barber) && !empty($pk_barber) && !empty($col_b_nama)) {
+        $select_fields[] = "b.`$col_b_nama` as nama_barber";
+        $joins[] = "LEFT JOIN barber b ON a.`$col_a_barber` = b.`$pk_barber`";
     }
     if (!empty($col_a_layanan) && !empty($pk_layanan) && !empty($col_l_nama)) {
         $select_fields[] = "l.`$col_l_nama` as nama_layanan";

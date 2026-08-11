@@ -9,17 +9,29 @@ if (isset($_POST['register'])) {
     $password = password_hash($_POST['password'], PASSWORD_DEFAULT);
     $role = 'pelanggan';
 
-    $stmt = mysqli_prepare($conn, "INSERT INTO users (nama, username, password, role) VALUES (?, ?, ?, ?)");
-    mysqli_stmt_bind_param($stmt, "ssss", $nama, $username, $password, $role);
+    // Cek apakah username sudah ada di database
+    $check_stmt = mysqli_prepare($conn, "SELECT id_user FROM users WHERE username = ?");
+    mysqli_stmt_bind_param($check_stmt, "s", $username);
+    mysqli_stmt_execute($check_stmt);
+    mysqli_stmt_store_result($check_stmt);
 
-    if (mysqli_stmt_execute($stmt)) {
-        header("Location: login.php");
-        exit;
+    if (mysqli_stmt_num_rows($check_stmt) > 0) {
+        $error = 'Username sudah digunakan. Silakan pilih username lain.';
+    } else {
+        $stmt = mysqli_prepare($conn, "INSERT INTO users (nama, username, password, role) VALUES (?, ?, ?, ?)");
+        mysqli_stmt_bind_param($stmt, "ssss", $nama, $username, $password, $role);
+
+        if (mysqli_stmt_execute($stmt)) {
+            header("Location: login.php");
+            exit;
+        }
+
+        $error = 'Pendaftaran gagal. Silakan coba lagi.';
     }
-
-    $error = mysqli_errno($conn) === 1062
-        ? 'Username sudah digunakan.'
-        : 'Pendaftaran gagal. Silakan coba lagi.';
+    
+    if (isset($check_stmt)) {
+        mysqli_stmt_close($check_stmt);
+    }
 }
 ?>
 <!DOCTYPE html>

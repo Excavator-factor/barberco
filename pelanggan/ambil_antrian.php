@@ -87,8 +87,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                   VALUES ('$pelanggan_id', '$layanan_id', $barber_id_sql, '$next_no', 'menunggu', '$today')";
 
         if (mysqli_query($conn, $query)) {
-            $id_antrian = mysqli_insert_id($conn);
-            header('Location: pembayaran.php?id=' . $id_antrian);
+            header('Location: dashboard.php?status=success');
             exit();
         }
 
@@ -248,7 +247,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                     <span class="material-symbols-outlined">confirmation_number</span>
                                     Ambil Antrean Sekarang
                                 </button>
-                                <p class="text-center text-sm leading-6 text-on-muted">Setelah antrean dibuat, Anda akan diarahkan ke halaman pembayaran.</p>
+                                <p class="text-center text-sm leading-6 text-on-muted">Setelah antrean dibuat, Anda dapat melihat status antrean di dashboard.</p>
                             </div>
                         </div>
                     </aside>
