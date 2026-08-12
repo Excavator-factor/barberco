@@ -8,8 +8,36 @@ $queueStatus = $active_queue && $col_a_status && isset($active_queue[$col_a_stat
 $serviceName = $active_queue['nama_layanan'] ?? 'Belum memilih layanan';
 $barberName = $active_queue['nama_barber'] ?? 'Barber tersedia';
 $priceLabel = isset($active_queue['harga_layanan']) ? 'Rp ' . number_format((int) $active_queue['harga_layanan'], 0, ',', '.') : 'Menunggu detail';
-$waitEstimate = $active_queue ? '12 min' : '0 min';
-$shopLoad = $active_queue ? 3 : 1;
+$waitEstimate = '0 min';
+$shopLoad = 1;
+
+if ($active_queue) {
+    // Estimate wait time based on queue order
+    $qDate = $active_queue['tanggal'];
+    $qNo = (int) $active_queue['no_antrian'];
+    $cntQ = mysqli_query($conn, "SELECT COUNT(*) as wait_count FROM antrian WHERE tanggal = '$qDate' AND no_antrian < $qNo AND LOWER(status_antrian) NOT IN ('selesai', 'dibatalkan')");
+    $waitRow = $cntQ ? mysqli_fetch_assoc($cntQ) : null;
+    $peopleAhead = $waitRow ? (int) $waitRow['wait_count'] : 0;
+    
+    // Each person ahead might take around 25 mins
+    $estMins = max(0, $peopleAhead * 25);
+    if (strtolower((string)$active_queue['status_antrian']) === 'proses') {
+        $waitEstimate = 'Sekarang';
+    } else {
+        $waitEstimate = $estMins > 0 ? $estMins . ' min' : '15 min'; // if they are next, give 15 min buffer or similar
+    }
+
+    // Shop Load calculation (1-5)
+    $activeCountQ = mysqli_query($conn, "SELECT COUNT(*) as active_c FROM antrian WHERE tanggal = '$qDate' AND LOWER(status_antrian) NOT IN ('selesai', 'dibatalkan')");
+    $loadRow = $activeCountQ ? mysqli_fetch_assoc($activeCountQ) : null;
+    $totalActive = $loadRow ? (int)$loadRow['active_c'] : 0;
+    
+    if ($totalActive <= 2) $shopLoad = 1;
+    elseif ($totalActive <= 4) $shopLoad = 2;
+    elseif ($totalActive <= 6) $shopLoad = 3;
+    elseif ($totalActive <= 10) $shopLoad = 4;
+    else $shopLoad = 5;
+}
 $recentHistory = array_slice($history_queues, 0, 4);
 ?>
 <!DOCTYPE html>

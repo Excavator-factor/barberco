@@ -5,8 +5,8 @@ include '_chrome.php';
 // ─────────────────────────────────────────────
 // HANDLE POST: Tambah Kapster (inline modal)
 // ─────────────────────────────────────────────
-$modalError   = '';
-$modalSuccess = '';
+$modalError   = $_GET['error'] ?? '';
+$modalSuccess = $_GET['success'] ?? '';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
@@ -311,6 +311,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                                     class="inline-flex h-8 w-8 items-center justify-center border border-outline-variant text-on-surface-variant rounded-lg transition-colors hover:text-primary hover:border-primary hover:bg-surface-container-high" title="Edit">
                                                     <span class="material-symbols-outlined text-[18px]">edit</span>
                                                 </button>
+                                                <a href="hapus_barber.php?id=<?= (int)$barber['id']; ?>" onclick="return confirm('Yakin ingin menghapus kapster ini?');" class="inline-flex h-8 w-8 items-center justify-center border border-outline-variant text-error rounded-lg transition-colors hover:bg-error/10 hover:border-error" title="Hapus">
+                                                    <span class="material-symbols-outlined text-[18px]">delete</span>
+                                                </a>
                                             </div>
                                         </td>
                                     </tr>
@@ -364,6 +367,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                                     class="inline-flex h-8 w-8 items-center justify-center border border-outline-variant text-on-surface-variant rounded-lg transition-colors hover:text-primary hover:border-primary hover:bg-surface-container-high" title="Edit">
                                                     <span class="material-symbols-outlined text-[16px]">edit</span>
                                                 </button>
+                                                <a href="hapus_pengguna.php?id=<?= (int)$customer['id_user']; ?>" onclick="return confirm('Yakin ingin menghapus pelanggan ini?');" class="inline-flex h-8 w-8 items-center justify-center border border-outline-variant text-error rounded-lg transition-colors hover:bg-error/10 hover:border-error" title="Hapus">
+                                                    <span class="material-symbols-outlined text-[16px]">delete</span>
+                                                </a>
                                             </div>
                                         </td>
                                     </tr>
