@@ -104,20 +104,28 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
                 $chkTrx = mysqli_prepare($conn, "SELECT id FROM transaksi WHERE antrian_id = ? LIMIT 1");
                 mysqli_stmt_bind_param($chkTrx, 'i', $queueId);
                 mysqli_stmt_execute($chkTrx);
-                $hasTrx = mysqli_num_rows(mysqli_stmt_get_result($chkTrx)) > 0;
+                $resTrx = mysqli_stmt_get_result($chkTrx);
+                $trxRow = mysqli_fetch_assoc($resTrx);
+                $transaksi_id = $trxRow ? (int)$trxRow['id'] : 0;
                 mysqli_stmt_close($chkTrx);
 
-                if (!$hasTrx) {
+                if (!$transaksi_id) {
                     $layananRes = mysqli_query($conn, "SELECT l.harga FROM antrian a JOIN layanan l ON l.id = a.layanan_id WHERE a.id = $queueId LIMIT 1");
                     if ($layananRes && ($lRow = mysqli_fetch_assoc($layananRes))) {
                         $price = (int) $lRow['harga'];
                         $insTrx = mysqli_prepare($conn, "INSERT INTO transaksi (antrian_id, total_harga, metode_pembayaran, status_pembayaran, waktu_bayar) VALUES (?, ?, 'cash', 'lunas', NOW(6))");
                         mysqli_stmt_bind_param($insTrx, 'ii', $queueId, $price);
                         mysqli_stmt_execute($insTrx);
+                        $transaksi_id = mysqli_insert_id($conn);
                         mysqli_stmt_close($insTrx);
                     }
                 }
                 barber_flash('Antrean telah diselesaikan. Sesi berhasil ditutup!');
+                
+                if ($transaksi_id > 0) {
+                    header("Location: struk.php?id=" . $transaksi_id . "&auto_print=1");
+                    exit;
+                }
             } else {
                 barber_flash('Antrean tidak dapat diselesaikan.', 'error');
             }
