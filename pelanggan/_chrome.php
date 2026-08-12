@@ -83,7 +83,6 @@ function pelanggan_sidebar(string $active): void
 {
     $links = [
         ['dashboard.php', 'dashboard', 'ringkasan', 'Dashboard'],
-        ['ambil_antrian.php', 'add_circle', 'antrean', 'Pesan Layanan'],
         ['katalog.php', 'content_cut', 'katalog', 'Katalog Layanan'],
         ['riwayat.php', 'history', 'riwayat', 'Riwayat'],
         ['profil.php', 'person', 'profil', 'Profil'],
@@ -204,7 +203,6 @@ function pelanggan_mobile_nav(string $active): void
 {
     $links = [
         ['dashboard.php', 'dashboard', 'ringkasan', 'Dashboard'],
-        ['ambil_antrian.php', 'add_circle', 'antrean', 'Pesan'],
         ['katalog.php', 'content_cut', 'katalog', 'Katalog'],
         ['riwayat.php', 'history', 'riwayat', 'Riwayat'],
         ['profil.php', 'person', 'profil', 'Profil'],
