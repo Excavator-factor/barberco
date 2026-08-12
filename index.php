@@ -78,7 +78,7 @@ if (isset($_SESSION['role'])) {
     $user_role = $_SESSION['role'];
 
     if ($user_role === 'pelanggan') {
-        $book_now_url = 'pelanggan/ambil_antrian.php';
+        $book_now_url = 'pelanggan/dashboard.php?open_modal=1';
     } elseif ($user_role === 'admin') {
         $book_now_url = 'admin/dashboard.php';
     } elseif ($user_role === 'barber') {

@@ -64,7 +64,7 @@ $recentHistory = array_slice($history_queues, 0, 4);
                     <h1 class="mt-3 font-display text-4xl font-black text-on-surface md:text-5xl">Selamat datang kembali, <span class="text-primary"><?= htmlspecialchars($username); ?></span></h1>
                     <p class="mt-3 text-lg leading-8 text-on-muted">Pantau status antrean, lihat riwayat, dan pesan layanan berikutnya dari satu tempat.</p>
                 </div>
-                <a href="ambil_antrian.php" class="inline-flex items-center justify-center gap-2 border border-primary bg-primary px-6 py-4 text-[12px] font-black uppercase tracking-[0.16em] text-on-primary transition hover:bg-transparent hover:text-primary">
+                <a href="#" onclick="openBookingModal(); return false;" class="inline-flex items-center justify-center gap-2 border border-primary bg-primary px-6 py-4 text-[12px] font-black uppercase tracking-[0.16em] text-on-primary transition hover:bg-transparent hover:text-primary">
                     <span class="material-symbols-outlined">add_circle</span>
                     Pesan Layanan Baru
                 </a>
@@ -120,7 +120,7 @@ $recentHistory = array_slice($history_queues, 0, 4);
                             <span class="font-display text-2xl font-black text-on-surface"><?= htmlspecialchars($priceLabel); ?></span>
                             <span class="text-sm text-on-muted"><?= count($history_queues); ?> kunjungan</span>
                         </div>
-                        <a href="ambil_antrian.php" class="block w-full border border-on-surface bg-on-surface py-3 text-center text-[12px] font-black uppercase tracking-[0.16em] text-background transition hover:border-primary hover:bg-primary hover:text-on-primary">Pilih Layanan</a>
+                        <a href="#" onclick="openBookingModal(); return false;" class="block w-full border border-on-surface bg-on-surface py-3 text-center text-[12px] font-black uppercase tracking-[0.16em] text-background transition hover:border-primary hover:bg-primary hover:text-on-primary">Pilih Layanan</a>
                     </div>
                 </article>
 
@@ -195,5 +195,7 @@ $recentHistory = array_slice($history_queues, 0, 4);
         </div>
     </main>
     <?php pelanggan_mobile_nav('ringkasan'); ?>
+    <?php pelanggan_booking_modal(); ?>
+    <?php if (isset($_GET['open_modal'])): ?><script>window.addEventListener('DOMContentLoaded', () => openBookingModal());</script><?php endif; ?>
 </body>
 </html>

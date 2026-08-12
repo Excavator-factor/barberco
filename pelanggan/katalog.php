@@ -114,7 +114,7 @@ function katalog_service_image(array $svc, array $fallbacks, ?string $col_gambar
                                     <div class="mt-auto pt-4 border-t border-outline">
                                         <div class="flex items-center justify-between gap-3">
                                             <span class="font-display text-xl font-black text-primary"><?= $harga ?></span>
-                                            <a href="ambil_antrian.php<?= $id_svc ? '?layanan=' . urlencode($id_svc) : '' ?>"
+                                            <a href="#" onclick="openBookingModal('<?= $id_svc ?? '' ?>'); return false;"
                                                class="inline-flex items-center gap-1.5 border border-outline bg-surface-high px-4 py-2.5 text-[11px] font-black uppercase tracking-[0.12em] text-on-muted transition hover:border-primary hover:bg-primary hover:text-on-primary">
                                                 <span class="material-symbols-outlined text-[16px]">add_circle</span>
                                                 Pilih
@@ -137,7 +137,7 @@ function katalog_service_image(array $svc, array $fallbacks, ?string $col_gambar
                         <h3 class="mt-2 font-display text-xl font-black text-on-surface">Butuh konsultasi?</h3>
                         <p class="mt-1 text-sm text-on-muted">Barber kami siap memberikan saran terbaik untuk gaya rambut yang sesuai dengan kebutuhan Anda.</p>
                     </div>
-                    <a href="ambil_antrian.php" class="inline-flex shrink-0 items-center justify-center gap-2 border border-primary px-6 py-3 text-[12px] font-black uppercase tracking-[0.14em] text-primary transition hover:bg-primary hover:text-on-primary">
+                    <a href="#" onclick="openBookingModal(); return false;" class="inline-flex shrink-0 items-center justify-center gap-2 border border-primary px-6 py-3 text-[12px] font-black uppercase tracking-[0.14em] text-primary transition hover:bg-primary hover:text-on-primary">
                         <span class="material-symbols-outlined">calendar_add_on</span>
                         Buat Reservasi
                     </a>
@@ -147,6 +147,7 @@ function katalog_service_image(array $svc, array $fallbacks, ?string $col_gambar
         </div>
     </main>
     <?php pelanggan_mobile_nav('katalog'); ?>
+    <?php pelanggan_booking_modal(); ?>
 
     <style>
         .line-clamp-3 {

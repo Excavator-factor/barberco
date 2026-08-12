@@ -224,3 +224,195 @@ function pelanggan_mobile_nav(string $active): void
     </nav>
     <?php
 }
+
+
+function pelanggan_booking_modal() {
+    global $conn;
+    $q_layanan = mysqli_query($conn, "SELECT * FROM layanan ORDER BY id ASC");
+    $q_barber =  mysqli_query($conn, "SELECT * FROM barber WHERE LOWER(status) = 'aktif' ORDER BY id ASC");
+
+    // Fetch into arrays
+    $layanan = [];
+    if ($q_layanan) { while ($row = mysqli_fetch_assoc($q_layanan)) { $layanan[] = $row; } }
+    $barbers = [];
+    if ($q_barber) { while ($row = mysqli_fetch_assoc($q_barber)) { $barbers[] = $row; } }
+?>
+    <div id="bookingModal" class="fixed inset-0 z-[100] hidden flex items-center justify-center p-4">
+        <!-- Backdrop -->
+        <div class="absolute inset-0 bg-black/80 backdrop-blur-sm transition-opacity" onclick="closeBookingModal()"></div>
+        
+        <!-- Modal Content -->
+        <div class="relative w-full max-w-2xl max-h-[90vh] flex flex-col bg-surface border border-outline shadow-2xl scale-95 transition-transform duration-300" id="bookingModalBody">
+            
+            <!-- Header -->
+            <div class="flex items-center justify-between border-b border-outline p-5 bg-surface-high shrink-0">
+                <div>
+                    <h3 class="font-display text-xl font-black text-on-surface">Pesan Layanan</h3>
+                    <p class="text-[11px] font-black uppercase text-primary tracking-widest mt-1">Multi-step Booking</p>
+                </div>
+                <button type="button" onclick="closeBookingModal()" class="text-on-muted hover:text-error transition"><span class="material-symbols-outlined">close</span></button>
+            </div>
+            
+            <form action="proses_booking.php" method="POST" id="bookingForm" class="flex flex-col overflow-hidden min-h-0 flex-1">
+                <input type="hidden" name="id_layanan" id="modal_id_layanan" value="">
+                <input type="hidden" name="id_barber" id="modal_id_barber" value="">
+                
+                <div class="overflow-y-auto p-6 customer-scroll relative flex-1" id="modalScrollArea">
+                    <!-- Step 1: Layanan -->
+                    <div id="step1" class="step-container space-y-4">
+                        <h4 class="font-bold text-on-surface mb-4">Langkah 1: Pilih Layanan</h4>
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                            <?php foreach ($layanan as $l): ?>
+                                <label class="block cursor-pointer">
+                                    <input type="radio" name="layanan_sel" class="peer hidden" value="<?= $l['id'] ?>" data-name="<?= htmlspecialchars($l['nama_layanan']) ?>" data-price="<?= number_format($l['harga'],0,',','.') ?>">
+                                    <div class="border border-outline bg-surface-panel p-4 hover:border-primary peer-checked:border-primary peer-checked:bg-primary/5 transition">
+                                        <h5 class="font-bold text-on-surface"><?= htmlspecialchars($l['nama_layanan']) ?></h5>
+                                        <p class="text-primary text-sm font-black mt-1">Rp <?= number_format($l['harga'],0,',','.') ?></p>
+                                    </div>
+                                </label>
+                            <?php endforeach; ?>
+                        </div>
+                    </div>
+
+                    <!-- Step 2: Barber -->
+                    <div id="step2" class="step-container space-y-4 hidden">
+                        <h4 class="font-bold text-on-surface mb-2">Langkah 2: Pilih Barber</h4>
+                        <p class="text-sm text-on-muted mb-4">Opsional. Biarkan kosong jika tidak ada preferensi.</p>
+                        
+                        <label class="block cursor-pointer mb-3">
+                            <input type="radio" name="barber_sel" class="peer hidden" value="0" data-name="Barber Tersedia" checked>
+                            <div class="border border-outline bg-surface-panel p-4 hover:border-primary peer-checked:border-primary peer-checked:bg-primary/5 transition flex items-center gap-3">
+                                <span class="material-symbols-outlined text-primary">group</span>
+                                <span class="font-bold text-on-surface">Siapapun yang tersedia</span>
+                            </div>
+                        </label>
+                            
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                            <?php foreach ($barbers as $b): ?>
+                                <label class="block cursor-pointer">
+                                    <input type="radio" name="barber_sel" class="peer hidden" value="<?= $b['id'] ?>" data-name="<?= htmlspecialchars($b['nama']) ?>">
+                                    <div class="border border-outline bg-surface-panel p-4 hover:border-primary peer-checked:border-primary peer-checked:bg-primary/5 transition flex items-center gap-3">
+                                        <img src="https://ui-avatars.com/api/?name=<?= urlencode($b['nama']) ?>&background=random" class="w-10 h-10 rounded-full border border-outline">
+                                        <div>
+                                            <h5 class="font-bold text-on-surface"><?= htmlspecialchars($b['nama']) ?></h5>
+                                            <p class="text-[10px] text-primary uppercase"><?= htmlspecialchars($b['spesialisasi'] ?: 'Master Barber') ?></p>
+                                        </div>
+                                    </div>
+                                </label>
+                            <?php endforeach; ?>
+                        </div>
+                    </div>
+
+                    <!-- Step 3: Summary -->
+                    <div id="step3" class="step-container space-y-4 hidden">
+                        <h4 class="font-bold text-on-surface mb-4">Langkah 3: Konfirmasi Ringkasan</h4>
+                        
+                        <div class="bg-surface-panel p-5 border border-outline space-y-4">
+                            <div class="flex justify-between border-b border-outline pb-3">
+                                <span class="text-on-muted">Layanan</span>
+                                <span class="font-bold text-on-surface" id="summary-layanan">-</span>
+                            </div>
+                            <div class="flex justify-between border-b border-outline pb-3">
+                                <span class="text-on-muted">Barber</span>
+                                <span class="font-bold text-on-surface" id="summary-barber">-</span>
+                            </div>
+                            <div class="flex justify-between pt-2">
+                                <span class="text-[11px] font-black uppercase tracking-widest text-on-muted">Total Biaya</span>
+                                <span class="font-display text-2xl font-black text-primary" id="summary-biaya">-</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Footer / Navigation -->
+                <div class="border-t border-outline p-5 bg-surface-high flex justify-between items-center gap-4 shrink-0">
+                    <button type="button" id="btnPrev" onclick="prevStep()" class="hidden px-5 py-2.5 border border-outline text-on-muted hover:text-on-surface font-bold text-xs uppercase tracking-widest transition">
+                        Kembali
+                    </button>
+                    <div class="flex-1"></div>
+                    <button type="button" id="btnNext" onclick="nextStep()" class="px-5 py-2.5 bg-primary text-on-primary font-bold text-xs uppercase tracking-widest hover:bg-white transition">
+                        Selanjutnya
+                    </button>
+                    <button type="button" id="btnSubmit" onclick="submitBooking()" class="hidden px-5 py-2.5 bg-primary text-on-primary font-bold text-xs uppercase tracking-widest hover:bg-white transition flex items-center gap-2">
+                        Konfirmasi <span class="material-symbols-outlined text-[18px]">check_circle</span>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+    <script>
+        let currentStep = 1;
+
+        function openBookingModal(preselectedLayananId = null) {
+            document.getElementById("bookingModal").classList.remove("hidden");
+            setTimeout(() => {
+                document.getElementById("bookingModalBody").classList.remove("scale-95");
+                document.getElementById("bookingModalBody").classList.add("scale-100");
+            }, 10);
+            
+            if (preselectedLayananId) {
+                const input = document.querySelector(`input[name="layanan_sel"][value="${preselectedLayananId}"]`);
+                if (input) input.checked = true;
+            }
+            
+            goToStep(1);
+        }
+
+        function closeBookingModal() {
+            document.getElementById("bookingModalBody").classList.remove("scale-100");
+            document.getElementById("bookingModalBody").classList.add("scale-95");
+            setTimeout(() => {
+                document.getElementById("bookingModal").classList.add("hidden");
+            }, 300);
+        }
+
+        function goToStep(step) {
+            if (step === 2) {
+                const selectedLayanan = document.querySelector('input[name="layanan_sel"]:checked');
+                if (!selectedLayanan) {
+                    Swal.fire({icon: "error", title: "Oops!", text: "Harap Pilih Layanan Terlebih Dahulu.", background: "#1e2020", color: "#e2e2e2"});
+                    return;
+                }
+            } else if (step === 3) {
+                 const l = document.querySelector('input[name="layanan_sel"]:checked');
+                 const b = document.querySelector('input[name="barber_sel"]:checked');
+                 
+                 document.getElementById("modal_id_layanan").value = l.value;
+                 document.getElementById("modal_id_barber").value = b.value;
+                 
+                 document.getElementById("summary-layanan").innerText = l.getAttribute("data-name");
+                 document.getElementById("summary-biaya").innerText = "Rp " + l.getAttribute("data-price");
+                 document.getElementById("summary-barber").innerText = b.getAttribute("data-name");
+            }
+
+            document.getElementById("step1").classList.add("hidden");
+            document.getElementById("step2").classList.add("hidden");
+            document.getElementById("step3").classList.add("hidden");
+            
+            document.getElementById("btnPrev").classList.add("hidden");
+            document.getElementById("btnNext").classList.add("hidden");
+            document.getElementById("btnSubmit").classList.add("hidden");
+
+            document.getElementById("step" + step).classList.remove("hidden");
+            document.getElementById("modalScrollArea").scrollTop = 0;
+
+            if (step === 1) {
+                document.getElementById("btnNext").classList.remove("hidden");
+            } else if (step === 2) {
+                document.getElementById("btnPrev").classList.remove("hidden");
+                document.getElementById("btnNext").classList.remove("hidden");
+            } else if (step === 3) {
+                document.getElementById("btnPrev").classList.remove("hidden");
+                document.getElementById("btnSubmit").classList.remove("hidden");
+            }
+            
+            currentStep = step;
+        }
+
+        function nextStep() { goToStep(currentStep + 1); }
+        function prevStep() { goToStep(currentStep - 1); }
+        function submitBooking() { document.getElementById("bookingForm").submit(); }
+    </script>
+<?php
+}
+?>
