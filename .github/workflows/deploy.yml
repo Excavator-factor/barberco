@@ -19,7 +19,7 @@ jobs:
         with:
           server: ftpupload.net
           username: if0_42597733
-          password: PratamaS123
+          password: ${{ secrets.FTP_PASSWORD }}
           server-dir: satryobarber.web.id/htdocs/ # Sesuaikan folder di hosting Anda (biasanya public_html atau htdocs)
           # Daftar file atau folder yang tidak ingin ikut di-upload
           exclude: |
