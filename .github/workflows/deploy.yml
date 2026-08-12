@@ -17,8 +17,8 @@ jobs:
       - name: 📂 Sync files via FTP
         uses: SamKirkland/FTP-Deploy-Action@v4.3.4
         with:
-          server: ${{ secrets.FTP_SERVER }}
-          username: ${{ secrets.FTP_USERNAME }}
+          server: ftpupload.net
+          username: if0_42597733
           password: ${{ secrets.FTP_PASSWORD }}
           server-dir: satryobarber.web.id/htdocs/ # Sesuaikan folder di hosting Anda (biasanya public_html atau htdocs)
           # Daftar file atau folder yang tidak ingin ikut di-upload
