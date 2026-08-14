@@ -37,7 +37,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                   VALUES ('$user_id', '$layanan_id', $barber_id_sql, '$next_no', 'menunggu', '$today')";
 
         if (mysqli_query($conn, $query)) {
-            header('Location: dashboard.php?status=success');
+            $antrian_id = mysqli_insert_id($conn);
+            header("Location: pembayaran.php?id=" . $antrian_id);
             exit();
         }
 
