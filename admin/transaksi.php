@@ -97,6 +97,7 @@ for ($i = 1; $i <= 12; $i++) {
                                     <th class="px-4 py-4 border-b border-outline-variant">Pelanggan & Kapster</th>
                                     <th class="px-4 py-4 border-b border-outline-variant">Layanan</th>
                                     <th class="px-4 py-4 border-b border-outline-variant">Subtotal</th>
+                                    <th class="px-4 py-4 border-b border-outline-variant">Metode</th>
                                     <th class="px-4 py-4 border-b border-outline-variant">Status</th>
                                     <th class="px-4 py-4 border-b border-outline-variant text-right">Aksi</th>
                                 </tr>
@@ -118,6 +119,9 @@ for ($i = 1; $i <= 12; $i++) {
                                             </td>
                                             <td class="px-4 py-4 text-sm font-bold text-on-surface align-middle">
                                                 Rp <?= number_format((int)$trx['total_harga'], 0, ',', '.'); ?>
+                                            </td>
+                                            <td class="px-4 py-4 text-sm font-bold text-on-surface align-middle uppercase">
+                                                <?= htmlspecialchars($trx['metode_pembayaran'] ?? 'CASH'); ?>
                                             </td>
                                             <td class="px-4 py-4 align-middle">
                                                 <?php if (strtolower($trx['status_pembayaran']) === 'lunas'): ?>
