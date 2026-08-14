@@ -126,7 +126,7 @@ $recentHistory = array_slice($history_queues, 0, 4);
                             <span class="text-sm text-on-muted"><?= count($history_queues); ?> kunjungan</span>
                         </div>
                         <?php if ($active_queue && !empty($hasUnpaidTrx)): ?>
-                            <a href="pembayaran.php?id=<?= $active_queue['id']; ?>" class="block w-full border border-primary bg-primary py-3 text-center text-[12px] font-black uppercase tracking-[0.16em] text-on-primary transition hover:bg-transparent hover:text-primary">Bayar Sekarang</a>
+                            <a href="#" onclick="openPaymentModal(); return false;" class="block w-full border border-primary bg-primary py-3 text-center text-[12px] font-black uppercase tracking-[0.16em] text-on-primary transition hover:bg-transparent hover:text-primary">Bayar Sekarang</a>
                         <?php elseif (!$active_queue): ?>
                             <a href="#" onclick="openBookingModal(); return false;" class="block w-full border border-on-surface bg-on-surface py-3 text-center text-[12px] font-black uppercase tracking-[0.16em] text-background transition hover:border-primary hover:bg-primary hover:text-on-primary">Pilih Layanan</a>
                         <?php else: ?>
@@ -207,6 +207,8 @@ $recentHistory = array_slice($history_queues, 0, 4);
     </main>
     <?php pelanggan_mobile_nav('ringkasan'); ?>
     <?php pelanggan_booking_modal(); ?>
+    <?php if ($active_queue) pelanggan_payment_modal($active_queue); ?>
     <?php if (isset($_GET['open_modal'])): ?><script>window.addEventListener('DOMContentLoaded', () => openBookingModal());</script><?php endif; ?>
+    <?php if (isset($_GET['open_payment_modal'])): ?><script>window.addEventListener('DOMContentLoaded', () => openPaymentModal());</script><?php endif; ?>
 </body>
 </html>

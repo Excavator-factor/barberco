@@ -37,8 +37,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                   VALUES ('$user_id', '$layanan_id', $barber_id_sql, '$next_no', 'menunggu', '$today')";
 
         if (mysqli_query($conn, $query)) {
-            $antrian_id = mysqli_insert_id($conn);
-            header("Location: pembayaran.php?id=" . $antrian_id);
+            header("Location: dashboard.php?open_payment_modal=1");
             exit();
         }
 

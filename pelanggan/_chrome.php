@@ -413,4 +413,109 @@ function pelanggan_booking_modal() {
     </script>
 <?php
 }
+
+function pelanggan_payment_modal($active_queue) {
+    if (!$active_queue) return;
+    $harga = (int) $active_queue['harga_layanan'];
+?>
+    <div id="paymentModal" class="fixed inset-0 z-[110] hidden flex items-center justify-center p-4">
+        <!-- Backdrop -->
+        <div class="absolute inset-0 bg-black/80 backdrop-blur-sm transition-opacity" onclick="closePaymentModal()"></div>
+        
+        <!-- Modal Content -->
+        <div class="relative w-full max-w-lg max-h-[90vh] flex flex-col bg-surface border border-outline shadow-2xl scale-95 transition-transform duration-300" id="paymentModalBody">
+            
+            <!-- Header -->
+            <div class="flex items-center justify-between border-b border-outline p-5 bg-surface-high shrink-0">
+                <div>
+                    <h3 class="font-display text-xl font-black text-on-surface">Pembayaran</h3>
+                    <p class="text-[11px] font-black uppercase text-primary tracking-widest mt-1">Selesaikan Transaksi</p>
+                </div>
+                <button type="button" onclick="closePaymentModal()" class="text-on-muted hover:text-error transition"><span class="material-symbols-outlined">close</span></button>
+            </div>
+            
+            <form action="proses_pembayaran.php" method="POST" enctype="multipart/form-data" class="flex flex-col overflow-hidden min-h-0 flex-1">
+                <input type="hidden" name="antrian_id" value="<?= (int)$active_queue['id'] ?>">
+                
+                <div class="overflow-y-auto p-6 customer-scroll relative flex-1 space-y-6">
+                    <div class="flex justify-between items-end pb-4 border-b-2 border-primary">
+                        <span class="text-[11px] font-black uppercase tracking-[0.18em] text-on-muted">Total Tagihan</span>
+                        <span class="font-display text-2xl font-black text-primary">Rp <?= number_format($harga, 0, ',', '.'); ?></span>
+                    </div>
+
+                    <div>
+                        <label class="mb-3 block text-[12px] font-black uppercase tracking-[0.18em] text-primary">Metode Pembayaran</label>
+                        <div class="grid gap-3">
+                            <label class="flex cursor-pointer items-center justify-between gap-4 border border-outline bg-surface-panel p-4 transition hover:border-primary">
+                                <span class="flex items-center gap-3 text-sm font-bold uppercase text-on-surface"><input type="radio" name="metode_pembayaran" value="QRIS" checked onclick="togglePaymentUpload(true, 'qris')" class="accent-[#f2ca50]">QRIS Instant</span>
+                                <span class="material-symbols-outlined text-primary">qr_code_scanner</span>
+                            </label>
+                            <label class="flex cursor-pointer items-center justify-between gap-4 border border-outline bg-surface-panel p-4 transition hover:border-primary">
+                                <span class="flex items-center gap-3 text-sm font-bold uppercase text-on-surface"><input type="radio" name="metode_pembayaran" value="Transfer Bank" onclick="togglePaymentUpload(true, 'bank')" class="accent-[#f2ca50]">Transfer Bank</span>
+                                <span class="material-symbols-outlined text-primary">account_balance</span>
+                            </label>
+                            <label class="flex cursor-pointer items-center justify-between gap-4 border border-outline bg-surface-panel p-4 transition hover:border-primary">
+                                <span class="flex items-center gap-3 text-sm font-bold uppercase text-on-surface"><input type="radio" name="metode_pembayaran" value="Tunai" onclick="togglePaymentUpload(false, 'cash')" class="accent-[#f2ca50]">Tunai di Kasir</span>
+                                <span class="material-symbols-outlined text-primary">payments</span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <div id="modal-info-qris" class="border border-dashed border-primary bg-primary/5 p-5 text-center">
+                        <p class="mb-3 text-[11px] font-black uppercase tracking-[0.18em] text-on-muted">Scan QRIS Barber.co</p>
+                        <img src="https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=BARBERCO-IDR-<?= $harga ?>" alt="QRIS" class="mx-auto border border-outline bg-white p-2 w-32 h-32 object-contain">
+                    </div>
+
+                    <div id="modal-info-bank" class="hidden border border-dashed border-primary bg-primary/5 p-5">
+                        <p class="mb-3 text-[11px] font-black uppercase tracking-[0.18em] text-on-muted">Rekening Pembayaran</p>
+                        <div class="space-y-1 text-sm text-on-surface">
+                            <p><strong>BCA:</strong> 8830-1234-5678 a.n Barber.co</p>
+                            <p><strong>Mandiri:</strong> 112-00-9876-5432 a.n Barber.co</p>
+                        </div>
+                    </div>
+
+                    <div id="modal-wrapper-upload" class="space-y-2">
+                        <label class="block text-[11px] font-black uppercase tracking-[0.18em] text-on-muted">Unggah Bukti</label>
+                        <input type="file" name="bukti_pembayaran" accept="image/*,.pdf" class="w-full border border-outline bg-surface-panel p-2 text-sm text-on-muted file:mr-4 file:border-0 file:bg-primary file:px-3 file:py-1.5 file:text-[10px] file:font-black file:uppercase file:text-on-primary">
+                    </div>
+                </div>
+
+                <div class="border-t border-outline p-5 bg-surface-high flex shrink-0">
+                    <button type="submit" class="flex w-full items-center justify-center gap-2 border border-primary bg-primary py-3 text-[12px] font-black uppercase tracking-[0.18em] text-on-primary transition hover:bg-transparent hover:text-primary">
+                        <span class="material-symbols-outlined">verified</span>
+                        Konfirmasi Pembayaran
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+    
+    <script>
+        function openPaymentModal() {
+            const modal = document.getElementById("paymentModal");
+            if(modal) {
+                modal.classList.remove("hidden");
+                setTimeout(() => {
+                    document.getElementById("paymentModalBody").classList.remove("scale-95");
+                    document.getElementById("paymentModalBody").classList.add("scale-100");
+                }, 10);
+            }
+        }
+
+        function closePaymentModal() {
+            document.getElementById("paymentModalBody").classList.remove("scale-100");
+            document.getElementById("paymentModalBody").classList.add("scale-95");
+            setTimeout(() => {
+                document.getElementById("paymentModal").classList.add("hidden");
+            }, 300);
+        }
+
+        function togglePaymentUpload(showUpload, type) {
+            document.getElementById('modal-wrapper-upload').classList.toggle('hidden', !showUpload);
+            document.getElementById('modal-info-qris').classList.toggle('hidden', type !== 'qris');
+            document.getElementById('modal-info-bank').classList.toggle('hidden', type !== 'bank');
+        }
+    </script>
+<?php
+}
 ?>
