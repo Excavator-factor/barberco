@@ -231,9 +231,19 @@ function pelanggan_booking_modal() {
 
     // Fetch into arrays
     $layanan = [];
+    $col_l_gambar = getExistingCol($conn, 'layanan', ['gambar', 'foto', 'image', 'foto_layanan']);
     if ($q_layanan) { while ($row = mysqli_fetch_assoc($q_layanan)) { $layanan[] = $row; } }
     $barbers = [];
     if ($q_barber) { while ($row = mysqli_fetch_assoc($q_barber)) { $barbers[] = $row; } }
+    
+    $fallback_images = [
+        'https://images.unsplash.com/photo-1622287162716-f311baa1a2b8?auto=format&fit=crop&w=1000&q=80',
+        'https://images.unsplash.com/photo-1585747860715-2ba37e788b70?auto=format&fit=crop&w=1000&q=80',
+        'https://images.unsplash.com/photo-1502823403499-6ccfcf4fb453?auto=format&fit=crop&w=1000&q=80',
+        'https://images.unsplash.com/photo-1605497788044-5a32c7078486?auto=format&fit=crop&w=1000&q=80',
+        'https://images.unsplash.com/photo-1503951914875-452162b0f3f1?auto=format&fit=crop&w=1000&q=80',
+        'https://images.unsplash.com/photo-1621605815971-fbc98d665033?auto=format&fit=crop&w=1000&q=80',
+    ];
 ?>
     <div id="bookingModal" class="fixed inset-0 z-[100] hidden flex items-center justify-center p-4">
         <!-- Backdrop -->
@@ -260,12 +270,25 @@ function pelanggan_booking_modal() {
                     <div id="step1" class="step-container space-y-4">
                         <h4 class="font-bold text-on-surface mb-4">Langkah 1: Pilih Layanan</h4>
                         <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                            <?php foreach ($layanan as $l): ?>
+                            <?php foreach ($layanan as $l): 
+                                $img_url = '';
+                                if ($col_l_gambar && !empty($l[$col_l_gambar])) {
+                                    $img_url = '../' . ltrim($l[$col_l_gambar], '/');
+                                } else {
+                                    $id = (int) ($l['id'] ?? 0);
+                                    $img_url = $fallback_images[$id % count($fallback_images)];
+                                }
+                            ?>
                                 <label class="block cursor-pointer">
                                     <input type="radio" name="layanan_sel" class="peer hidden" value="<?= $l['id'] ?>" data-name="<?= htmlspecialchars($l['nama_layanan']) ?>" data-price="<?= number_format($l['harga'],0,',','.') ?>">
-                                    <div class="border border-outline bg-surface-panel p-4 hover:border-primary peer-checked:border-primary peer-checked:bg-primary/5 transition">
-                                        <h5 class="font-bold text-on-surface"><?= htmlspecialchars($l['nama_layanan']) ?></h5>
-                                        <p class="text-primary text-sm font-black mt-1">Rp <?= number_format($l['harga'],0,',','.') ?></p>
+                                    <div class="border border-outline bg-surface-panel p-4 hover:border-primary peer-checked:border-primary peer-checked:bg-primary/5 transition flex items-center gap-4">
+                                        <div class="w-16 h-16 rounded overflow-hidden shrink-0 border border-outline">
+                                            <img src="<?= htmlspecialchars($img_url) ?>" class="w-full h-full object-cover">
+                                        </div>
+                                        <div>
+                                            <h5 class="font-bold text-on-surface"><?= htmlspecialchars($l['nama_layanan']) ?></h5>
+                                            <p class="text-primary text-sm font-black mt-1">Rp <?= number_format($l['harga'],0,',','.') ?></p>
+                                        </div>
                                     </div>
                                 </label>
                             <?php endforeach; ?>
