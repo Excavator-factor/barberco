@@ -131,7 +131,7 @@ for ($i = 1; $i <= 12; $i++) {
                                                 <?php endif; ?>
                                             </td>
                                             <td class="px-4 py-4 text-right align-middle">
-                                                <button onclick="showDetailTransaksi(<?= (int)$trx['id']; ?>, <?= htmlspecialchars(json_encode($trx['nama_pelanggan']), ENT_QUOTES); ?>, <?= htmlspecialchars(json_encode($trx['nama_barber']), ENT_QUOTES); ?>, <?= htmlspecialchars(json_encode($trx['nama_layanan']), ENT_QUOTES); ?>, <?= (int)$trx['total_harga']; ?>, <?= htmlspecialchars(json_encode($trx['status_pembayaran']), ENT_QUOTES); ?>, <?= htmlspecialchars(json_encode(date('d M Y H:i', strtotime($trx['waktu_bayar']))), ENT_QUOTES); ?>)" class="inline-flex h-8 w-8 items-center justify-center border border-outline-variant text-on-surface-variant rounded-lg transition-colors hover:text-primary hover:border-primary hover:bg-surface-container-high" title="Lihat Detail">
+                                                <button onclick="showDetailTransaksi(<?= (int)$trx['id']; ?>, <?= htmlspecialchars(json_encode($trx['nama_pelanggan']), ENT_QUOTES); ?>, <?= htmlspecialchars(json_encode($trx['nama_barber']), ENT_QUOTES); ?>, <?= htmlspecialchars(json_encode($trx['nama_layanan']), ENT_QUOTES); ?>, <?= (int)$trx['total_harga']; ?>, <?= htmlspecialchars(json_encode($trx['status_pembayaran']), ENT_QUOTES); ?>, <?= htmlspecialchars(json_encode(date('d M Y H:i', strtotime($trx['waktu_bayar']))), ENT_QUOTES); ?>, <?= htmlspecialchars(json_encode($trx['metode_pembayaran'] ?? 'CASH'), ENT_QUOTES); ?>)" class="inline-flex h-8 w-8 items-center justify-center border border-outline-variant text-on-surface-variant rounded-lg transition-colors hover:text-primary hover:border-primary hover:bg-surface-container-high" title="Lihat Detail">
                                                     <span class="material-symbols-outlined text-[20px]">visibility</span>
                                                 </button>
                                             </td>
@@ -180,7 +180,7 @@ for ($i = 1; $i <= 12; $i++) {
         }
     });
 
-    function showDetailTransaksi(id, pelanggan, kapster, layanan, total, status, waktu) {
+    function showDetailTransaksi(id, pelanggan, kapster, layanan, total, status, waktu, metode) {
         const totalFmt = 'Rp ' + total.toLocaleString('id-ID');
         const isLunas = status.toLowerCase() === 'lunas';
         const statusColor = isLunas ? '#f2ca50' : '#ffb4ab';
@@ -213,6 +213,10 @@ for ($i = 1; $i <= 12; $i++) {
                         <div style="display:flex;justify-content:space-between;">
                             <span style="font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#99907c;">Layanan</span>
                             <span style="font-size:13px;font-weight:600;color:#e2e2e2;">${layanan}</span>
+                        </div>
+                        <div style="display:flex;justify-content:space-between;">
+                            <span style="font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#99907c;">Metode Bayar</span>
+                            <span style="font-size:13px;font-weight:600;color:#e2e2e2;text-transform:uppercase;">${metode}</span>
                         </div>
                     </div>
                     <div style="border-top:2px dashed #4d4635;padding-top:14px;display:flex;justify-content:space-between;align-items:center;">
