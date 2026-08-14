@@ -232,6 +232,7 @@ function pelanggan_booking_modal() {
     // Fetch into arrays
     $layanan = [];
     $col_l_gambar = getExistingCol($conn, 'layanan', ['gambar', 'foto', 'image', 'foto_layanan']);
+    $col_l_desc = getExistingCol($conn, 'layanan', ['deskripsi', 'description', 'keterangan', 'desc']);
     if ($q_layanan) { while ($row = mysqli_fetch_assoc($q_layanan)) { $layanan[] = $row; } }
     $barbers = [];
     if ($q_barber) { while ($row = mysqli_fetch_assoc($q_barber)) { $barbers[] = $row; } }
@@ -278,16 +279,23 @@ function pelanggan_booking_modal() {
                                     $id = (int) ($l['id'] ?? 0);
                                     $img_url = $fallback_images[$id % count($fallback_images)];
                                 }
+                                $desc = '';
+                                if ($col_l_desc && !empty($l[$col_l_desc])) {
+                                    $desc = htmlspecialchars($l[$col_l_desc]);
+                                } else {
+                                    $desc = 'Layanan premium Barber.co.';
+                                }
                             ?>
                                 <label class="block cursor-pointer">
                                     <input type="radio" name="layanan_sel" class="peer hidden" value="<?= $l['id'] ?>" data-name="<?= htmlspecialchars($l['nama_layanan']) ?>" data-price="<?= number_format($l['harga'],0,',','.') ?>">
-                                    <div class="border border-outline bg-surface-panel p-4 hover:border-primary peer-checked:border-primary peer-checked:bg-primary/5 transition flex items-center gap-4">
-                                        <div class="w-16 h-16 rounded overflow-hidden shrink-0 border border-outline">
+                                    <div class="border border-outline bg-surface-panel p-4 hover:border-primary peer-checked:border-primary peer-checked:bg-primary/5 transition flex sm:items-center gap-4 flex-col sm:flex-row">
+                                        <div class="w-20 h-20 sm:w-16 sm:h-16 rounded overflow-hidden shrink-0 border border-outline hidden sm:block">
                                             <img src="<?= htmlspecialchars($img_url) ?>" class="w-full h-full object-cover">
                                         </div>
-                                        <div>
-                                            <h5 class="font-bold text-on-surface"><?= htmlspecialchars($l['nama_layanan']) ?></h5>
-                                            <p class="text-primary text-sm font-black mt-1">Rp <?= number_format($l['harga'],0,',','.') ?></p>
+                                        <div class="flex-1">
+                                            <h5 class="font-bold text-on-surface leading-tight"><?= htmlspecialchars($l['nama_layanan']) ?></h5>
+                                            <p class="text-[10px] text-on-muted leading-relaxed mt-1 line-clamp-2"><?= $desc ?></p>
+                                            <p class="text-primary text-sm font-black mt-2">Rp <?= number_format($l['harga'],0,',','.') ?></p>
                                         </div>
                                     </div>
                                 </label>
