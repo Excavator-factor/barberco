@@ -208,7 +208,7 @@ $recentHistory = array_slice($history_queues, 0, 4);
     <?php pelanggan_mobile_nav('ringkasan'); ?>
     <?php pelanggan_booking_modal(); ?>
     <?php if ($active_queue) pelanggan_payment_modal($active_queue); ?>
-    <?php if (isset($_GET['open_modal'])): ?><script>window.addEventListener('DOMContentLoaded', () => openBookingModal());</script><?php endif; ?>
-    <?php if (isset($_GET['open_payment_modal'])): ?><script>window.addEventListener('DOMContentLoaded', () => openPaymentModal());</script><?php endif; ?>
+    <?php if (isset($_GET['open_modal'])): ?><script>window.addEventListener('DOMContentLoaded', () => { openBookingModal(); window.history.replaceState({}, document.title, window.location.pathname); });</script><?php endif; ?>
+    <?php if (isset($_GET['open_payment_modal'])): ?><script>window.addEventListener('DOMContentLoaded', () => { openPaymentModal(); window.history.replaceState({}, document.title, window.location.pathname); });</script><?php endif; ?>
 </body>
 </html>
