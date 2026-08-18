@@ -1,6 +1,6 @@
 <?php
-include '_bootstrap.php';
-include '_chrome.php';
+include "_bootstrap.php";
+include "_chrome.php";
 
 // Fetch all transactions
 $trxSql = "SELECT t.*, a.tanggal, a.waktu_dibuat, l.nama_layanan, 
@@ -15,13 +15,26 @@ $trxSql = "SELECT t.*, a.tanggal, a.waktu_dibuat, l.nama_layanan,
 $transaksi = mysqli_query($conn, $trxSql);
 
 // Prepare monthly data for chart
-$monthsLine = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'];
+$monthsLine = [
+    "Jan",
+    "Feb",
+    "Mar",
+    "Apr",
+    "Mei",
+    "Jun",
+    "Jul",
+    "Agu",
+    "Sep",
+    "Okt",
+    "Nov",
+    "Des",
+];
 $revenueLine = [];
 for ($i = 1; $i <= 12; $i++) {
     $revenueLine[] = $adminMonthlyRevenue[$i] ?? 0;
 }
 ?>
-<?php admin_header('Transaksi', 'transaksi'); ?>
+<?php admin_header("Transaksi", "transaksi"); ?>
     <div class="p-md">
         <div class="flex justify-between items-end mb-lg mt-4">
             <div>
@@ -35,21 +48,33 @@ for ($i = 1; $i <= 12; $i++) {
             <article class="bg-surface-container border border-outline-variant p-5 rounded-xl shadow-sm">
                 <p class="text-[10px] font-bold uppercase tracking-widest text-on-surface-variant text-primary">Est. Pendapatan Hari Ini</p>
                 <div class="flex justify-between items-center mt-2">
-                    <h2 class="text-2xl font-bold font-headline-md text-on-surface">Rp <?= number_format($adminDashboardStats['revenueToday'], 0, ',', '.'); ?></h2>
+                    <h2 class="text-2xl font-bold font-headline-md text-on-surface">Rp <?= number_format(
+                        $adminDashboardStats["revenueToday"],
+                        0,
+                        ",",
+                        ".",
+                    ) ?></h2>
                     <span class="material-symbols-outlined text-outline-variant">payments</span>
                 </div>
             </article>
             <article class="bg-surface-container border border-outline-variant p-5 rounded-xl shadow-sm">
                 <p class="text-[10px] font-bold uppercase tracking-widest text-on-surface-variant text-primary">Est. Pendapatan Bulan Ini</p>
                 <div class="flex justify-between items-center mt-2">
-                    <h2 class="text-2xl font-bold font-headline-md text-on-surface">Rp <?= number_format($adminDashboardStats['revenueMonth'], 0, ',', '.'); ?></h2>
+                    <h2 class="text-2xl font-bold font-headline-md text-on-surface">Rp <?= number_format(
+                        $adminDashboardStats["revenueMonth"],
+                        0,
+                        ",",
+                        ".",
+                    ) ?></h2>
                     <span class="material-symbols-outlined text-outline-variant">account_balance_wallet</span>
                 </div>
             </article>
             <article class="bg-surface-container border border-outline-variant p-5 rounded-xl shadow-sm">
                 <p class="text-[10px] font-bold uppercase tracking-widest text-on-surface-variant text-primary">Total Transaksi Selesai (Hari ini)</p>
                 <div class="flex justify-between items-center mt-2">
-                    <h2 class="text-2xl font-bold font-headline-md text-on-surface"><?= $adminDashboardStats['completedToday']; ?> Transaksi</h2>
+                    <h2 class="text-2xl font-bold font-headline-md text-on-surface"><?= $adminDashboardStats[
+                        "completedToday"
+                    ] ?> Transaksi</h2>
                     <span class="material-symbols-outlined text-outline-variant">receipt_long</span>
                 </div>
             </article>
@@ -61,7 +86,9 @@ for ($i = 1; $i <= 12; $i++) {
                 <div class="flex items-center justify-between mb-4">
                     <div>
                         <h3 class="font-headline-md text-lg text-primary">Grafik Pendapatan</h3>
-                        <p class="text-xs text-on-surface-variant font-bold uppercase tracking-widest">Tren Pendapatan Tahun <?= date('Y') ?></p>
+                        <p class="text-xs text-on-surface-variant font-bold uppercase tracking-widest">Tren Pendapatan Tahun <?= date(
+                            "Y",
+                        ) ?></p>
                     </div>
                 </div>
                 <div class="relative h-72 w-full">
@@ -103,28 +130,65 @@ for ($i = 1; $i <= 12; $i++) {
                                 </tr>
                             </thead>
                             <tbody>
-                                <?php if ($transaksi && mysqli_num_rows($transaksi) > 0): ?>
-                                    <?php mysqli_data_seek($transaksi, 0); while ($trx = mysqli_fetch_assoc($transaksi)): ?>
+                                <?php if (
+                                    $transaksi &&
+                                    mysqli_num_rows($transaksi) > 0
+                                ): ?>
+                                    <?php
+                                    mysqli_data_seek($transaksi, 0);
+                                    while (
+                                        $trx = mysqli_fetch_assoc($transaksi)
+                                    ): ?>
                                         <tr class="hover:bg-surface-container-high/50 transition-colors">
                                             <td class="px-4 py-4 align-middle">
-                                                <p class="text-sm font-bold text-on-surface uppercase tracking-wider text-primary">#TRX-<?= str_pad((string)$trx['id'], 5, '0', STR_PAD_LEFT); ?></p>
-                                                <p class="text-[10px] font-bold text-on-surface-variant mt-1"><?= date('d M Y - H:i', strtotime($trx['waktu_bayar'])); ?></p>
+                                                <p class="text-sm font-bold text-on-surface uppercase tracking-wider text-primary">#TRX-<?= str_pad(
+                                                    (string) $trx["id"],
+                                                    5,
+                                                    "0",
+                                                    STR_PAD_LEFT,
+                                                ) ?></p>
+                                                <p class="text-[10px] font-bold text-on-surface-variant mt-1"><?= date(
+                                                    "d M Y - H:i",
+                                                    strtotime(
+                                                        $trx["waktu_bayar"],
+                                                    ),
+                                                ) ?></p>
                                             </td>
                                             <td class="px-4 py-4 align-middle">
-                                                <p class="text-sm font-bold text-on-surface"><?= htmlspecialchars($trx['nama_pelanggan']); ?></p>
-                                                <p class="text-[10px] uppercase tracking-widest text-on-surface-variant mt-1 font-bold">Kapster: <?= htmlspecialchars($trx['nama_barber']); ?></p>
+                                                <p class="text-sm font-bold text-on-surface"><?= htmlspecialchars(
+                                                    $trx["nama_pelanggan"],
+                                                ) ?></p>
+                                                <p class="text-[10px] uppercase tracking-widest text-on-surface-variant mt-1 font-bold">Kapster: <?= htmlspecialchars(
+                                                    $trx["nama_barber"],
+                                                ) ?></p>
                                             </td>
                                             <td class="px-4 py-4 text-sm font-medium text-on-surface align-middle">
-                                                <?= htmlspecialchars($trx['nama_layanan']); ?>
+                                                <?= htmlspecialchars(
+                                                    $trx["nama_layanan"],
+                                                ) ?>
                                             </td>
                                             <td class="px-4 py-4 text-sm font-bold text-on-surface align-middle">
-                                                Rp <?= number_format((int)$trx['total_harga'], 0, ',', '.'); ?>
+                                                Rp <?= number_format(
+                                                    (int) $trx["total_harga"],
+                                                    0,
+                                                    ",",
+                                                    ".",
+                                                ) ?>
                                             </td>
                                             <td class="px-4 py-4 text-sm font-bold text-on-surface align-middle uppercase">
-                                                <?= htmlspecialchars($trx['metode_pembayaran'] ?? 'CASH'); ?>
+                                                <?= htmlspecialchars(
+                                                    $trx["metode_pembayaran"] ??
+                                                        "CASH",
+                                                ) ?>
                                             </td>
                                             <td class="px-4 py-4 align-middle">
-                                                <?php if (strtolower($trx['status_pembayaran']) === 'lunas'): ?>
+                                                <?php if (
+                                                    strtolower(
+                                                        $trx[
+                                                            "status_pembayaran"
+                                                        ],
+                                                    ) === "lunas"
+                                                ): ?>
                                                     <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded text-xs font-bold bg-primary/10 text-primary border border-primary/30 uppercase tracking-widest">
                                                         <span class="material-symbols-outlined text-[14px]">check_circle</span> Lunas
                                                     </span>
@@ -135,12 +199,33 @@ for ($i = 1; $i <= 12; $i++) {
                                                 <?php endif; ?>
                                             </td>
                                             <td class="px-4 py-4 text-right align-middle">
-                                                <button onclick="showDetailTransaksi(<?= (int)$trx['id']; ?>, <?= htmlspecialchars(json_encode($trx['nama_pelanggan']), ENT_QUOTES); ?>, <?= htmlspecialchars(json_encode($trx['nama_barber']), ENT_QUOTES); ?>, <?= htmlspecialchars(json_encode($trx['nama_layanan']), ENT_QUOTES); ?>, <?= (int)$trx['total_harga']; ?>, <?= htmlspecialchars(json_encode($trx['status_pembayaran']), ENT_QUOTES); ?>, <?= htmlspecialchars(json_encode(date('d M Y H:i', strtotime($trx['waktu_bayar']))), ENT_QUOTES); ?>, <?= htmlspecialchars(json_encode($trx['metode_pembayaran'] ?? 'CASH'), ENT_QUOTES); ?>)" class="inline-flex h-8 w-8 items-center justify-center border border-outline-variant text-on-surface-variant rounded-lg transition-colors hover:text-primary hover:border-primary hover:bg-surface-container-high" title="Lihat Detail">
+                                                <button onclick="showDetailTransaksi(<?= (int) $trx[
+                                                    "id"
+                                                ] ?>, <?= htmlspecialchars(
+    json_encode($trx["nama_pelanggan"]),
+    ENT_QUOTES,
+) ?>, <?= htmlspecialchars(
+    json_encode($trx["nama_barber"]),
+    ENT_QUOTES,
+) ?>, <?= htmlspecialchars(
+    json_encode($trx["nama_layanan"]),
+    ENT_QUOTES,
+) ?>, <?= (int) $trx["total_harga"] ?>, <?= htmlspecialchars(
+    json_encode($trx["status_pembayaran"]),
+    ENT_QUOTES,
+) ?>, <?= htmlspecialchars(
+    json_encode(date("d M Y H:i", strtotime($trx["waktu_bayar"]))),
+    ENT_QUOTES,
+) ?>, <?= htmlspecialchars(
+    json_encode($trx["metode_pembayaran"] ?? "CASH"),
+    ENT_QUOTES,
+) ?>)" class="inline-flex h-8 w-8 items-center justify-center border border-outline-variant text-on-surface-variant rounded-lg transition-colors hover:text-primary hover:border-primary hover:bg-surface-container-high" title="Lihat Detail">
                                                     <span class="material-symbols-outlined text-[20px]">visibility</span>
                                                 </button>
                                             </td>
                                         </tr>
-                                    <?php endwhile; ?>
+                                    <?php endwhile;
+                                    ?>
                                 <?php endif; ?>
                             </tbody>
                         </table>
@@ -248,10 +333,10 @@ for ($i = 1; $i <= 12; $i++) {
     new Chart(ctxRevenue, {
         type: 'line',
         data: {
-            labels: <?= json_encode($monthsLine); ?>,
+            labels: <?= json_encode($monthsLine) ?>,
             datasets: [{
                 label: 'Pendapatan (Rp)',
-                data: <?= json_encode($revenueLine); ?>,
+                data: <?= json_encode($revenueLine) ?>,
                 backgroundColor: gradientFill,
                 borderColor: '#f2ca50',
                 borderWidth: 2,
@@ -323,4 +408,4 @@ for ($i = 1; $i <= 12; $i++) {
     `;
     document.head.appendChild(style);
 </script>
-<?php admin_footer('transaksi'); ?>
+<?php admin_footer("transaksi"); ?>

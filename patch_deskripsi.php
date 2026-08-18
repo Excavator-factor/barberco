@@ -1,1 +1,2 @@
-<?php // Script has been completed and safely disabled ?>
+<?php // Script has been completed and safely disabled
+?>

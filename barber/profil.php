@@ -1,121 +1,182 @@
 <?php
-include '_bootstrap.php';
-include '_chrome.php';
+include "_bootstrap.php";
+include "_chrome.php";
 
-$userId = (int)($_SESSION['user_id'] ?? 0);
-$profilNotice = '';
-$profilError = '';
+$userId = (int) ($_SESSION["user_id"] ?? 0);
+$profilNotice = "";
+$profilError = "";
 
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_profil'])) {
-    $nama = trim((string)($_POST['nama'] ?? ''));
-    $username = trim((string)($_POST['username'] ?? ''));
-    $password = trim((string)($_POST['password'] ?? ''));
-    $spesialisasi = trim((string)($_POST['spesialisasi'] ?? ''));
+if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST["update_profil"])) {
+    $nama = trim((string) ($_POST["nama"] ?? ""));
+    $username = trim((string) ($_POST["username"] ?? ""));
+    $password = trim((string) ($_POST["password"] ?? ""));
+    $spesialisasi = trim((string) ($_POST["spesialisasi"] ?? ""));
 
-    if ($nama === '' || $username === '') {
-        $profilError = 'Nama dan username tidak boleh kosong.';
+    if ($nama === "" || $username === "") {
+        $profilError = "Nama dan username tidak boleh kosong.";
     } else {
-        $check = mysqli_prepare($conn, 'SELECT id_user FROM users WHERE username = ? AND id_user != ? LIMIT 1');
-        mysqli_stmt_bind_param($check, 'si', $username, $userId);
+        $check = mysqli_prepare(
+            $conn,
+            "SELECT id_user FROM users WHERE username = ? AND id_user != ? LIMIT 1",
+        );
+        mysqli_stmt_bind_param($check, "si", $username, $userId);
         mysqli_stmt_execute($check);
         $exists = mysqli_stmt_get_result($check);
         if ($exists && mysqli_fetch_assoc($exists)) {
-            $profilError = 'Username sudah digunakan oleh akun lain.';
+            $profilError = "Username sudah digunakan oleh akun lain.";
         }
         mysqli_stmt_close($check);
 
         if (!$profilError) {
             $avatarFileName = null;
-            if (isset($_FILES['avatar']) && $_FILES['avatar']['error'] === UPLOAD_ERR_OK) {
-                $uploadDir = __DIR__ . '/../uploads/avatars/';
+            if (
+                isset($_FILES["avatar"]) &&
+                $_FILES["avatar"]["error"] === UPLOAD_ERR_OK
+            ) {
+                $uploadDir = __DIR__ . "/../uploads/avatars/";
                 if (!is_dir($uploadDir)) {
                     @mkdir($uploadDir, 0777, true);
                 }
-                $tmpName = $_FILES['avatar']['tmp_name'];
-                $ext = strtolower(pathinfo($_FILES['avatar']['name'], PATHINFO_EXTENSION));
-                $allowed = ['jpg', 'jpeg', 'png', 'webp'];
+                $tmpName = $_FILES["avatar"]["tmp_name"];
+                $ext = strtolower(
+                    pathinfo($_FILES["avatar"]["name"], PATHINFO_EXTENSION),
+                );
+                $allowed = ["jpg", "jpeg", "png", "webp"];
                 if (in_array($ext, $allowed)) {
-                    $avatarFileName = 'avatar_' . $userId . '_' . time() . '.' . $ext;
+                    $avatarFileName =
+                        "avatar_" . $userId . "_" . time() . "." . $ext;
                     move_uploaded_file($tmpName, $uploadDir . $avatarFileName);
                 } else {
-                    $profilError = 'Format gambar tidak didukung.';
+                    $profilError = "Format gambar tidak didukung.";
                 }
             }
 
             if (!$profilError) {
                 mysqli_begin_transaction($conn);
                 try {
-                    if ($password === '') {
+                    if ($password === "") {
                         if ($avatarFileName) {
-                            $stmt = mysqli_prepare($conn, "UPDATE users SET nama = ?, username = ?, avatar = ? WHERE id_user = ?");
-                            mysqli_stmt_bind_param($stmt, 'sssi', $nama, $username, $avatarFileName, $userId);
+                            $stmt = mysqli_prepare(
+                                $conn,
+                                "UPDATE users SET nama = ?, username = ?, avatar = ? WHERE id_user = ?",
+                            );
+                            mysqli_stmt_bind_param(
+                                $stmt,
+                                "sssi",
+                                $nama,
+                                $username,
+                                $avatarFileName,
+                                $userId,
+                            );
                         } else {
-                            $stmt = mysqli_prepare($conn, "UPDATE users SET nama = ?, username = ? WHERE id_user = ?");
-                            mysqli_stmt_bind_param($stmt, 'ssi', $nama, $username, $userId);
+                            $stmt = mysqli_prepare(
+                                $conn,
+                                "UPDATE users SET nama = ?, username = ? WHERE id_user = ?",
+                            );
+                            mysqli_stmt_bind_param(
+                                $stmt,
+                                "ssi",
+                                $nama,
+                                $username,
+                                $userId,
+                            );
                         }
                     } else {
                         if ($avatarFileName) {
-                            $stmt = mysqli_prepare($conn, "UPDATE users SET nama = ?, username = ?, password = ?, avatar = ? WHERE id_user = ?");
-                            mysqli_stmt_bind_param($stmt, 'ssssi', $nama, $username, $password, $avatarFileName, $userId);
+                            $stmt = mysqli_prepare(
+                                $conn,
+                                "UPDATE users SET nama = ?, username = ?, password = ?, avatar = ? WHERE id_user = ?",
+                            );
+                            mysqli_stmt_bind_param(
+                                $stmt,
+                                "ssssi",
+                                $nama,
+                                $username,
+                                $password,
+                                $avatarFileName,
+                                $userId,
+                            );
                         } else {
-                            $stmt = mysqli_prepare($conn, "UPDATE users SET nama = ?, username = ?, password = ? WHERE id_user = ?");
-                            mysqli_stmt_bind_param($stmt, 'sssi', $nama, $username, $password, $userId);
+                            $stmt = mysqli_prepare(
+                                $conn,
+                                "UPDATE users SET nama = ?, username = ?, password = ? WHERE id_user = ?",
+                            );
+                            mysqli_stmt_bind_param(
+                                $stmt,
+                                "sssi",
+                                $nama,
+                                $username,
+                                $password,
+                                $userId,
+                            );
                         }
                     }
-                mysqli_stmt_execute($stmt);
-                mysqli_stmt_close($stmt);
+                    mysqli_stmt_execute($stmt);
+                    mysqli_stmt_close($stmt);
 
-                // Update data barber
-                $stmtBarber = mysqli_prepare($conn, "UPDATE barber SET nama = ?, spesialisasi = ? WHERE user_id = ?");
-                mysqli_stmt_bind_param($stmtBarber, 'ssi', $nama, $spesialisasi, $userId);
-                mysqli_stmt_execute($stmtBarber);
-                mysqli_stmt_close($stmtBarber);
+                    // Update data barber
+                    $stmtBarber = mysqli_prepare(
+                        $conn,
+                        "UPDATE barber SET nama = ?, spesialisasi = ? WHERE user_id = ?",
+                    );
+                    mysqli_stmt_bind_param(
+                        $stmtBarber,
+                        "ssi",
+                        $nama,
+                        $spesialisasi,
+                        $userId,
+                    );
+                    mysqli_stmt_execute($stmtBarber);
+                    mysqli_stmt_close($stmtBarber);
 
-                mysqli_commit($conn);
-                $_SESSION['nama'] = $nama;
-                $_SESSION['username'] = $username;
-                $GLOBALS['barberName'] = $nama;
-                $GLOBALS['barberSpecialties'] = $spesialisasi;
-                if ($avatarFileName) {
-                    $_SESSION['avatar'] = $avatarFileName;
+                    mysqli_commit($conn);
+                    $_SESSION["nama"] = $nama;
+                    $_SESSION["username"] = $username;
+                    $GLOBALS["barberName"] = $nama;
+                    $GLOBALS["barberSpecialties"] = $spesialisasi;
+                    if ($avatarFileName) {
+                        $_SESSION["avatar"] = $avatarFileName;
+                    }
+
+                    $profilNotice = "Profil berhasil diperbarui.";
+                } catch (Exception $e) {
+                    mysqli_rollback($conn);
+                    $profilError = "Gagal mempebarui profil.";
                 }
-                
-                $profilNotice = 'Profil berhasil diperbarui.';
-            } catch (Exception $e) {
-                mysqli_rollback($conn);
-                $profilError = 'Gagal mempebarui profil.';
             }
-        }
         }
     }
 }
 
-$stmt = mysqli_prepare($conn, 'SELECT u.nama, u.username, u.avatar, b.spesialisasi FROM users u LEFT JOIN barber b ON u.id_user = b.user_id WHERE u.id_user = ? LIMIT 1');
-mysqli_stmt_bind_param($stmt, 'i', $userId);
+$stmt = mysqli_prepare(
+    $conn,
+    "SELECT u.nama, u.username, u.avatar, b.spesialisasi FROM users u LEFT JOIN barber b ON u.id_user = b.user_id WHERE u.id_user = ? LIMIT 1",
+);
+mysqli_stmt_bind_param($stmt, "i", $userId);
 mysqli_stmt_execute($stmt);
 $result = mysqli_stmt_get_result($stmt);
 $user = $result ? mysqli_fetch_assoc($result) : null;
 mysqli_stmt_close($stmt);
 
-$currentNama = $user['nama'] ?? $_SESSION['nama'] ?? '';
-$currentUsername = $user['username'] ?? $_SESSION['username'] ?? '';
-$currentSpesialisasi = $user['spesialisasi'] ?? '';
-$currentAvatar = $user['avatar'] ?? null;
+$currentNama = $user["nama"] ?? ($_SESSION["nama"] ?? "");
+$currentUsername = $user["username"] ?? ($_SESSION["username"] ?? "");
+$currentSpesialisasi = $user["spesialisasi"] ?? "";
+$currentAvatar = $user["avatar"] ?? null;
 ?>
 <!DOCTYPE html>
 <html class="dark" lang="id">
 <head>
-    <?php barber_head('Pengaturan Profil'); ?>
+    <?php barber_head("Pengaturan Profil"); ?>
 </head>
 <body class="bg-background text-on-background font-body-md selection:bg-primary selection:text-on-primary">
 <div class="flex h-screen overflow-hidden">
     <!-- Sidebar Navigation -->
-    <?php barber_sidebar('profil'); ?>
+    <?php barber_sidebar("profil"); ?>
 
     <!-- Main Content Area -->
     <main class="flex-grow md:ml-[250px] flex flex-col h-screen overflow-hidden min-w-0">
         <!-- Top Bar -->
-        <?php barber_header('Pengaturan Profil'); ?>
+        <?php barber_header("Pengaturan Profil"); ?>
 
         <!-- Dashboard Canvas -->
         <!-- Dashboard Canvas -->
@@ -161,14 +222,18 @@ $currentAvatar = $user['avatar'] ?? null;
                 <?php if ($profilNotice): ?>
                     <div class="glass-card mb-6 p-4 rounded-lg flex items-center gap-3 border-green-500/30 text-green-400">
                         <span class="material-symbols-outlined">check_circle</span>
-                        <span class="font-bold text-sm"><?= htmlspecialchars($profilNotice); ?></span>
+                        <span class="font-bold text-sm"><?= htmlspecialchars(
+                            $profilNotice,
+                        ) ?></span>
                     </div>
                 <?php endif; ?>
 
                 <?php if ($profilError): ?>
                     <div class="glass-card mb-6 p-4 rounded-lg flex items-center gap-3 border-red-500/30 text-red-400">
                         <span class="material-symbols-outlined">error</span>
-                        <span class="font-bold text-sm"><?= htmlspecialchars($profilError); ?></span>
+                        <span class="font-bold text-sm"><?= htmlspecialchars(
+                            $profilError,
+                        ) ?></span>
                     </div>
                 <?php endif; ?>
 
@@ -181,8 +246,17 @@ $currentAvatar = $user['avatar'] ?? null;
                         <!-- Avatar Display -->
                         <div class="flex flex-col items-center gap-4 mb-6">
                             <div class="relative group w-24 h-24 rounded-full border-2 border-primary/30 flex items-center justify-center overflow-hidden bg-surface-container-high shrink-0 transition-all hover:border-primary/60">
-                                <?php if ($currentAvatar && file_exists(__DIR__ . '/../uploads/avatars/' . $currentAvatar)): ?>
-                                    <img id="avatarPreview" class="w-full h-full object-cover" src="../uploads/avatars/<?= htmlspecialchars($currentAvatar) ?>" alt="Avatar">
+                                <?php if (
+                                    $currentAvatar &&
+                                    file_exists(
+                                        __DIR__ .
+                                            "/../uploads/avatars/" .
+                                            $currentAvatar,
+                                    )
+                                ): ?>
+                                    <img id="avatarPreview" class="w-full h-full object-cover" src="../uploads/avatars/<?= htmlspecialchars(
+                                        $currentAvatar,
+                                    ) ?>" alt="Avatar">
                                 <?php else: ?>
                                     <img id="avatarPreview" class="w-full h-full object-cover hidden" src="" alt="Avatar">
                                     <span id="avatarFallback" class="material-symbols-outlined text-5xl text-primary/70">person</span>
@@ -193,7 +267,9 @@ $currentAvatar = $user['avatar'] ?? null;
                                 </label>
                             </div>
                             <div class="text-center">
-                                <h3 class="font-bold text-white mb-2 text-lg"><?= htmlspecialchars($currentUsername); ?></h3>
+                                <h3 class="font-bold text-white mb-2 text-lg"><?= htmlspecialchars(
+                                    $currentUsername,
+                                ) ?></h3>
                                 <span class="bg-primary/20 text-primary border border-primary/30 px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider">BARBER</span>
                             </div>
                         </div>
@@ -202,16 +278,22 @@ $currentAvatar = $user['avatar'] ?? null;
                         <div class="w-full space-y-4">
                             <div class="flex items-center gap-3 text-on-surface-variant">
                                 <span class="material-symbols-outlined text-sm text-primary">badge</span>
-                                <span class="text-sm"><?= htmlspecialchars($currentNama); ?></span>
+                                <span class="text-sm"><?= htmlspecialchars(
+                                    $currentNama,
+                                ) ?></span>
                             </div>
                             <div class="flex items-center gap-3 text-on-surface-variant">
                                 <span class="material-symbols-outlined text-sm text-primary">person</span>
-                                <span class="text-sm">@<?= htmlspecialchars($currentUsername); ?></span>
+                                <span class="text-sm">@<?= htmlspecialchars(
+                                    $currentUsername,
+                                ) ?></span>
                             </div>
-                            <?php if($currentSpesialisasi): ?>
+                            <?php if ($currentSpesialisasi): ?>
                             <div class="flex items-center gap-3 text-on-surface-variant">
                                 <span class="material-symbols-outlined text-sm text-primary">content_cut</span>
-                                <span class="text-sm"><?= htmlspecialchars($currentSpesialisasi); ?></span>
+                                <span class="text-sm"><?= htmlspecialchars(
+                                    $currentSpesialisasi,
+                                ) ?></span>
                             </div>
                             <?php endif; ?>
                         </div>
@@ -229,15 +311,21 @@ $currentAvatar = $user['avatar'] ?? null;
                             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                                 <div class="space-y-2">
                                     <label class="font-bold text-[11px] text-white tracking-widest ml-1 uppercase">Nama Lengkap</label>
-                                    <input name="nama" class="w-full h-12 px-4 rounded-lg form-input text-sm" placeholder="Nama Lengkap" type="text" value="<?= htmlspecialchars($currentNama); ?>" required>
+                                    <input name="nama" class="w-full h-12 px-4 rounded-lg form-input text-sm" placeholder="Nama Lengkap" type="text" value="<?= htmlspecialchars(
+                                        $currentNama,
+                                    ) ?>" required>
                                 </div>
                                 <div class="space-y-2">
                                     <label class="font-bold text-[11px] text-white tracking-widest ml-1 uppercase">Username</label>
-                                    <input name="username" class="w-full h-12 px-4 rounded-lg form-input text-sm" placeholder="@username" type="text" value="<?= htmlspecialchars($currentUsername); ?>" required>
+                                    <input name="username" class="w-full h-12 px-4 rounded-lg form-input text-sm" placeholder="@username" type="text" value="<?= htmlspecialchars(
+                                        $currentUsername,
+                                    ) ?>" required>
                                 </div>
                                 <div class="space-y-2 md:col-span-2">
                                     <label class="font-bold text-[11px] text-white tracking-widest ml-1 uppercase">Spesialisasi Artistik</label>
-                                    <input name="spesialisasi" class="w-full h-12 px-4 rounded-lg form-input text-sm" placeholder="Cth: Classic Fade, Hair Tattoo, Taper" type="text" value="<?= htmlspecialchars($currentSpesialisasi); ?>">
+                                    <input name="spesialisasi" class="w-full h-12 px-4 rounded-lg form-input text-sm" placeholder="Cth: Classic Fade, Hair Tattoo, Taper" type="text" value="<?= htmlspecialchars(
+                                        $currentSpesialisasi,
+                                    ) ?>">
                                 </div>
                             </div>
                             <div class="w-full h-px bg-white/10 my-6"></div>
@@ -266,7 +354,7 @@ $currentAvatar = $user['avatar'] ?? null;
         </div>
     </main>
 </div>
-<?php barber_mobile_nav('profil'); ?>
+<?php barber_mobile_nav("profil"); ?>
 <?php barber_scripts(); ?>
 <script>
     function previewAvatar(input) {

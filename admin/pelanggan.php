@@ -1,3 +1,3 @@
 <?php
 header("Location: pengguna.php");
-exit;
+exit();

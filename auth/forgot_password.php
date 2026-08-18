@@ -1,19 +1,22 @@
 <?php
 session_start();
-include '../config/database.php';
+include "../config/database.php";
 
 $submitted = false;
-$error = '';
+$error = "";
 
-if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $recoveryId = trim($_POST['recovery_id'] ?? '');
+if ($_SERVER["REQUEST_METHOD"] === "POST") {
+    $recoveryId = trim($_POST["recovery_id"] ?? "");
 
-    if ($recoveryId === '') {
-        $error = 'Masukkan username Anda terlebih dahulu.';
+    if ($recoveryId === "") {
+        $error = "Masukkan username Anda terlebih dahulu.";
     } else {
-        $stmt = mysqli_prepare($conn, 'SELECT id_user FROM users WHERE username = ? LIMIT 1');
+        $stmt = mysqli_prepare(
+            $conn,
+            "SELECT id_user FROM users WHERE username = ? LIMIT 1",
+        );
         if ($stmt) {
-            mysqli_stmt_bind_param($stmt, 's', $recoveryId);
+            mysqli_stmt_bind_param($stmt, "s", $recoveryId);
             mysqli_stmt_execute($stmt);
             mysqli_stmt_close($stmt);
         }
@@ -74,7 +77,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                 Swal.fire({
                                     icon: 'error',
                                     title: 'Terjadi Kesalahan',
-                                    text: '<?= htmlspecialchars($error, ENT_QUOTES); ?>',
+                                    text: '<?= htmlspecialchars(
+                                        $error,
+                                        ENT_QUOTES,
+                                    ) ?>',
                                     background: '#f8fafc',
                                     color: '#0f172a',
                                     confirmButtonColor: '#0f172a',
@@ -102,6 +108,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             </div>
         </section>
     </main>
-    <footer class="flex flex-col items-center justify-between gap-4 border-t border-slate-200 bg-white px-6 py-7 text-[10px] font-bold tracking-[.15em] text-slate-500 sm:flex-row sm:px-12"><span>BARBER.CO &mdash; HAK CIPTA &copy; <?= date('Y'); ?></span><span>PRIVASI &nbsp;&nbsp; BANTUAN</span></footer>
+    <footer class="flex flex-col items-center justify-between gap-4 border-t border-slate-200 bg-white px-6 py-7 text-[10px] font-bold tracking-[.15em] text-slate-500 sm:flex-row sm:px-12"><span>BARBER.CO &mdash; HAK CIPTA &copy; <?= date(
+        "Y",
+    ) ?></span><span>PRIVASI &nbsp;&nbsp; BANTUAN</span></footer>
 </body>
 </html>

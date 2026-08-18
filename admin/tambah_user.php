@@ -1,37 +1,43 @@
 <?php
-include '../config/database.php';
-include '../config/helper.php';
-check_login('admin');
+include "../config/database.php";
+include "../config/helper.php";
+check_login("admin");
 
-$error = '';
-$success = '';
+$error = "";
+$success = "";
 
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['create_user'])) {
-    $nama = mysqli_real_escape_string($conn, $_POST['nama']);
-    $username = mysqli_real_escape_string($conn, $_POST['username']);
-    $role = mysqli_real_escape_string($conn, $_POST['role']);
-    $password = mysqli_real_escape_string($conn, $_POST['password']);
-    
-    if ($role === 'customer') {
-        $role = 'pelanggan';
-    } else if ($role === 'staff') {
-        $role = 'admin'; // We map staff to admin in the system
+if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST["create_user"])) {
+    $nama = mysqli_real_escape_string($conn, $_POST["nama"]);
+    $username = mysqli_real_escape_string($conn, $_POST["username"]);
+    $role = mysqli_real_escape_string($conn, $_POST["role"]);
+    $password = mysqli_real_escape_string($conn, $_POST["password"]);
+
+    if ($role === "customer") {
+        $role = "pelanggan";
+    } elseif ($role === "staff") {
+        $role = "admin"; // We map staff to admin in the system
     } else {
-        $role = 'pelanggan';
+        $role = "pelanggan";
     }
 
-    if ($username === '' || $password === '') {
-        $error = 'Username dan password wajib diisi.';
+    if ($username === "" || $password === "") {
+        $error = "Username dan password wajib diisi.";
     } else {
-        $check = mysqli_query($conn, "SELECT id_user FROM users WHERE username = '$username' LIMIT 1");
+        $check = mysqli_query(
+            $conn,
+            "SELECT id_user FROM users WHERE username = '$username' LIMIT 1",
+        );
         if ($check && mysqli_num_rows($check) > 0) {
-            $error = 'Username sudah digunakan.';
+            $error = "Username sudah digunakan.";
         } else {
-            $insert = mysqli_query($conn, "INSERT INTO users (username, password, role, nama) VALUES ('$username', '$password', '$role', '$nama')");
+            $insert = mysqli_query(
+                $conn,
+                "INSERT INTO users (username, password, role, nama) VALUES ('$username', '$password', '$role', '$nama')",
+            );
             if ($insert) {
-                $success = 'Akun pengguna baru berhasil ditambahkan.';
+                $success = "Akun pengguna baru berhasil ditambahkan.";
             } else {
-                $error = 'Gagal menyimpan data pengguna.';
+                $error = "Gagal menyimpan data pengguna.";
             }
         }
     }
@@ -186,16 +192,23 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['create_user'])) {
 <div class="flex items-center gap-md">
 <div class="h-8 w-px bg-outline-variant"></div>
 <div class="flex items-center gap-sm cursor-pointer active:opacity-80 transition-opacity">
-<?php if (!empty($_SESSION['avatar']) && file_exists(__DIR__ . '/../uploads/avatars/' . $_SESSION['avatar'])): ?>
+<?php if (
+    !empty($_SESSION["avatar"]) &&
+    file_exists(__DIR__ . "/../uploads/avatars/" . $_SESSION["avatar"])
+): ?>
 <div class="w-8 h-8 rounded-full border border-primary flex items-center justify-center bg-surface-container overflow-hidden">
-<img src="../uploads/avatars/<?= htmlspecialchars($_SESSION['avatar']) ?>" class="w-full h-full object-cover">
+<img src="../uploads/avatars/<?= htmlspecialchars(
+    $_SESSION["avatar"],
+) ?>" class="w-full h-full object-cover">
 </div>
 <?php else: ?>
 <div class="w-8 h-8 rounded-full border border-primary flex items-center justify-center bg-surface-container text-primary">
 <span class="material-symbols-outlined text-sm">person</span>
 </div>
 <?php endif; ?>
-<span class="font-label-caps text-label-caps text-primary uppercase"><?= htmlspecialchars($_SESSION['username'] ?? 'Admin'); ?></span>
+<span class="font-label-caps text-label-caps text-primary uppercase"><?= htmlspecialchars(
+    $_SESSION["username"] ?? "Admin",
+) ?></span>
 </div>
 </div>
 </header>
@@ -217,13 +230,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['create_user'])) {
 </a>
 </div>
 
-<?php if($error): ?>
+<?php if ($error): ?>
     <script>
         document.addEventListener('DOMContentLoaded', function() {
             Swal.fire({
                 icon: 'error',
                 title: 'Data Gagal Disimpan',
-                text: '<?= htmlspecialchars($error, ENT_QUOTES); ?>',
+                text: '<?= htmlspecialchars($error, ENT_QUOTES) ?>',
                 background: '#1e2020',
                 color: '#e2e2e2',
                 confirmButtonColor: '#f2ca50',
@@ -232,13 +245,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['create_user'])) {
         });
     </script>
 <?php endif; ?>
-<?php if($success): ?>
+<?php if ($success): ?>
     <script>
         document.addEventListener('DOMContentLoaded', function() {
             Swal.fire({
                 icon: 'success',
                 title: 'Berhasil',
-                text: '<?= htmlspecialchars($success, ENT_QUOTES); ?>',
+                text: '<?= htmlspecialchars($success, ENT_QUOTES) ?>',
                 background: '#1e2020',
                 color: '#e2e2e2',
                 confirmButtonColor: '#f2ca50',

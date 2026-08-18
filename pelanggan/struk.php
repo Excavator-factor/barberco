@@ -1,17 +1,18 @@
 <?php
-include '../config/database.php';
-include '../config/helper.php';
+include "../config/database.php";
+include "../config/helper.php";
 
 // 1. Ubah akses dari 'barber' menjadi 'pelanggan'
-check_login('pelanggan');
+check_login("pelanggan");
 
-if (!isset($_GET['id'])) {
-    header('Location: dashboard.php');
-    exit;
+if (!isset($_GET["id"])) {
+    header("Location: dashboard.php");
+    exit();
 }
 
-$transaksi_id = (int)$_GET['id'];
-$pelanggan_id = $_SESSION['id_user'] ?? $_SESSION['user_id'] ?? $_SESSION['id'] ?? 0;
+$transaksi_id = (int) $_GET["id"];
+$pelanggan_id =
+    $_SESSION["id_user"] ?? ($_SESSION["user_id"] ?? ($_SESSION["id"] ?? 0));
 
 // 2. Query disesuaikan agar pelanggan hanya bisa melihat struk miliknya sendiri
 $query = "SELECT t.*, a.tanggal, a.no_antrian, 
@@ -27,12 +28,12 @@ $query = "SELECT t.*, a.tanggal, a.no_antrian,
 $result = mysqli_query($conn, $query);
 
 if (!$result || mysqli_num_rows($result) === 0) {
-    header('Location: dashboard.php');
-    exit;
+    header("Location: dashboard.php");
+    exit();
 }
 
 $data = mysqli_fetch_assoc($result);
-$barberName = $data['nama_barber'] ?? 'Artisan';
+$barberName = $data["nama_barber"] ?? "Artisan";
 ?>
 <!DOCTYPE html>
 <html lang="id">
@@ -99,39 +100,68 @@ $barberName = $data['nama_barber'] ?? 'Artisan';
         <div class="text-xs space-y-1">
             <div class="flex justify-between">
                 <span>TRX:</span>
-                <span>#<?= str_pad($transaksi_id, 6, "0", STR_PAD_LEFT) ?></span>
+                <span>#<?= str_pad(
+                    $transaksi_id,
+                    6,
+                    "0",
+                    STR_PAD_LEFT,
+                ) ?></span>
             </div>
             <div class="flex justify-between">
                 <span>DATE:</span>
-                <span><?= date('d/m/Y', strtotime($data['waktu_bayar'])) ?></span>
+                <span><?= date(
+                    "d/m/Y",
+                    strtotime($data["waktu_bayar"]),
+                ) ?></span>
             </div>
             <div class="flex justify-between">
                 <span>TIME:</span>
-                <span><?= date('H:i:s', strtotime($data['waktu_bayar'])) ?></span>
+                <span><?= date(
+                    "H:i:s",
+                    strtotime($data["waktu_bayar"]),
+                ) ?></span>
             </div>
             <div class="flex justify-between">
                 <span>ARTISAN:</span>
-                <span class="uppercase"><?= htmlspecialchars($barberName) ?></span>
+                <span class="uppercase"><?= htmlspecialchars(
+                    $barberName,
+                ) ?></span>
             </div>
         </div>
 
         <div class="dotted-line"></div>
 
         <!-- Customer & Service -->
-        <div class="text-xs mb-2 font-bold uppercase">PELANGGAN: <?= htmlspecialchars($data['nama_pelanggan']) ?> (Q: <?= $data['no_antrian'] ?>)</div>
+        <div class="text-xs mb-2 font-bold uppercase">PELANGGAN: <?= htmlspecialchars(
+            $data["nama_pelanggan"],
+        ) ?> (Q: <?= $data["no_antrian"] ?>)</div>
         <div class="text-xs mb-4">
             <div class="flex justify-between font-bold">
-                <span class="uppercase flex-1"><?= htmlspecialchars($data['nama_layanan']) ?></span>
-                <span class="whitespace-nowrap ml-2">Rp <?= number_format($data['harga'] ?? $data['total_harga'], 0, ',', '.') ?></span>
+                <span class="uppercase flex-1"><?= htmlspecialchars(
+                    $data["nama_layanan"],
+                ) ?></span>
+                <span class="whitespace-nowrap ml-2">Rp <?= number_format(
+                    $data["harga"] ?? $data["total_harga"],
+                    0,
+                    ",",
+                    ".",
+                ) ?></span>
             </div>
-            <div class="text-[10px] mt-1">Status: LUNAS &bull; <span class="uppercase">Method: <?= htmlspecialchars($data['metode_pembayaran'] ?? 'CASH') ?></span></div>
+            <div class="text-[10px] mt-1">Status: LUNAS &bull; <span class="uppercase">Method: <?= htmlspecialchars(
+                $data["metode_pembayaran"] ?? "CASH",
+            ) ?></span></div>
         </div>
 
         <div class="dotted-line"></div>
 
         <div class="flex justify-between items-end mt-4 mb-6">
             <span class="text-xs font-bold">TOTAL:</span>
-            <span class="text-lg font-bold">Rp <?= number_format($data['total_harga'], 0, ',', '.') ?></span>
+            <span class="text-lg font-bold">Rp <?= number_format(
+                $data["total_harga"],
+                0,
+                ",",
+                ".",
+            ) ?></span>
         </div>
 
         <div class="text-center text-[10px] space-y-1">

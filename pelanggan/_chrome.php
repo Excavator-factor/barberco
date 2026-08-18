@@ -4,7 +4,7 @@ function pelanggan_theme_head(string $title): void
     ?>
     <meta charset="utf-8">
     <meta content="width=device-width, initial-scale=1.0" name="viewport">
-    <title><?= htmlspecialchars($title); ?> | Barber.co</title>
+    <title><?= htmlspecialchars($title) ?> | Barber.co</title>
     <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Montserrat:wght@500;600;700;800;900&family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet">
@@ -82,12 +82,11 @@ function pelanggan_theme_head(string $title): void
 function pelanggan_sidebar(string $active): void
 {
     $links = [
-        ['dashboard.php', 'dashboard', 'ringkasan', 'Dashboard'],
-        ['katalog.php', 'content_cut', 'katalog', 'Katalog Layanan'],
-        ['riwayat.php', 'history', 'riwayat', 'Riwayat'],
-        ['profil.php', 'person', 'profil', 'Profil'],
-    ];
-    ?>
+        ["dashboard.php", "dashboard", "ringkasan", "Dashboard"],
+        ["katalog.php", "content_cut", "katalog", "Katalog Layanan"],
+        ["riwayat.php", "history", "riwayat", "Riwayat"],
+        ["profil.php", "person", "profil", "Profil"],
+    ]; ?>
     <script>if(localStorage.getItem('pelangganSidebarCollapsed') === '1') document.body.classList.add('pelanggan-sidebar-collapsed');</script>
     <aside data-pelanggan-sidebar class="fixed left-0 top-0 z-50 hidden h-screen w-64 flex-col overflow-y-auto border-r border-outline bg-surface-panel py-6 md:flex">
         <div class="mb-10 px-5">
@@ -109,9 +108,17 @@ function pelanggan_sidebar(string $active): void
 
         <nav class="flex-1 space-y-2 px-2">
             <?php foreach ($links as [$href, $icon, $key, $label]): ?>
-                <a class="<?= $active === $key ? 'flex items-center gap-3 bg-primary px-4 py-3 text-[12px] font-black uppercase tracking-[0.12em] text-on-primary shadow-[0_0_18px_rgba(242,202,80,.18)]' : 'flex items-center gap-3 px-4 py-3 text-[12px] font-black uppercase tracking-[0.12em] text-on-muted transition hover:bg-surface-high hover:text-primary'; ?>" href="<?= htmlspecialchars($href); ?>">
-                    <span class="material-symbols-outlined"><?= htmlspecialchars($icon); ?></span>
-                    <span class="pelanggan-sidebar-label"><?= htmlspecialchars($label); ?></span>
+                <a class="<?= $active === $key
+                    ? "flex items-center gap-3 bg-primary px-4 py-3 text-[12px] font-black uppercase tracking-[0.12em] text-on-primary shadow-[0_0_18px_rgba(242,202,80,.18)]"
+                    : "flex items-center gap-3 px-4 py-3 text-[12px] font-black uppercase tracking-[0.12em] text-on-muted transition hover:bg-surface-high hover:text-primary" ?>" href="<?= htmlspecialchars(
+    $href,
+) ?>">
+                    <span class="material-symbols-outlined"><?= htmlspecialchars(
+                        $icon,
+                    ) ?></span>
+                    <span class="pelanggan-sidebar-label"><?= htmlspecialchars(
+                        $label,
+                    ) ?></span>
                 </a>
             <?php endforeach; ?>
         </nav>
@@ -120,12 +127,24 @@ function pelanggan_sidebar(string $active): void
             <div class="pelanggan-sidebar-footer-profile mx-3 mb-3 border border-outline bg-surface-low p-4">
                 <p class="text-[10px] font-black uppercase tracking-[.18em] text-on-muted mb-2">Profil Pengguna</p>
                 <div class="flex items-center gap-3">
-                    <?php if (!empty($_SESSION['avatar']) && file_exists(__DIR__ . '/../uploads/avatars/' . $_SESSION['avatar'])): ?>
+                    <?php if (
+                        !empty($_SESSION["avatar"]) &&
+                        file_exists(
+                            __DIR__ .
+                                "/../uploads/avatars/" .
+                                $_SESSION["avatar"],
+                        )
+                    ): ?>
                         <div class="w-8 h-8 rounded border border-primary overflow-hidden flex-shrink-0">
-                            <img src="../uploads/avatars/<?= htmlspecialchars($_SESSION['avatar']); ?>" class="w-full h-full object-cover">
+                            <img src="../uploads/avatars/<?= htmlspecialchars(
+                                $_SESSION["avatar"],
+                            ) ?>" class="w-full h-full object-cover">
                         </div>
                     <?php endif; ?>
-                    <p class="text-sm font-bold text-on-surface"><?= htmlspecialchars($GLOBALS['username'] ?? ($_SESSION['username'] ?? 'Pelanggan')); ?></p>
+                    <p class="text-sm font-bold text-on-surface"><?= htmlspecialchars(
+                        $GLOBALS["username"] ??
+                            ($_SESSION["username"] ?? "Pelanggan"),
+                    ) ?></p>
                 </div>
             </div>
             <a href="../auth/logout.php" class="flex items-center gap-3 px-4 py-3 text-[12px] font-black uppercase tracking-[0.12em] text-on-muted transition hover:text-error">
@@ -173,23 +192,37 @@ function pelanggan_sidebar(string $active): void
     <?php
 }
 
-function pelanggan_topbar(string $subtitle = 'Portal Pelanggan'): void
+function pelanggan_topbar(string $subtitle = "Portal Pelanggan"): void
 {
     ?>
     <header class="sticky top-0 z-40 flex h-16 items-center justify-between border-b border-outline bg-surface px-5 md:px-8">
         <div class="flex items-center gap-4">
-            <div class="border border-outline bg-surface-high px-3 py-1 text-[12px] font-black uppercase tracking-[.18em] text-primary" data-realtime-clock><?= date('H:i:s'); ?></div>
+            <div class="border border-outline bg-surface-high px-3 py-1 text-[12px] font-black uppercase tracking-[.18em] text-primary" data-realtime-clock><?= date(
+                "H:i:s",
+            ) ?></div>
             <span class="hidden text-on-muted/50 md:block">|</span>
-            <span class="hidden text-sm text-on-muted md:block"><?= htmlspecialchars($subtitle); ?></span>
+            <span class="hidden text-sm text-on-muted md:block"><?= htmlspecialchars(
+                $subtitle,
+            ) ?></span>
         </div>
         <div class="flex items-center gap-4">
             <div class="flex items-center gap-2">
-                <?php if (!empty($_SESSION['avatar']) && file_exists(__DIR__ . '/../uploads/avatars/' . $_SESSION['avatar'])): ?>
+                <?php if (
+                    !empty($_SESSION["avatar"]) &&
+                    file_exists(
+                        __DIR__ . "/../uploads/avatars/" . $_SESSION["avatar"],
+                    )
+                ): ?>
                     <div class="w-8 h-8 rounded border border-primary overflow-hidden hidden sm:block">
-                        <img src="../uploads/avatars/<?= htmlspecialchars($_SESSION['avatar']); ?>" class="w-full h-full object-cover">
+                        <img src="../uploads/avatars/<?= htmlspecialchars(
+                            $_SESSION["avatar"],
+                        ) ?>" class="w-full h-full object-cover">
                     </div>
                 <?php endif; ?>
-                <span class="hidden text-sm text-on-muted sm:inline">Halo, <strong class="uppercase text-on-surface"><?= htmlspecialchars($GLOBALS['username'] ?? ($_SESSION['username'] ?? 'Pelanggan')); ?></strong></span>
+                <span class="hidden text-sm text-on-muted sm:inline">Halo, <strong class="uppercase text-on-surface"><?= htmlspecialchars(
+                    $GLOBALS["username"] ??
+                        ($_SESSION["username"] ?? "Pelanggan"),
+                ) ?></strong></span>
             </div>
             <a href="../auth/logout.php" class="flex h-10 w-10 items-center justify-center border border-outline text-on-muted transition hover:border-primary hover:text-primary" title="Keluar">
                 <span class="material-symbols-outlined">logout</span>
@@ -202,17 +235,22 @@ function pelanggan_topbar(string $subtitle = 'Portal Pelanggan'): void
 function pelanggan_mobile_nav(string $active): void
 {
     $links = [
-        ['dashboard.php', 'dashboard', 'ringkasan', 'Dashboard'],
-        ['katalog.php', 'content_cut', 'katalog', 'Katalog'],
-        ['riwayat.php', 'history', 'riwayat', 'Riwayat'],
-        ['profil.php', 'person', 'profil', 'Profil'],
-    ];
-    ?>
+        ["dashboard.php", "dashboard", "ringkasan", "Dashboard"],
+        ["katalog.php", "content_cut", "katalog", "Katalog"],
+        ["riwayat.php", "history", "riwayat", "Riwayat"],
+        ["profil.php", "person", "profil", "Profil"],
+    ]; ?>
     <nav class="fixed bottom-0 left-0 z-50 flex w-full justify-around border-t border-outline bg-surface-panel py-3 md:hidden">
         <?php foreach ($links as [$href, $icon, $key, $label]): ?>
-            <a href="<?= htmlspecialchars($href); ?>" class="<?= $active === $key ? 'text-primary' : 'text-on-muted'; ?> flex flex-col items-center justify-center gap-1">
-                <span class="material-symbols-outlined"><?= htmlspecialchars($icon); ?></span>
-                <span class="text-[10px] font-black uppercase tracking-[0.12em]"><?= htmlspecialchars($label); ?></span>
+            <a href="<?= htmlspecialchars($href) ?>" class="<?= $active === $key
+    ? "text-primary"
+    : "text-on-muted" ?> flex flex-col items-center justify-center gap-1">
+                <span class="material-symbols-outlined"><?= htmlspecialchars(
+                    $icon,
+                ) ?></span>
+                <span class="text-[10px] font-black uppercase tracking-[0.12em]"><?= htmlspecialchars(
+                    $label,
+                ) ?></span>
             </a>
         <?php endforeach; ?>
         <a href="../auth/logout.php" class="flex flex-col items-center justify-center gap-1 text-on-muted">
@@ -223,29 +261,50 @@ function pelanggan_mobile_nav(string $active): void
     <?php
 }
 
-
-function pelanggan_booking_modal() {
+function pelanggan_booking_modal()
+{
     global $conn;
     $q_layanan = mysqli_query($conn, "SELECT * FROM layanan ORDER BY id ASC");
-    $q_barber =  mysqli_query($conn, "SELECT * FROM barber WHERE LOWER(status) = 'aktif' ORDER BY id ASC");
+    $q_barber = mysqli_query(
+        $conn,
+        "SELECT * FROM barber WHERE LOWER(status) = 'aktif' ORDER BY id ASC",
+    );
 
     // Fetch into arrays
     $layanan = [];
-    $col_l_gambar = getExistingCol($conn, 'layanan', ['gambar', 'foto', 'image', 'foto_layanan']);
-    $col_l_desc = getExistingCol($conn, 'layanan', ['deskripsi', 'description', 'keterangan', 'desc']);
-    if ($q_layanan) { while ($row = mysqli_fetch_assoc($q_layanan)) { $layanan[] = $row; } }
+    $col_l_gambar = getExistingCol($conn, "layanan", [
+        "gambar",
+        "foto",
+        "image",
+        "foto_layanan",
+    ]);
+    $col_l_desc = getExistingCol($conn, "layanan", [
+        "deskripsi",
+        "description",
+        "keterangan",
+        "desc",
+    ]);
+    if ($q_layanan) {
+        while ($row = mysqli_fetch_assoc($q_layanan)) {
+            $layanan[] = $row;
+        }
+    }
     $barbers = [];
-    if ($q_barber) { while ($row = mysqli_fetch_assoc($q_barber)) { $barbers[] = $row; } }
-    
+    if ($q_barber) {
+        while ($row = mysqli_fetch_assoc($q_barber)) {
+            $barbers[] = $row;
+        }
+    }
+
     $fallback_images = [
-        'https://images.unsplash.com/photo-1622287162716-f311baa1a2b8?auto=format&fit=crop&w=1000&q=80',
-        'https://images.unsplash.com/photo-1585747860715-2ba37e788b70?auto=format&fit=crop&w=1000&q=80',
-        'https://images.unsplash.com/photo-1502823403499-6ccfcf4fb453?auto=format&fit=crop&w=1000&q=80',
-        'https://images.unsplash.com/photo-1605497788044-5a32c7078486?auto=format&fit=crop&w=1000&q=80',
-        'https://images.unsplash.com/photo-1503951914875-452162b0f3f1?auto=format&fit=crop&w=1000&q=80',
-        'https://images.unsplash.com/photo-1621605815971-fbc98d665033?auto=format&fit=crop&w=1000&q=80',
+        "https://images.unsplash.com/photo-1622287162716-f311baa1a2b8?auto=format&fit=crop&w=1000&q=80",
+        "https://images.unsplash.com/photo-1585747860715-2ba37e788b70?auto=format&fit=crop&w=1000&q=80",
+        "https://images.unsplash.com/photo-1502823403499-6ccfcf4fb453?auto=format&fit=crop&w=1000&q=80",
+        "https://images.unsplash.com/photo-1605497788044-5a32c7078486?auto=format&fit=crop&w=1000&q=80",
+        "https://images.unsplash.com/photo-1503951914875-452162b0f3f1?auto=format&fit=crop&w=1000&q=80",
+        "https://images.unsplash.com/photo-1621605815971-fbc98d665033?auto=format&fit=crop&w=1000&q=80",
     ];
-?>
+    ?>
     <div id="bookingModal" class="fixed inset-0 z-[100] hidden flex items-center justify-center p-4">
         <!-- Backdrop -->
         <div class="absolute inset-0 bg-black/80 backdrop-blur-sm transition-opacity" onclick="closeBookingModal()"></div>
@@ -262,7 +321,7 @@ function pelanggan_booking_modal() {
                 <button type="button" onclick="closeBookingModal()" class="text-on-muted hover:text-error transition"><span class="material-symbols-outlined">close</span></button>
             </div>
             
-            <form action="proses_booking.php" method="POST" id="bookingForm" class="flex flex-col overflow-hidden min-h-0 flex-1">
+            <form action="../functions/crud_antrean.php?action=book_queue" method="POST" id="bookingForm" class="flex flex-col overflow-hidden min-h-0 flex-1">
                 <input type="hidden" name="id_layanan" id="modal_id_layanan" value="">
                 <input type="hidden" name="id_barber" id="modal_id_barber" value="">
                 
@@ -271,35 +330,57 @@ function pelanggan_booking_modal() {
                     <div id="step1" class="step-container space-y-4">
                         <h4 class="font-bold text-on-surface mb-4">Langkah 1: Pilih Layanan</h4>
                         <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                            <?php foreach ($layanan as $l): 
-                                $img_url = '';
-                                if ($col_l_gambar && !empty($l[$col_l_gambar])) {
-                                    $img_url = '../' . ltrim($l[$col_l_gambar], '/');
+                            <?php foreach ($layanan as $l):
+
+                                $img_url = "";
+                                if (
+                                    $col_l_gambar &&
+                                    !empty($l[$col_l_gambar])
+                                ) {
+                                    $img_url =
+                                        "../" . ltrim($l[$col_l_gambar], "/");
                                 } else {
-                                    $id = (int) ($l['id'] ?? 0);
-                                    $img_url = $fallback_images[$id % count($fallback_images)];
+                                    $id = (int) ($l["id"] ?? 0);
+                                    $img_url =
+                                        $fallback_images[
+                                            $id % count($fallback_images)
+                                        ];
                                 }
-                                $desc = '';
+                                $desc = "";
                                 if ($col_l_desc && !empty($l[$col_l_desc])) {
                                     $desc = htmlspecialchars($l[$col_l_desc]);
                                 } else {
-                                    $desc = 'Layanan premium Barber.co.';
+                                    $desc = "Layanan premium Barber.co.";
                                 }
-                            ?>
+                                ?>
                                 <label class="block cursor-pointer">
-                                    <input type="radio" name="layanan_sel" class="peer hidden" value="<?= $l['id'] ?>" data-name="<?= htmlspecialchars($l['nama_layanan']) ?>" data-price="<?= number_format($l['harga'],0,',','.') ?>">
+                                    <input type="radio" name="layanan_sel" class="peer hidden" value="<?= $l[
+                                        "id"
+                                    ] ?>" data-name="<?= htmlspecialchars(
+    $l["nama_layanan"],
+) ?>" data-price="<?= number_format($l["harga"], 0, ",", ".") ?>">
                                     <div class="border border-outline bg-surface-panel p-4 hover:border-primary peer-checked:border-primary peer-checked:bg-primary/5 transition flex sm:items-center gap-4 flex-col sm:flex-row">
                                         <div class="w-20 h-20 sm:w-16 sm:h-16 rounded overflow-hidden shrink-0 border border-outline hidden sm:block">
-                                            <img src="<?= htmlspecialchars($img_url) ?>" class="w-full h-full object-cover">
+                                            <img src="<?= htmlspecialchars(
+                                                $img_url,
+                                            ) ?>" class="w-full h-full object-cover">
                                         </div>
                                         <div class="flex-1">
-                                            <h5 class="font-bold text-on-surface leading-tight"><?= htmlspecialchars($l['nama_layanan']) ?></h5>
+                                            <h5 class="font-bold text-on-surface leading-tight"><?= htmlspecialchars(
+                                                $l["nama_layanan"],
+                                            ) ?></h5>
                                             <p class="text-[10px] text-on-muted leading-relaxed mt-1 line-clamp-2"><?= $desc ?></p>
-                                            <p class="text-primary text-sm font-black mt-2">Rp <?= number_format($l['harga'],0,',','.') ?></p>
+                                            <p class="text-primary text-sm font-black mt-2">Rp <?= number_format(
+                                                $l["harga"],
+                                                0,
+                                                ",",
+                                                ".",
+                                            ) ?></p>
                                         </div>
                                     </div>
                                 </label>
-                            <?php endforeach; ?>
+                            <?php
+                            endforeach; ?>
                         </div>
                     </div>
 
@@ -319,12 +400,23 @@ function pelanggan_booking_modal() {
                         <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                             <?php foreach ($barbers as $b): ?>
                                 <label class="block cursor-pointer">
-                                    <input type="radio" name="barber_sel" class="peer hidden" value="<?= $b['id'] ?>" data-name="<?= htmlspecialchars($b['nama']) ?>">
+                                    <input type="radio" name="barber_sel" class="peer hidden" value="<?= $b[
+                                        "id"
+                                    ] ?>" data-name="<?= htmlspecialchars(
+    $b["nama"],
+) ?>">
                                     <div class="border border-outline bg-surface-panel p-4 hover:border-primary peer-checked:border-primary peer-checked:bg-primary/5 transition flex items-center gap-3">
-                                        <img src="https://ui-avatars.com/api/?name=<?= urlencode($b['nama']) ?>&background=random" class="w-10 h-10 rounded-full border border-outline">
+                                        <img src="https://ui-avatars.com/api/?name=<?= urlencode(
+                                            $b["nama"],
+                                        ) ?>&background=random" class="w-10 h-10 rounded-full border border-outline">
                                         <div>
-                                            <h5 class="font-bold text-on-surface"><?= htmlspecialchars($b['nama']) ?></h5>
-                                            <p class="text-[10px] text-primary uppercase"><?= htmlspecialchars($b['spesialisasi'] ?: 'Master Barber') ?></p>
+                                            <h5 class="font-bold text-on-surface"><?= htmlspecialchars(
+                                                $b["nama"],
+                                            ) ?></h5>
+                                            <p class="text-[10px] text-primary uppercase"><?= htmlspecialchars(
+                                                $b["spesialisasi"] ?:
+                                                "Master Barber",
+                                            ) ?></p>
                                         </div>
                                     </div>
                                 </label>
@@ -445,10 +537,13 @@ function pelanggan_booking_modal() {
 <?php
 }
 
-function pelanggan_payment_modal($active_queue) {
-    if (!$active_queue) return;
-    $harga = (int) $active_queue['harga_layanan'];
-?>
+function pelanggan_payment_modal($active_queue)
+{
+    if (!$active_queue) {
+        return;
+    }
+    $harga = (int) $active_queue["harga_layanan"];
+    ?>
     <div id="paymentModal" class="fixed inset-0 z-[110] hidden flex items-center justify-center p-4">
         <!-- Backdrop -->
         <div class="absolute inset-0 bg-black/80 backdrop-blur-sm transition-opacity" onclick="closePaymentModal()"></div>
@@ -466,12 +561,19 @@ function pelanggan_payment_modal($active_queue) {
             </div>
             
             <form action="proses_pembayaran.php" method="POST" enctype="multipart/form-data" class="flex flex-col overflow-hidden min-h-0 flex-1">
-                <input type="hidden" name="antrian_id" value="<?= (int)$active_queue['id'] ?>">
+                <input type="hidden" name="antrian_id" value="<?= (int) $active_queue[
+                    "id"
+                ] ?>">
                 
                 <div class="overflow-y-auto p-6 customer-scroll relative flex-1 space-y-6">
                     <div class="flex justify-between items-end pb-4 border-b-2 border-primary">
                         <span class="text-[11px] font-black uppercase tracking-[0.18em] text-on-muted">Total Tagihan</span>
-                        <span class="font-display text-2xl font-black text-primary">Rp <?= number_format($harga, 0, ',', '.'); ?></span>
+                        <span class="font-display text-2xl font-black text-primary">Rp <?= number_format(
+                            $harga,
+                            0,
+                            ",",
+                            ".",
+                        ) ?></span>
                     </div>
 
                     <div>

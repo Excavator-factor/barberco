@@ -1,38 +1,51 @@
 <?php
-include '../config/database.php';
-include '../config/helper.php';
-check_login('admin');
+include "../config/database.php";
+include "../config/helper.php";
+check_login("admin");
 
-$error = '';
-$success = '';
+$error = "";
+$success = "";
 
-if (isset($_POST['simpan'])) {
-    $username = mysqli_real_escape_string($conn, $_POST['username']);
-    $password = mysqli_real_escape_string($conn, $_POST['password']);
-    $nama = mysqli_real_escape_string($conn, $_POST['nama']);
-    $spesialisasi = mysqli_real_escape_string($conn, $_POST['spesialisasi']);
-    $status = mysqli_real_escape_string($conn, $_POST['status']);
-    
+if (isset($_POST["simpan"])) {
+    $username = mysqli_real_escape_string($conn, $_POST["username"]);
+    $password = mysqli_real_escape_string($conn, $_POST["password"]);
+    $nama = mysqli_real_escape_string($conn, $_POST["nama"]);
+    $spesialisasi = mysqli_real_escape_string($conn, $_POST["spesialisasi"]);
+    $status = mysqli_real_escape_string($conn, $_POST["status"]);
+
     // Check if username already exists
-    $check = mysqli_query($conn, "SELECT id_user FROM users WHERE username = '$username'");
-    if($check && mysqli_num_rows($check) > 0) {
-        $error = 'Username sudah digunakan. Silakan pilih username lain.';
+    $check = mysqli_query(
+        $conn,
+        "SELECT id_user FROM users WHERE username = '$username'",
+    );
+    if ($check && mysqli_num_rows($check) > 0) {
+        $error = "Username sudah digunakan. Silakan pilih username lain.";
     } else {
         mysqli_begin_transaction($conn);
         try {
-            $insert_user = mysqli_query($conn, "INSERT INTO users (username, password, role, nama) VALUES ('$username', '$password', 'barber', '$nama')");
-            if(!$insert_user) throw new Exception(mysqli_error($conn));
-            
+            $insert_user = mysqli_query(
+                $conn,
+                "INSERT INTO users (username, password, role, nama) VALUES ('$username', '$password', 'barber', '$nama')",
+            );
+            if (!$insert_user) {
+                throw new Exception(mysqli_error($conn));
+            }
+
             $user_id = mysqli_insert_id($conn);
-            
-            $insert_barber = mysqli_query($conn, "INSERT INTO barber (user_id, nama, spesialisasi, status) VALUES ('$user_id', '$nama', '$spesialisasi', '$status')");
-            if(!$insert_barber) throw new Exception(mysqli_error($conn));
-            
+
+            $insert_barber = mysqli_query(
+                $conn,
+                "INSERT INTO barber (user_id, nama, spesialisasi, status) VALUES ('$user_id', '$nama', '$spesialisasi', '$status')",
+            );
+            if (!$insert_barber) {
+                throw new Exception(mysqli_error($conn));
+            }
+
             mysqli_commit($conn);
-            $success = 'Arstisan Barber berhasil didaftarkan!';
+            $success = "Arstisan Barber berhasil didaftarkan!";
         } catch (Exception $e) {
             mysqli_rollback($conn);
-            $error = 'Gagal mendaftarkan barber sistem: ' . $e->getMessage();
+            $error = "Gagal mendaftarkan barber sistem: " . $e->getMessage();
         }
     }
 }
@@ -174,12 +187,19 @@ if (isset($_POST['simpan'])) {
 <div class="flex items-center space-x-md">
 <div class="flex items-center space-x-3 cursor-pointer group">
 <div class="text-right">
-<p class="font-label-caps text-label-caps text-on-surface uppercase"><?= htmlspecialchars($_SESSION['username'] ?? 'Admin'); ?></p>
+<p class="font-label-caps text-label-caps text-on-surface uppercase"><?= htmlspecialchars(
+    $_SESSION["username"] ?? "Admin",
+) ?></p>
 <p class="text-[10px] text-on-surface-variant">System Manager</p>
 </div>
-<?php if (!empty($_SESSION['avatar']) && file_exists(__DIR__ . '/../uploads/avatars/' . $_SESSION['avatar'])): ?>
+<?php if (
+    !empty($_SESSION["avatar"]) &&
+    file_exists(__DIR__ . "/../uploads/avatars/" . $_SESSION["avatar"])
+): ?>
 <div class="w-10 h-10 rounded-full border border-primary/30 flex items-center justify-center bg-surface-container-high text-primary group-hover:border-primary transition-colors overflow-hidden">
-<img src="../uploads/avatars/<?= htmlspecialchars($_SESSION['avatar']) ?>" class="w-full h-full object-cover text-primary">
+<img src="../uploads/avatars/<?= htmlspecialchars(
+    $_SESSION["avatar"],
+) ?>" class="w-full h-full object-cover text-primary">
 </div>
 <?php else: ?>
 <div class="w-10 h-10 rounded-full border border-primary/30 flex items-center justify-center bg-surface-container-high text-primary group-hover:border-primary transition-colors">
@@ -204,13 +224,13 @@ if (isset($_POST['simpan'])) {
 <p class="text-on-surface-variant">Register a new professional grooming specialist to the Barber.co roster.</p>
 </div>
 
-<?php if($error): ?>
+<?php if ($error): ?>
     <script>
         document.addEventListener('DOMContentLoaded', function() {
             Swal.fire({
                 icon: 'error',
                 title: 'Gagal Menyimpan',
-                text: '<?= htmlspecialchars($error, ENT_QUOTES); ?>',
+                text: '<?= htmlspecialchars($error, ENT_QUOTES) ?>',
                 background: '#1e2020',
                 color: '#e2e2e2',
                 confirmButtonColor: '#f2ca50',
@@ -219,13 +239,13 @@ if (isset($_POST['simpan'])) {
         });
     </script>
 <?php endif; ?>
-<?php if($success): ?>
+<?php if ($success): ?>
     <script>
         document.addEventListener('DOMContentLoaded', function() {
             Swal.fire({
                 icon: 'success',
                 title: 'Berhasil',
-                text: '<?= htmlspecialchars($success, ENT_QUOTES); ?>',
+                text: '<?= htmlspecialchars($success, ENT_QUOTES) ?>',
                 background: '#1e2020',
                 color: '#e2e2e2',
                 confirmButtonColor: '#f2ca50',

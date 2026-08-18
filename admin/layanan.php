@@ -1,131 +1,28 @@
 <?php
-include '_bootstrap.php';
-include '_chrome.php';
+include "_bootstrap.php";
+include "_chrome.php";
 
 function admin_service_card_image(array $service): string
 {
-    $stored = trim((string) ($service['gambar'] ?? ''));
-    if ($stored !== '') {
-        $local = '../' . ltrim($stored, '/');
-        if (is_file(__DIR__ . '/../' . ltrim($stored, '/'))) {
+    $stored = trim((string) ($service["gambar"] ?? ""));
+    if ($stored !== "") {
+        $local = "../" . ltrim($stored, "/");
+        if (is_file(__DIR__ . "/../" . ltrim($stored, "/"))) {
             return $local;
         }
     }
-    return '';
+    return "";
 }
 
 // ─────────────────────────────────────────────
-// HANDLE POST: Tambah Layanan (inline modal)
-// ─────────────────────────────────────────────
-$modalError   = $_GET['error'] ?? '';
-$modalSuccess = $_GET['success'] ?? '';
 
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && empty($_POST) && $_SERVER['CONTENT_LENGTH'] > 0) {
-    $modalError = "Gagal memproses form. Ukuran file yang Anda upload terlalu besar dan melampaui batas server PHP (post_max_size). Silakan kompresi gambar Anda di bawah " . ini_get('post_max_size') . ".";
-}
+$modalError = $_SESSION["modalError"] ?? ($_GET["error"] ?? "");
+$modalSuccess = $_SESSION["modalSuccess"] ?? ($_GET["success"] ?? "");
+unset($_SESSION["modalError"], $_SESSION["modalSuccess"]);
 
 admin_ensure_layanan_image_column($conn);
-
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['action'] === 'add_layanan') {
-    $nama      = trim((string) ($_POST['nama_layanan'] ?? ''));
-    $deskripsi = trim((string) ($_POST['deskripsi'] ?? ''));
-    $harga     = (int) ($_POST['harga'] ?? 0);
-    $durasi    = (int) ($_POST['durasi'] ?? 0);
-    $imagePath = '';
-
-    if ($nama === '' || $harga <= 0 || $durasi <= 0) {
-        $modalError = 'Nama layanan, harga, dan durasi wajib diisi dengan benar.';
-    } else {
-        // Handle optional image upload
-        if (isset($_FILES['gambar']) && $_FILES['gambar']['error'] !== UPLOAD_ERR_NO_FILE) {
-            if ($_FILES['gambar']['error'] !== UPLOAD_ERR_OK) {
-                $modalError = 'Upload gagal (Ukuran terlalu besar atau file rusak). Kode: ' . $_FILES['gambar']['error'];
-            } else {
-                $allowed = ['jpg', 'jpeg', 'png', 'webp'];
-                $ext = strtolower(pathinfo(basename((string)$_FILES['gambar']['name']), PATHINFO_EXTENSION));
-                $uploadDir = __DIR__ . '/../uploads/layanan';
-                if (!is_dir($uploadDir)) @mkdir($uploadDir, 0775, true);
-                if (!in_array($ext, $allowed, true)) {
-                    $modalError = 'Format gambar harus JPG, PNG, atau WEBP.';
-                } else {
-                    $safeName = 'layanan-' . preg_replace('/[^a-z0-9]+/i','-',strtolower($nama)) . '-' . time() . '.' . $ext;
-                    if (move_uploaded_file($_FILES['gambar']['tmp_name'], $uploadDir . '/' . $safeName)) {
-                        $imagePath = 'uploads/layanan/' . $safeName;
-                    } else {
-                        $modalError = 'Upload gambar gagal.';
-                    }
-                }
-            }
-        }
-
-        if ($modalError === '') {
-            $stmt = mysqli_prepare($conn, 'INSERT INTO layanan (nama_layanan, deskripsi, harga, durasi, gambar) VALUES (?, ?, ?, ?, ?)');
-            mysqli_stmt_bind_param($stmt, 'ssiis', $nama, $deskripsi, $harga, $durasi, $imagePath);
-            if (mysqli_stmt_execute($stmt)) {
-                $modalSuccess = "Layanan \"$nama\" berhasil ditambahkan!";
-                // Refresh data
-                $adminServices = mysqli_query($conn, 'SELECT * FROM layanan ORDER BY id DESC');
-            } else {
-                $modalError = 'Gagal menyimpan layanan: ' . mysqli_error($conn);
-            }
-            mysqli_stmt_close($stmt);
-        }
-    }
-}
-
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['action'] === 'edit_layanan') {
-    $id = (int)($_POST['id_layanan'] ?? 0);
-    $nama = trim((string) ($_POST['nama_layanan'] ?? ''));
-    $deskripsi = trim((string) ($_POST['deskripsi'] ?? ''));
-    $harga = (int) ($_POST['harga'] ?? 0);
-    $durasi = (int) ($_POST['durasi'] ?? 0);
-    $imagePath = '';
-
-    if ($id <= 0 || $nama === '' || $harga <= 0 || $durasi <= 0) {
-        $modalError = 'Data layanan tidak valid.';
-    } else {
-        // Handle optional image upload
-        if (isset($_FILES['gambar']) && $_FILES['gambar']['error'] !== UPLOAD_ERR_NO_FILE) {
-            if ($_FILES['gambar']['error'] !== UPLOAD_ERR_OK) {
-                $modalError = 'Upload gagal (Ukuran terlalu besar atau file rusak). Kode: ' . $_FILES['gambar']['error'];
-            } else {
-                $allowed = ['jpg', 'jpeg', 'png', 'webp'];
-                $ext = strtolower(pathinfo(basename((string)$_FILES['gambar']['name']), PATHINFO_EXTENSION));
-                $uploadDir = __DIR__ . '/../uploads/layanan';
-                if (!is_dir($uploadDir)) @mkdir($uploadDir, 0775, true);
-                if (!in_array($ext, $allowed, true)) {
-                    $modalError = 'Format gambar harus JPG, PNG, atau WEBP.';
-                } else {
-                    $safeName = 'layanan-' . preg_replace('/[^a-z0-9]+/i','-',strtolower($nama)) . '-' . time() . '.' . $ext;
-                    if (move_uploaded_file($_FILES['gambar']['tmp_name'], $uploadDir . '/' . $safeName)) {
-                        $imagePath = 'uploads/layanan/' . $safeName;
-                    } else {
-                        $modalError = 'Upload gambar gagal.';
-                    }
-                }
-            }
-        }
-
-        if ($modalError === '') {
-            if ($imagePath !== '') {
-                $stmt = mysqli_prepare($conn, 'UPDATE layanan SET nama_layanan=?, deskripsi=?, harga=?, durasi=?, gambar=? WHERE id=?');
-                mysqli_stmt_bind_param($stmt, 'ssiisi', $nama, $deskripsi, $harga, $durasi, $imagePath, $id);
-            } else {
-                $stmt = mysqli_prepare($conn, 'UPDATE layanan SET nama_layanan=?, deskripsi=?, harga=?, durasi=? WHERE id=?');
-                mysqli_stmt_bind_param($stmt, 'ssiii', $nama, $deskripsi, $harga, $durasi, $id);
-            }
-            if (mysqli_stmt_execute($stmt)) {
-                $modalSuccess = "Layanan \"$nama\" berhasil diperbarui!";
-                $adminServices = mysqli_query($conn, 'SELECT * FROM layanan ORDER BY id DESC');
-            } else {
-                $modalError = 'Gagal menyimpan layanan: ' . mysqli_error($conn);
-            }
-            mysqli_stmt_close($stmt);
-        }
-    }
-}
 ?>
-<?php admin_header('Layanan & Harga', 'layanan'); ?>
+<?php admin_header("Layanan & Harga", "layanan"); ?>
     <div class="p-md space-y-8">
         <div class="flex flex-wrap justify-between items-start gap-3 mb-lg mt-4">
             <div>
@@ -142,15 +39,24 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
         <section class="grid grid-cols-1 gap-4 md:grid-cols-3">
             <article class="bg-surface-container border border-outline-variant p-5 rounded-xl">
                 <p class="text-[10px] font-bold uppercase tracking-widest text-on-surface-variant">Jumlah Layanan</p>
-                <h2 class="mt-2 text-2xl font-bold font-headline-md text-primary"><?= $adminDashboardStats['totalServices']; ?></h2>
+                <h2 class="mt-2 text-2xl font-bold font-headline-md text-primary"><?= $adminDashboardStats[
+                    "totalServices"
+                ] ?></h2>
             </article>
             <article class="bg-surface-container border border-outline-variant p-5 rounded-xl">
                 <p class="text-[10px] font-bold uppercase tracking-widest text-on-surface-variant">Pendapatan Bulan Ini</p>
-                <h2 class="mt-2 text-2xl font-bold font-headline-md text-primary">Rp <?= number_format($adminDashboardStats['revenueMonth'], 0, ',', '.'); ?></h2>
+                <h2 class="mt-2 text-2xl font-bold font-headline-md text-primary">Rp <?= number_format(
+                    $adminDashboardStats["revenueMonth"],
+                    0,
+                    ",",
+                    ".",
+                ) ?></h2>
             </article>
             <article class="bg-surface-container border border-outline-variant p-5 rounded-xl">
                 <p class="text-[10px] font-bold uppercase tracking-widest text-on-surface-variant">Pelanggan Aktif</p>
-                <h2 class="mt-2 text-2xl font-bold font-headline-md text-primary"><?= $adminDashboardStats['totalUsers']; ?></h2>
+                <h2 class="mt-2 text-2xl font-bold font-headline-md text-primary"><?= $adminDashboardStats[
+                    "totalUsers"
+                ] ?></h2>
             </article>
         </section>
 
@@ -177,39 +83,85 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
                         </tr>
                     </thead>
                     <tbody>
-                        <?php if ($adminServices && mysqli_num_rows($adminServices) > 0): ?>
-                            <?php mysqli_data_seek($adminServices, 0); while ($service = mysqli_fetch_assoc($adminServices)): ?>
-                                <?php $serviceImage = admin_service_card_image($service); ?>
+                        <?php if (
+                            $adminServices &&
+                            mysqli_num_rows($adminServices) > 0
+                        ): ?>
+                            <?php
+                            mysqli_data_seek($adminServices, 0);
+                            while (
+                                $service = mysqli_fetch_assoc($adminServices)
+                            ): ?>
+                                <?php $serviceImage = admin_service_card_image(
+                                    $service,
+                                ); ?>
                                 <tr class="hover:bg-secondary-container/30 transition-colors">
                                     <td class="px-3 py-3">
                                         <div class="h-14 w-20 overflow-hidden border border-outline-variant bg-surface rounded-lg flex items-center justify-center">
-                                            <?php if ($serviceImage !== ''): ?>
-                                                <img src="<?= htmlspecialchars($serviceImage); ?>" alt="<?= htmlspecialchars($service['nama_layanan']); ?>" class="h-full w-full object-cover">
+                                            <?php if ($serviceImage !== ""): ?>
+                                                <img src="<?= htmlspecialchars(
+                                                    $serviceImage,
+                                                ) ?>" alt="<?= htmlspecialchars(
+    $service["nama_layanan"],
+) ?>" class="h-full w-full object-cover">
                                             <?php else: ?>
                                                 <span class="material-symbols-outlined text-outline-variant text-[24px]">inventory_2</span>
                                             <?php endif; ?>
                                         </div>
                                     </td>
                                     <td class="px-3 py-3">
-                                        <p class="text-sm font-bold text-on-surface"><?= htmlspecialchars($service['nama_layanan']); ?></p>
-                                        <p class="text-[10px] font-bold uppercase tracking-widest text-on-surface-variant mt-1">ID #<?= (int) $service['id']; ?></p>
+                                        <p class="text-sm font-bold text-on-surface"><?= htmlspecialchars(
+                                            $service["nama_layanan"],
+                                        ) ?></p>
+                                        <p class="text-[10px] font-bold uppercase tracking-widest text-on-surface-variant mt-1">ID #<?= (int) $service[
+                                            "id"
+                                        ] ?></p>
                                     </td>
                                     <td class="px-3 py-3 text-sm leading-6 text-on-surface-variant" style="max-width:200px;">
-                                        <span class="line-clamp-2"><?= htmlspecialchars($service['deskripsi'] ?: '—'); ?></span>
+                                        <span class="line-clamp-2"><?= htmlspecialchars(
+                                            $service["deskripsi"] ?: "—",
+                                        ) ?></span>
                                     </td>
-                                    <td class="px-3 py-3 text-sm font-bold text-primary whitespace-nowrap">Rp <?= number_format((int) $service['harga'], 0, ',', '.'); ?></td>
-                                    <td class="px-3 py-3 text-sm font-bold text-on-surface whitespace-nowrap"><?= (int) $service['durasi']; ?> <span class="font-normal text-on-surface-variant text-xs">menit</span></td>
+                                    <td class="px-3 py-3 text-sm font-bold text-primary whitespace-nowrap">Rp <?= number_format(
+                                        (int) $service["harga"],
+                                        0,
+                                        ",",
+                                        ".",
+                                    ) ?></td>
+                                    <td class="px-3 py-3 text-sm font-bold text-on-surface whitespace-nowrap"><?= (int) $service[
+                                        "durasi"
+                                    ] ?> <span class="font-normal text-on-surface-variant text-xs">menit</span></td>
                                     <td class="px-3 py-3 text-right">
                                         <div class="inline-flex items-center gap-2">
-                                            <button onclick="showDetailLayanan(<?= (int)$service['id']; ?>, <?= htmlspecialchars(json_encode($service['nama_layanan']), ENT_QUOTES); ?>, <?= htmlspecialchars(json_encode($service['deskripsi'] ?: '-'), ENT_QUOTES); ?>, <?= (int)$service['harga']; ?>, <?= (int)$service['durasi']; ?>, <?= htmlspecialchars(json_encode($serviceImage), ENT_QUOTES); ?>)"
+                                            <button onclick="showDetailLayanan(<?= (int) $service[
+                                                "id"
+                                            ] ?>, <?= htmlspecialchars(
+    json_encode($service["nama_layanan"]),
+    ENT_QUOTES,
+) ?>, <?= htmlspecialchars(
+    json_encode($service["deskripsi"] ?: "-"),
+    ENT_QUOTES,
+) ?>, <?= (int) $service["harga"] ?>, <?= (int) $service[
+    "durasi"
+] ?>, <?= htmlspecialchars(json_encode($serviceImage), ENT_QUOTES) ?>)"
                                                 class="inline-flex h-8 w-8 items-center justify-center border border-outline-variant text-on-surface-variant rounded-lg transition-colors hover:text-primary hover:border-primary hover:bg-surface-container-high" title="Lihat Detail">
                                                 <span class="material-symbols-outlined text-[18px]">visibility</span>
                                             </button>
-                                            <button onclick="openEditLayanan(<?= (int)$service['id']; ?>, <?= htmlspecialchars(json_encode($service['nama_layanan']), ENT_QUOTES); ?>, <?= htmlspecialchars(json_encode($service['deskripsi'] ?: ''), ENT_QUOTES); ?>, <?= (int)$service['harga']; ?>, <?= (int)$service['durasi']; ?>)"
+                                            <button onclick="openEditLayanan(<?= (int) $service[
+                                                "id"
+                                            ] ?>, <?= htmlspecialchars(
+    json_encode($service["nama_layanan"]),
+    ENT_QUOTES,
+) ?>, <?= htmlspecialchars(
+    json_encode($service["deskripsi"] ?: ""),
+    ENT_QUOTES,
+) ?>, <?= (int) $service["harga"] ?>, <?= (int) $service["durasi"] ?>)"
                                                 class="inline-flex h-8 w-8 items-center justify-center border border-outline-variant text-on-surface-variant rounded-lg transition-colors hover:text-primary hover:border-primary hover:bg-surface-container-high" title="Edit">
                                                 <span class="material-symbols-outlined text-[18px]">edit</span>
                                             </button>
-                                            <a href="hapus_layanan.php?id=<?= (int) $service['id']; ?>"
+                                            <a href="../functions/crud_layanan.php?action=delete&id=<?= (int) $service[
+                                                "id"
+                                            ] ?>"
                                                 class="inline-flex h-8 w-8 items-center justify-center border border-outline-variant text-error rounded-lg transition-colors hover:bg-error/10 hover:border-error" title="Hapus"
                                                 onclick="return confirm('Hapus layanan ini?');">
                                                 <span class="material-symbols-outlined text-[18px]">delete</span>
@@ -217,7 +169,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
                                         </div>
                                     </td>
                                 </tr>
-                            <?php endwhile; ?>
+                            <?php endwhile;
+                            ?>
                         <?php endif; ?>
                     </tbody>
                 </table>
@@ -225,7 +178,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
         </section>
     </div>
 
-<?php admin_render_mobile_nav('layanan'); ?>
+<?php admin_render_mobile_nav("layanan"); ?>
 
 <!-- ══════════════════════════════════════════
      MODAL — TAMBAH LAYANAN
@@ -246,7 +199,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
                 <span class="material-symbols-outlined">close</span>
             </button>
         </div>
-        <form method="POST" enctype="multipart/form-data" class="p-5 space-y-4">
+        <form method="POST" action="../functions/crud_layanan.php" enctype="multipart/form-data" class="p-5 space-y-4">
             <input type="hidden" name="action" value="add_layanan">
             <div>
                 <label class="mb-1.5 block text-[10px] font-bold uppercase tracking-widest text-on-surface-variant">Nama Layanan *</label>
@@ -307,7 +260,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
                 <span class="material-symbols-outlined">close</span>
             </button>
         </div>
-        <form method="POST" enctype="multipart/form-data" class="p-5 space-y-4">
+        <form method="POST" action="../functions/crud_layanan.php" enctype="multipart/form-data" class="p-5 space-y-4">
             <input type="hidden" name="action" value="edit_layanan">
             <input type="hidden" name="id_layanan" id="editLayanan_id">
             <div>
@@ -381,15 +334,27 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
     <?php if ($modalError): ?>
     document.addEventListener('DOMContentLoaded', function() {
         Swal.fire({
-            icon: 'error', title: 'Gagal', text: <?= json_encode($modalError); ?>,
+            icon: 'error', title: 'Gagal', text: <?= json_encode(
+                $modalError,
+            ) ?>,
             background: '#1e2020', color: '#e2e2e2', confirmButtonColor: '#f2ca50', iconColor: '#ffb4ab'
         });
         
-        <?php if (isset($_POST['action']) && $_POST['action'] === 'edit_layanan'): ?>
+        <?php if (
+            isset($_POST["action"]) &&
+            $_POST["action"] === "edit_layanan"
+        ): ?>
             document.getElementById('modalEditLayanan').classList.remove('hidden');
-        <?php elseif (isset($_POST['action']) && $_POST['action'] === 'add_layanan'): ?>
+        <?php elseif (
+            isset($_POST["action"]) &&
+            $_POST["action"] === "add_layanan"
+        ): ?>
             document.getElementById('modalTambahLayanan').classList.remove('hidden');
-        <?php elseif ($_SERVER['REQUEST_METHOD'] === 'POST' && empty($_POST) && $_SERVER['CONTENT_LENGTH'] > 0): ?>
+        <?php elseif (
+            $_SERVER["REQUEST_METHOD"] === "POST" &&
+            empty($_POST) &&
+            $_SERVER["CONTENT_LENGTH"] > 0
+        ): ?>
             document.getElementById('modalTambahLayanan').classList.remove('hidden');
         <?php endif; ?>
     });
@@ -397,7 +362,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
     <?php if ($modalSuccess): ?>
     document.addEventListener('DOMContentLoaded', function() {
         Swal.fire({
-            icon: 'success', title: 'Berhasil!', text: <?= json_encode($modalSuccess); ?>,
+            icon: 'success', title: 'Berhasil!', text: <?= json_encode(
+                $modalSuccess,
+            ) ?>,
             background: '#1e2020', color: '#e2e2e2', confirmButtonColor: '#f2ca50', iconColor: '#f2ca50'
         });
     });
@@ -446,4 +413,4 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
         document.getElementById('modalEditLayanan').classList.remove('hidden');
     }
 </script>
-<?php admin_footer('layanan'); ?>
+<?php admin_footer("layanan"); ?>

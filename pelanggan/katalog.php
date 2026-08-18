@@ -1,10 +1,11 @@
 <?php
-include '_bootstrap.php';
-include '_chrome.php';
+include "_bootstrap.php";
+include "_chrome.php";
 
 // Fetch all services from the layanan table
 $services = [];
-$sql_services = "SELECT * FROM layanan ORDER BY " . ($pk_layanan ?? '1') . " ASC";
+$sql_services =
+    "SELECT * FROM layanan ORDER BY " . ($pk_layanan ?? "1") . " ASC";
 $res_services = @mysqli_query($conn, $sql_services);
 if ($res_services) {
     while ($row = mysqli_fetch_assoc($res_services)) {
@@ -13,42 +14,56 @@ if ($res_services) {
 }
 
 // Fetch description column if exists
-$col_l_desc    = getExistingCol($conn, 'layanan', ['deskripsi', 'description', 'keterangan', 'desc']);
-$col_l_gambar  = getExistingCol($conn, 'layanan', ['gambar', 'foto', 'image', 'foto_layanan']);
+$col_l_desc = getExistingCol($conn, "layanan", [
+    "deskripsi",
+    "description",
+    "keterangan",
+    "desc",
+]);
+$col_l_gambar = getExistingCol($conn, "layanan", [
+    "gambar",
+    "foto",
+    "image",
+    "foto_layanan",
+]);
 
 // Fallback Unsplash barbershop images (same as admin/layanan.php)
 $fallback_images = [
-    'https://images.unsplash.com/photo-1622287162716-f311baa1a2b8?auto=format&fit=crop&w=1000&q=80',
-    'https://images.unsplash.com/photo-1585747860715-2ba37e788b70?auto=format&fit=crop&w=1000&q=80',
-    'https://images.unsplash.com/photo-1502823403499-6ccfcf4fb453?auto=format&fit=crop&w=1000&q=80',
-    'https://images.unsplash.com/photo-1605497788044-5a32c7078486?auto=format&fit=crop&w=1000&q=80',
-    'https://images.unsplash.com/photo-1503951914875-452162b0f3f1?auto=format&fit=crop&w=1000&q=80',
-    'https://images.unsplash.com/photo-1621605815971-fbc98d665033?auto=format&fit=crop&w=1000&q=80',
+    "https://images.unsplash.com/photo-1622287162716-f311baa1a2b8?auto=format&fit=crop&w=1000&q=80",
+    "https://images.unsplash.com/photo-1585747860715-2ba37e788b70?auto=format&fit=crop&w=1000&q=80",
+    "https://images.unsplash.com/photo-1502823403499-6ccfcf4fb453?auto=format&fit=crop&w=1000&q=80",
+    "https://images.unsplash.com/photo-1605497788044-5a32c7078486?auto=format&fit=crop&w=1000&q=80",
+    "https://images.unsplash.com/photo-1503951914875-452162b0f3f1?auto=format&fit=crop&w=1000&q=80",
+    "https://images.unsplash.com/photo-1621605815971-fbc98d665033?auto=format&fit=crop&w=1000&q=80",
 ];
 
-function katalog_service_image(array $svc, array $fallbacks, ?string $col_gambar): string {
+function katalog_service_image(
+    array $svc,
+    array $fallbacks,
+    ?string $col_gambar,
+): string {
     if ($col_gambar) {
-        $stored = trim((string) ($svc[$col_gambar] ?? ''));
-        if ($stored !== '') {
-            $local = '../' . ltrim($stored, '/');
-            if (is_file(__DIR__ . '/../' . ltrim($stored, '/'))) {
+        $stored = trim((string) ($svc[$col_gambar] ?? ""));
+        if ($stored !== "") {
+            $local = "../" . ltrim($stored, "/");
+            if (is_file(__DIR__ . "/../" . ltrim($stored, "/"))) {
                 return $local;
             }
         }
     }
-    $id = (int) ($svc['id'] ?? $svc['id_layanan'] ?? 0);
+    $id = (int) ($svc["id"] ?? ($svc["id_layanan"] ?? 0));
     return $fallbacks[$id % count($fallbacks)];
 }
 ?>
 <!DOCTYPE html>
 <html class="dark" lang="id">
 <head>
-    <?php pelanggan_theme_head('Katalog Layanan'); ?>
+    <?php pelanggan_theme_head("Katalog Layanan"); ?>
 </head>
 <body class="min-h-screen">
-    <?php pelanggan_sidebar('katalog'); ?>
+    <?php pelanggan_sidebar("katalog"); ?>
     <main data-pelanggan-main class="min-h-screen transition-[margin] duration-200 md:ml-64">
-        <?php pelanggan_topbar('Katalog Layanan'); ?>
+        <?php pelanggan_topbar("Katalog Layanan"); ?>
 
         <div class="mx-auto w-full max-w-[1440px] space-y-10 p-5 pb-28 md:p-8">
 
@@ -71,18 +86,41 @@ function katalog_service_image(array $svc, array $fallbacks, ?string $col_gambar
                     </div>
                 <?php else: ?>
                     <div class="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-                        <?php foreach ($services as $svc): 
-                            $nama    = htmlspecialchars($svc[$col_l_nama] ?? 'Layanan');
-                            $harga   = isset($svc[$col_l_harga]) ? 'Rp ' . number_format((int)$svc[$col_l_harga], 0, ',', '.') : 'Hubungi Kami';
-                            $durasi  = ($col_l_durasi && isset($svc[$col_l_durasi])) ? (int)$svc[$col_l_durasi] . ' menit' : null;
-                            $desc    = ($col_l_desc && isset($svc[$col_l_desc])) ? htmlspecialchars($svc[$col_l_desc]) : null;
-                            $img_url = katalog_service_image($svc, $fallback_images, $col_l_gambar);
-                            $id_svc  = $svc[$pk_layanan] ?? null;
-                        ?>
+                        <?php foreach ($services as $svc):
+
+                            $nama = htmlspecialchars(
+                                $svc[$col_l_nama] ?? "Layanan",
+                            );
+                            $harga = isset($svc[$col_l_harga])
+                                ? "Rp " .
+                                    number_format(
+                                        (int) $svc[$col_l_harga],
+                                        0,
+                                        ",",
+                                        ".",
+                                    )
+                                : "Hubungi Kami";
+                            $durasi =
+                                $col_l_durasi && isset($svc[$col_l_durasi])
+                                    ? (int) $svc[$col_l_durasi] . " menit"
+                                    : null;
+                            $desc =
+                                $col_l_desc && isset($svc[$col_l_desc])
+                                    ? htmlspecialchars($svc[$col_l_desc])
+                                    : null;
+                            $img_url = katalog_service_image(
+                                $svc,
+                                $fallback_images,
+                                $col_l_gambar,
+                            );
+                            $id_svc = $svc[$pk_layanan] ?? null;
+                            ?>
                             <article class="customer-card flex flex-col overflow-hidden group transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_8px_30px_rgba(242,202,80,0.12)]">
                                 <!-- Card Image -->
                                 <div class="relative h-44 overflow-hidden bg-surface-high">
-                                    <img src="<?= htmlspecialchars($img_url) ?>" alt="<?= $nama ?>"
+                                    <img src="<?= htmlspecialchars(
+                                        $img_url,
+                                    ) ?>" alt="<?= $nama ?>"
                                          class="h-full w-full object-cover transition duration-500 group-hover:scale-110">
                                     <div class="absolute inset-0 bg-gradient-to-t from-background/80 via-transparent to-transparent"></div>
                                     <!-- Price Badge -->
@@ -114,7 +152,8 @@ function katalog_service_image(array $svc, array $fallbacks, ?string $col_gambar
                                     <div class="mt-auto pt-4 border-t border-outline">
                                         <div class="flex items-center justify-between gap-3">
                                             <span class="font-display text-xl font-black text-primary"><?= $harga ?></span>
-                                            <a href="#" onclick="openBookingModal('<?= $id_svc ?? '' ?>'); return false;"
+                                            <a href="#" onclick="openBookingModal('<?= $id_svc ??
+                                                "" ?>'); return false;"
                                                class="inline-flex items-center gap-1.5 border border-outline bg-surface-high px-4 py-2.5 text-[11px] font-black uppercase tracking-[0.12em] text-on-muted transition hover:border-primary hover:bg-primary hover:text-on-primary">
                                                 <span class="material-symbols-outlined text-[16px]">add_circle</span>
                                                 Pilih
@@ -123,7 +162,8 @@ function katalog_service_image(array $svc, array $fallbacks, ?string $col_gambar
                                     </div>
                                 </div>
                             </article>
-                        <?php endforeach; ?>
+                        <?php
+                        endforeach; ?>
                     </div>
                 <?php endif; ?>
             </section>
@@ -146,7 +186,7 @@ function katalog_service_image(array $svc, array $fallbacks, ?string $col_gambar
 
         </div>
     </main>
-    <?php pelanggan_mobile_nav('katalog'); ?>
+    <?php pelanggan_mobile_nav("katalog"); ?>
     <?php pelanggan_booking_modal(); ?>
 
     <style>

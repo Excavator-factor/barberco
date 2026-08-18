@@ -1,99 +1,188 @@
 <?php
-include '_bootstrap.php';
-include '_chrome.php';
+include "_bootstrap.php";
+include "_chrome.php";
 
-$id = filter_input(INPUT_GET, 'id', FILTER_VALIDATE_INT) ?: filter_input(INPUT_POST, 'id', FILTER_VALIDATE_INT);
-if (!$id) { header('Location: kapster.php'); exit; }
-$error = ''; $success = '';
+$id =
+    filter_input(INPUT_GET, "id", FILTER_VALIDATE_INT) ?:
+    filter_input(INPUT_POST, "id", FILTER_VALIDATE_INT);
+if (!$id) {
+    header("Location: kapster.php");
+    exit();
+}
+$error = "";
+$success = "";
 
-if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $nama = trim($_POST['nama'] ?? ''); 
-    $username = trim($_POST['username'] ?? ''); 
-    $password = $_POST['password'] ?? '';
-    $spesialisasi = trim($_POST['spesialisasi'] ?? ''); 
-    $status = $_POST['status'] ?? 'aktif';
-    
-    if ($nama === '' || $username === '' || !in_array($status, ['aktif', 'nonaktif'], true)) {
-        $error = 'Data yang diisi tidak valid.';
+if ($_SERVER["REQUEST_METHOD"] === "POST") {
+    $nama = trim($_POST["nama"] ?? "");
+    $username = trim($_POST["username"] ?? "");
+    $password = $_POST["password"] ?? "";
+    $spesialisasi = trim($_POST["spesialisasi"] ?? "");
+    $status = $_POST["status"] ?? "aktif";
+
+    if (
+        $nama === "" ||
+        $username === "" ||
+        !in_array($status, ["aktif", "nonaktif"], true)
+    ) {
+        $error = "Data yang diisi tidak valid.";
     } else {
-        $owner = mysqli_prepare($conn, 'SELECT user_id FROM barber WHERE id = ? LIMIT 1'); 
-        mysqli_stmt_bind_param($owner, 'i', $id); 
-        mysqli_stmt_execute($owner); 
-        $barberRow = mysqli_fetch_assoc(mysqli_stmt_get_result($owner)); 
+        $owner = mysqli_prepare(
+            $conn,
+            "SELECT user_id FROM barber WHERE id = ? LIMIT 1",
+        );
+        mysqli_stmt_bind_param($owner, "i", $id);
+        mysqli_stmt_execute($owner);
+        $barberRow = mysqli_fetch_assoc(mysqli_stmt_get_result($owner));
         mysqli_stmt_close($owner);
-        
+
         if (!$barberRow) {
-            $error = 'Data barber tidak ditemukan.';
+            $error = "Data barber tidak ditemukan.";
         } else {
-            $userId = (int) $barberRow['user_id'];
-            $check = mysqli_prepare($conn, 'SELECT id_user FROM users WHERE username = ? AND id_user <> ? LIMIT 1'); 
-            mysqli_stmt_bind_param($check, 'si', $username, $userId); 
-            mysqli_stmt_execute($check); 
-            $duplicate = mysqli_num_rows(mysqli_stmt_get_result($check)) > 0; 
+            $userId = (int) $barberRow["user_id"];
+            $check = mysqli_prepare(
+                $conn,
+                "SELECT id_user FROM users WHERE username = ? AND id_user <> ? LIMIT 1",
+            );
+            mysqli_stmt_bind_param($check, "si", $username, $userId);
+            mysqli_stmt_execute($check);
+            $duplicate = mysqli_num_rows(mysqli_stmt_get_result($check)) > 0;
             mysqli_stmt_close($check);
-            
+
             if ($duplicate) {
-                $error = 'Username sudah digunakan.';
+                $error = "Username sudah digunakan.";
             } else {
                 mysqli_begin_transaction($conn);
                 try {
                     $avatarFileName = null;
-                    if (isset($_FILES['avatar']) && $_FILES['avatar']['error'] === UPLOAD_ERR_OK) {
-                        $uploadDir = __DIR__ . '/../uploads/avatars/';
-                        if (!is_dir($uploadDir)) { @mkdir($uploadDir, 0777, true); }
-                        $ext = strtolower(pathinfo($_FILES['avatar']['name'], PATHINFO_EXTENSION));
-                        if (in_array($ext, ['jpg', 'jpeg', 'png', 'webp'])) {
-                            $avatarFileName = 'avatar_' . $userId . '_' . time() . '.' . $ext;
-                            move_uploaded_file($_FILES['avatar']['tmp_name'], $uploadDir . $avatarFileName);
+                    if (
+                        isset($_FILES["avatar"]) &&
+                        $_FILES["avatar"]["error"] === UPLOAD_ERR_OK
+                    ) {
+                        $uploadDir = __DIR__ . "/../uploads/avatars/";
+                        if (!is_dir($uploadDir)) {
+                            @mkdir($uploadDir, 0777, true);
+                        }
+                        $ext = strtolower(
+                            pathinfo(
+                                $_FILES["avatar"]["name"],
+                                PATHINFO_EXTENSION,
+                            ),
+                        );
+                        if (in_array($ext, ["jpg", "jpeg", "png", "webp"])) {
+                            $avatarFileName =
+                                "avatar_" . $userId . "_" . time() . "." . $ext;
+                            move_uploaded_file(
+                                $_FILES["avatar"]["tmp_name"],
+                                $uploadDir . $avatarFileName,
+                            );
                         } else {
-                            throw new Exception('Format gambar tidak didukung.');
+                            throw new Exception(
+                                "Format gambar tidak didukung.",
+                            );
                         }
                     }
 
-                    if ($password !== '') {
+                    if ($password !== "") {
                         if ($avatarFileName) {
-                            $u = mysqli_prepare($conn, "UPDATE users SET nama = ?, username = ?, password = ?, avatar = ? WHERE id_user = ? AND role = 'barber'"); 
-                            mysqli_stmt_bind_param($u, 'ssssi', $nama, $username, $password, $avatarFileName, $userId);
+                            $u = mysqli_prepare(
+                                $conn,
+                                "UPDATE users SET nama = ?, username = ?, password = ?, avatar = ? WHERE id_user = ? AND role = 'barber'",
+                            );
+                            mysqli_stmt_bind_param(
+                                $u,
+                                "ssssi",
+                                $nama,
+                                $username,
+                                $password,
+                                $avatarFileName,
+                                $userId,
+                            );
                         } else {
-                            $u = mysqli_prepare($conn, "UPDATE users SET nama = ?, username = ?, password = ? WHERE id_user = ? AND role = 'barber'"); 
-                            mysqli_stmt_bind_param($u, 'sssi', $nama, $username, $password, $userId); 
+                            $u = mysqli_prepare(
+                                $conn,
+                                "UPDATE users SET nama = ?, username = ?, password = ? WHERE id_user = ? AND role = 'barber'",
+                            );
+                            mysqli_stmt_bind_param(
+                                $u,
+                                "sssi",
+                                $nama,
+                                $username,
+                                $password,
+                                $userId,
+                            );
                         }
                     } else {
                         if ($avatarFileName) {
-                            $u = mysqli_prepare($conn, "UPDATE users SET nama = ?, username = ?, avatar = ? WHERE id_user = ? AND role = 'barber'"); 
-                            mysqli_stmt_bind_param($u, 'sssi', $nama, $username, $avatarFileName, $userId);
+                            $u = mysqli_prepare(
+                                $conn,
+                                "UPDATE users SET nama = ?, username = ?, avatar = ? WHERE id_user = ? AND role = 'barber'",
+                            );
+                            mysqli_stmt_bind_param(
+                                $u,
+                                "sssi",
+                                $nama,
+                                $username,
+                                $avatarFileName,
+                                $userId,
+                            );
                         } else {
-                            $u = mysqli_prepare($conn, "UPDATE users SET nama = ?, username = ? WHERE id_user = ? AND role = 'barber'"); 
-                            mysqli_stmt_bind_param($u, 'ssi', $nama, $username, $userId); 
+                            $u = mysqli_prepare(
+                                $conn,
+                                "UPDATE users SET nama = ?, username = ? WHERE id_user = ? AND role = 'barber'",
+                            );
+                            mysqli_stmt_bind_param(
+                                $u,
+                                "ssi",
+                                $nama,
+                                $username,
+                                $userId,
+                            );
                         }
                     }
-                    mysqli_stmt_execute($u); mysqli_stmt_close($u);
-                    
-                    $b = mysqli_prepare($conn, 'UPDATE barber SET nama = ?, spesialisasi = ?, status = ? WHERE id = ?'); 
-                    mysqli_stmt_bind_param($b, 'sssi', $nama, $spesialisasi, $status, $id); 
-                    mysqli_stmt_execute($b); 
+                    mysqli_stmt_execute($u);
+                    mysqli_stmt_close($u);
+
+                    $b = mysqli_prepare(
+                        $conn,
+                        "UPDATE barber SET nama = ?, spesialisasi = ?, status = ? WHERE id = ?",
+                    );
+                    mysqli_stmt_bind_param(
+                        $b,
+                        "sssi",
+                        $nama,
+                        $spesialisasi,
+                        $status,
+                        $id,
+                    );
+                    mysqli_stmt_execute($b);
                     mysqli_stmt_close($b);
-                    
-                    mysqli_commit($conn); 
-                    $success = 'Data barber berhasil diperbarui.';
-                } catch (Throwable $e) { 
-                    mysqli_rollback($conn); 
-                    $error = 'Gagal: ' . $e->getMessage(); 
+
+                    mysqli_commit($conn);
+                    $success = "Data barber berhasil diperbarui.";
+                } catch (Throwable $e) {
+                    mysqli_rollback($conn);
+                    $error = "Gagal: " . $e->getMessage();
                 }
             }
         }
     }
 }
 
-$stmt = mysqli_prepare($conn, "SELECT b.id, b.nama, b.spesialisasi, b.status, u.username, u.avatar FROM barber b JOIN users u ON u.id_user = b.user_id WHERE b.id = ? LIMIT 1"); 
-mysqli_stmt_bind_param($stmt, 'i', $id); 
-mysqli_stmt_execute($stmt); 
-$barber = mysqli_fetch_assoc(mysqli_stmt_get_result($stmt)); 
+$stmt = mysqli_prepare(
+    $conn,
+    "SELECT b.id, b.nama, b.spesialisasi, b.status, u.username, u.avatar FROM barber b JOIN users u ON u.id_user = b.user_id WHERE b.id = ? LIMIT 1",
+);
+mysqli_stmt_bind_param($stmt, "i", $id);
+mysqli_stmt_execute($stmt);
+$barber = mysqli_fetch_assoc(mysqli_stmt_get_result($stmt));
 mysqli_stmt_close($stmt);
 
-if (!$barber) { header('Location: kapster.php'); exit; }
+if (!$barber) {
+    header("Location: kapster.php");
+    exit();
+}
 ?>
-<?php admin_header('Edit Barber', 'kapster'); ?>
+<?php admin_header("Edit Barber", "kapster"); ?>
 
 <style>
     .glass-card {
@@ -142,27 +231,40 @@ if (!$barber) { header('Location: kapster.php'); exit; }
     <?php if ($success): ?>
         <div class="glass-card mb-6 p-4 rounded-lg flex items-center gap-3 border-green-500/30 text-green-400">
             <span class="material-symbols-outlined">check_circle</span>
-            <span class="font-bold text-sm"><?= htmlspecialchars($success); ?></span>
+            <span class="font-bold text-sm"><?= htmlspecialchars(
+                $success,
+            ) ?></span>
         </div>
     <?php endif; ?>
 
     <?php if ($error): ?>
         <div class="glass-card mb-6 p-4 rounded-lg flex items-center gap-3 border-red-500/30 text-red-400">
             <span class="material-symbols-outlined">error</span>
-            <span class="font-bold text-sm"><?= htmlspecialchars($error); ?></span>
+            <span class="font-bold text-sm"><?= htmlspecialchars(
+                $error,
+            ) ?></span>
         </div>
     <?php endif; ?>
 
     <form method="post" enctype="multipart/form-data" class="grid grid-cols-1 lg:grid-cols-[300px_1fr] gap-8">
-        <input type="hidden" name="id" value="<?= (int) $barber['id'] ?>">
+        <input type="hidden" name="id" value="<?= (int) $barber["id"] ?>">
         
         <!-- Left Column: Profile Card -->
         <div class="glass-card rounded-xl p-6 flex flex-col items-center justify-center">
             <!-- Avatar Display -->
             <div class="flex flex-col items-center gap-4 mb-6">
                 <div class="relative group w-24 h-24 rounded-full border-2 border-primary/30 flex items-center justify-center overflow-hidden bg-surface-container-high shrink-0 transition-all hover:border-primary/60">
-                    <?php if (!empty($barber['avatar']) && file_exists(__DIR__ . '/../uploads/avatars/' . $barber['avatar'])): ?>
-                        <img id="avatarPreview" class="w-full h-full object-cover" src="../uploads/avatars/<?= htmlspecialchars($barber['avatar']) ?>" alt="Avatar">
+                    <?php if (
+                        !empty($barber["avatar"]) &&
+                        file_exists(
+                            __DIR__ .
+                                "/../uploads/avatars/" .
+                                $barber["avatar"],
+                        )
+                    ): ?>
+                        <img id="avatarPreview" class="w-full h-full object-cover" src="../uploads/avatars/<?= htmlspecialchars(
+                            $barber["avatar"],
+                        ) ?>" alt="Avatar">
                     <?php else: ?>
                         <img id="avatarPreview" class="w-full h-full object-cover hidden" src="" alt="Avatar">
                         <span id="avatarFallback" class="material-symbols-outlined text-5xl text-primary/70">person</span>
@@ -173,7 +275,9 @@ if (!$barber) { header('Location: kapster.php'); exit; }
                     </label>
                 </div>
                 <div class="text-center">
-                    <h3 class="font-bold text-white mb-2 text-lg"><?= htmlspecialchars($barber['username']); ?></h3>
+                    <h3 class="font-bold text-white mb-2 text-lg"><?= htmlspecialchars(
+                        $barber["username"],
+                    ) ?></h3>
                     <span class="bg-primary/20 text-primary border border-primary/30 px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider">BARBER</span>
                 </div>
             </div>
@@ -184,12 +288,16 @@ if (!$barber) { header('Location: kapster.php'); exit; }
             <div class="w-full space-y-4">
                 <div class="flex items-center gap-3 text-on-surface-variant flex-wrap">
                     <span class="material-symbols-outlined text-sm text-primary">badge</span>
-                    <span class="text-sm"><?= htmlspecialchars($barber['nama']); ?></span>
+                    <span class="text-sm"><?= htmlspecialchars(
+                        $barber["nama"],
+                    ) ?></span>
                 </div>
-                <?php if (!empty($barber['spesialisasi'])): ?>
+                <?php if (!empty($barber["spesialisasi"])): ?>
                 <div class="flex items-center gap-3 text-on-surface-variant flex-wrap">
                     <span class="material-symbols-outlined text-sm text-primary">content_cut</span>
-                    <span class="text-sm"><?= htmlspecialchars($barber['spesialisasi']); ?></span>
+                    <span class="text-sm"><?= htmlspecialchars(
+                        $barber["spesialisasi"],
+                    ) ?></span>
                 </div>
                 <?php endif; ?>
             </div>
@@ -207,21 +315,35 @@ if (!$barber) { header('Location: kapster.php'); exit; }
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div class="space-y-2">
                         <label class="font-bold text-[11px] text-white tracking-widest ml-1 uppercase">Nama Lengkap</label>
-                        <input name="nama" class="w-full h-12 px-4 rounded-lg form-input text-sm" type="text" value="<?= htmlspecialchars($barber['nama']) ?>" required>
+                        <input name="nama" class="w-full h-12 px-4 rounded-lg form-input text-sm" type="text" value="<?= htmlspecialchars(
+                            $barber["nama"],
+                        ) ?>" required>
                     </div>
                     <div class="space-y-2">
                         <label class="font-bold text-[11px] text-white tracking-widest ml-1 uppercase">Username</label>
-                        <input name="username" class="w-full h-12 px-4 rounded-lg form-input text-sm" type="text" value="<?= htmlspecialchars($barber['username']) ?>" required>
+                        <input name="username" class="w-full h-12 px-4 rounded-lg form-input text-sm" type="text" value="<?= htmlspecialchars(
+                            $barber["username"],
+                        ) ?>" required>
                     </div>
                     <div class="space-y-2 md:col-span-2">
                         <label class="font-bold text-[11px] text-white tracking-widest ml-1 uppercase">Spesialisasi Artistik</label>
-                        <input name="spesialisasi" class="w-full h-12 px-4 rounded-lg form-input text-sm" placeholder="Cth: Classic Fade, Hair Tattoo, dll" type="text" value="<?= htmlspecialchars($barber['spesialisasi'] ?? '') ?>">
+                        <input name="spesialisasi" class="w-full h-12 px-4 rounded-lg form-input text-sm" placeholder="Cth: Classic Fade, Hair Tattoo, dll" type="text" value="<?= htmlspecialchars(
+                            $barber["spesialisasi"] ?? "",
+                        ) ?>">
                     </div>
                     <div class="space-y-2">
                         <label class="font-bold text-[11px] text-white tracking-widest ml-1 uppercase">Status Aktif</label>
                         <select name="status" class="w-full h-12 px-4 rounded-lg form-input text-sm focus:outline-none focus:border-primary">
-                            <option value="aktif" class="bg-[#1a1a1a] text-white" <?= $barber['status'] === 'aktif' ? 'selected' : '' ?>>Aktif Melayani</option>
-                            <option value="nonaktif" class="bg-[#1a1a1a] text-white" <?= $barber['status'] === 'nonaktif' ? 'selected' : '' ?>>Tidak Aktif</option>
+                            <option value="aktif" class="bg-[#1a1a1a] text-white" <?= $barber[
+                                "status"
+                            ] === "aktif"
+                                ? "selected"
+                                : "" ?>>Aktif Melayani</option>
+                            <option value="nonaktif" class="bg-[#1a1a1a] text-white" <?= $barber[
+                                "status"
+                            ] === "nonaktif"
+                                ? "selected"
+                                : "" ?>>Tidak Aktif</option>
                         </select>
                     </div>
                 </div>
@@ -282,4 +404,4 @@ if (!$barber) { header('Location: kapster.php'); exit; }
     });
 </script>
 
-<?php admin_footer('kapster'); ?>
+<?php admin_footer("kapster"); ?>

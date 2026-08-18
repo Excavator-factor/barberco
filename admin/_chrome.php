@@ -2,13 +2,15 @@
 function admin_render_sidebar(string $active): void
 {
     $links = [
-        ['dashboard.php', 'dashboard', 'dashboard', 'Dashboard'],
-        ['antrean.php', 'event_seat', 'antrean', 'Manajemen Antrean'],
-        ['transaksi.php', 'receipt_long', 'transaksi', 'Transaksi'],
-        ['pengguna.php', 'group', 'pengguna', 'Pengguna'],
-        ['layanan.php', 'inventory_2', 'layanan', 'Layanan'],
+        ["dashboard.php", "dashboard", "dashboard", "Dashboard"],
+        ["antrean.php", "event_seat", "antrean", "Manajemen Antrean"],
+        ["transaksi.php", "receipt_long", "transaksi", "Transaksi"],
+        ["pengguna.php", "group", "pengguna", "Pengguna"],
+        ["layanan.php", "inventory_2", "layanan", "Layanan"],
     ];
-    $adminName = htmlspecialchars($_SESSION['username'] ?? $_SESSION['nama'] ?? 'Admin');
+    $adminName = htmlspecialchars(
+        $_SESSION["username"] ?? ($_SESSION["nama"] ?? "Admin"),
+    );
     ?>
     <aside class="sidebar-transition flex-shrink-0 w-[250px] bg-surface-container border-r border-outline-variant hidden md:flex flex-col h-full overflow-hidden z-30" id="sidebar">
         <div class="p-md flex items-center gap-base border-b border-outline-variant h-16">
@@ -24,9 +26,21 @@ function admin_render_sidebar(string $active): void
         <div class="flex-1 overflow-y-auto custom-scrollbar py-md">
             <nav class="space-y-1">
                 <?php foreach ($links as [$href, $icon, $key, $label]): ?>
-                    <a class="flex items-center gap-base <?= $active === $key ? 'bg-primary text-on-primary font-bold' : 'text-on-surface-variant hover:bg-secondary-container hover:text-on-secondary-container'; ?> rounded-lg px-4 py-3 mx-2 my-1 transition-all group" href="<?= htmlspecialchars($href); ?>">
-                        <span class="material-symbols-outlined <?= $active === $key ? '' : 'group-hover:scale-110 transition-transform'; ?>" <?= $active === $key ? 'style="font-variation-settings: \'FILL\' 1;"' : ''; ?>><?= htmlspecialchars($icon); ?></span>
-                        <span class="font-label-caps"><?= htmlspecialchars($label); ?></span>
+                    <a class="flex items-center gap-base <?= $active === $key
+                        ? "bg-primary text-on-primary font-bold"
+                        : "text-on-surface-variant hover:bg-secondary-container hover:text-on-secondary-container" ?> rounded-lg px-4 py-3 mx-2 my-1 transition-all group" href="<?= htmlspecialchars(
+     $href,
+ ) ?>">
+                        <span class="material-symbols-outlined <?= $active ===
+                        $key
+                            ? ""
+                            : "group-hover:scale-110 transition-transform" ?>" <?= $active ===
+$key
+    ? 'style="font-variation-settings: \'FILL\' 1;"'
+    : "" ?>><?= htmlspecialchars($icon) ?></span>
+                        <span class="font-label-caps"><?= htmlspecialchars(
+                            $label,
+                        ) ?></span>
                     </a>
                 <?php endforeach; ?>
 
@@ -45,11 +59,16 @@ function admin_render_sidebar(string $active): void
             <div class="flex items-center gap-base px-4 py-2 mb-2">
                 <div class="flex flex-col">
                     <span class="font-label-caps text-on-surface-variant text-[10px]">Masuk sebagai</span>
-                    <span class="font-label-caps text-primary"><?= $adminName; ?></span>
+                    <span class="font-label-caps text-primary"><?= $adminName ?></span>
                 </div>
             </div>
-            <a class="flex items-center gap-base <?= $active === 'profil' ? 'text-primary' : 'text-on-surface-variant hover:text-primary' ?> px-4 py-2 transition-all" href="profil.php">
-                <span class="material-symbols-outlined text-base" <?= $active === 'profil' ? 'style="font-variation-settings: \'FILL\' 1;"' : '' ?>>person</span>
+            <a class="flex items-center gap-base <?= $active === "profil"
+                ? "text-primary"
+                : "text-on-surface-variant hover:text-primary" ?> px-4 py-2 transition-all" href="profil.php">
+                <span class="material-symbols-outlined text-base" <?= $active ===
+                "profil"
+                    ? 'style="font-variation-settings: \'FILL\' 1;"'
+                    : "" ?>>person</span>
                 <span class="font-label-caps">Profil Anda</span>
             </a>
             <a class="flex items-center gap-base text-on-surface-variant hover:text-primary px-4 py-2 transition-all" href="backup_database.php">
@@ -68,17 +87,22 @@ function admin_render_sidebar(string $active): void
 function admin_render_mobile_nav(string $active): void
 {
     $links = [
-        ['dashboard.php', 'dashboard', 'dashboard'],
-        ['antrean.php', 'event_seat', 'antrean'],
-        ['transaksi.php', 'receipt_long', 'transaksi'],
-        ['pengguna.php', 'group', 'pengguna'],
-        ['layanan.php', 'inventory_2', 'layanan'],
-    ];
-    ?>
+        ["dashboard.php", "dashboard", "dashboard"],
+        ["antrean.php", "event_seat", "antrean"],
+        ["transaksi.php", "receipt_long", "transaksi"],
+        ["pengguna.php", "group", "pengguna"],
+        ["layanan.php", "inventory_2", "layanan"],
+    ]; ?>
     <nav class="fixed bottom-0 left-0 right-0 z-50 flex w-full justify-around border-t border-outline-variant bg-surface-container py-3 md:hidden">
         <?php foreach ($links as [$href, $icon, $key]): ?>
-            <a href="<?= htmlspecialchars($href); ?>" class="flex flex-col items-center gap-1 <?= $active === $key ? 'text-primary' : 'text-on-surface-variant hover:text-primary'; ?> no-underline">
-                <span class="material-symbols-outlined" <?= $active === $key ? 'style="font-variation-settings: \'FILL\' 1;"' : ''; ?>><?= htmlspecialchars($icon); ?></span>
+            <a href="<?= htmlspecialchars(
+                $href,
+            ) ?>" class="flex flex-col items-center gap-1 <?= $active === $key
+    ? "text-primary"
+    : "text-on-surface-variant hover:text-primary" ?> no-underline">
+                <span class="material-symbols-outlined" <?= $active === $key
+                    ? 'style="font-variation-settings: \'FILL\' 1;"'
+                    : "" ?>><?= htmlspecialchars($icon) ?></span>
             </a>
         <?php endforeach; ?>
     </nav>
@@ -89,10 +113,38 @@ function admin_render_mobile_nav(string $active): void
 function admin_header(string $title, string $active): void
 {
     global $dateLabel;
-    $bulan_array = ['Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember'];
-    $hari_array = ['Minggu','Senin','Selasa','Rabu','Kamis','Jumat','Sabtu'];
+    $bulan_array = [
+        "Januari",
+        "Februari",
+        "Maret",
+        "April",
+        "Mei",
+        "Juni",
+        "Juli",
+        "Agustus",
+        "September",
+        "Oktober",
+        "November",
+        "Desember",
+    ];
+    $hari_array = [
+        "Minggu",
+        "Senin",
+        "Selasa",
+        "Rabu",
+        "Kamis",
+        "Jumat",
+        "Sabtu",
+    ];
     if (!isset($dateLabel)) {
-        $dateLabel = $hari_array[date('w')] . ', ' . date('d') . ' ' . $bulan_array[date('n') - 1] . ' ' . date('Y');
+        $dateLabel =
+            $hari_array[date("w")] .
+            ", " .
+            date("d") .
+            " " .
+            $bulan_array[date("n") - 1] .
+            " " .
+            date("Y");
     }
     ?>
 <!DOCTYPE html>
@@ -100,7 +152,7 @@ function admin_header(string $title, string $active): void
 <head>
     <meta charset="utf-8"/>
     <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
-    <title><?= htmlspecialchars($title); ?> | Barber.co Admin</title>
+    <title><?= htmlspecialchars($title) ?> | Barber.co Admin</title>
     <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
     <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
@@ -327,30 +379,55 @@ function admin_header(string $title, string $active): void
                     <span class="material-symbols-outlined text-[28px]">menu</span>
                 </button>
                 <nav class="hidden md:flex gap-md">
-                    <a class="text-on-surface-variant hover:text-primary transition-colors font-body-md <?= $active === 'dashboard' ? 'text-primary font-bold border-b-2 border-primary pb-1' : '' ?>" href="dashboard.php">Dashboard</a>
-                    <a class="text-on-surface-variant hover:text-primary transition-colors font-body-md <?= $active === 'antrean' ? 'text-primary font-bold border-b-2 border-primary pb-1' : '' ?>" href="antrean.php">Status Antrean</a>
-                    <a class="text-on-surface-variant hover:text-primary transition-colors font-body-md <?= $active === 'layanan' ? 'text-primary font-bold border-b-2 border-primary pb-1' : '' ?>" href="layanan.php">Layanan</a>
+                    <a class="text-on-surface-variant hover:text-primary transition-colors font-body-md <?= $active ===
+                    "dashboard"
+                        ? "text-primary font-bold border-b-2 border-primary pb-1"
+                        : "" ?>" href="dashboard.php">Dashboard</a>
+                    <a class="text-on-surface-variant hover:text-primary transition-colors font-body-md <?= $active ===
+                    "antrean"
+                        ? "text-primary font-bold border-b-2 border-primary pb-1"
+                        : "" ?>" href="antrean.php">Status Antrean</a>
+                    <a class="text-on-surface-variant hover:text-primary transition-colors font-body-md <?= $active ===
+                    "layanan"
+                        ? "text-primary font-bold border-b-2 border-primary pb-1"
+                        : "" ?>" href="layanan.php">Layanan</a>
                 </nav>
             </div>
             <div class="flex items-center gap-md">
                 <!-- Real-Time Clock -->
                 <div class="hidden lg:flex flex-col items-end">
-                    <span class="font-bold text-primary font-label-caps" id="clock-time"><?= date('H:i:s'); ?></span>
-                    <span class="text-[10px] text-on-surface-variant font-label-caps" id="clock-date"><?= strtoupper((string)$dateLabel); ?></span>
+                    <span class="font-bold text-primary font-label-caps" id="clock-time"><?= date(
+                        "H:i:s",
+                    ) ?></span>
+                    <span class="text-[10px] text-on-surface-variant font-label-caps" id="clock-date"><?= strtoupper(
+                        (string) $dateLabel,
+                    ) ?></span>
                 </div>
                 <div class="flex items-center gap-base">
                     <!-- User Account representation -->
                     <a href="profil.php" class="flex items-center gap-base ml-2 cursor-pointer group hover:opacity-80 transition-opacity no-underline">
-                        <?php if (!empty($_SESSION['avatar']) && file_exists(__DIR__ . '/../uploads/avatars/' . $_SESSION['avatar'])): ?>
+                        <?php if (
+                            !empty($_SESSION["avatar"]) &&
+                            file_exists(
+                                __DIR__ .
+                                    "/../uploads/avatars/" .
+                                    $_SESSION["avatar"],
+                            )
+                        ): ?>
                             <div class="w-8 h-8 rounded border border-primary flex items-center justify-center bg-surface-container overflow-hidden">
-                                <img src="../uploads/avatars/<?= htmlspecialchars($_SESSION['avatar']) ?>" class="w-full h-full object-cover">
+                                <img src="../uploads/avatars/<?= htmlspecialchars(
+                                    $_SESSION["avatar"],
+                                ) ?>" class="w-full h-full object-cover">
                             </div>
                         <?php else: ?>
                             <div class="w-8 h-8 rounded border border-primary flex items-center justify-center bg-surface-container text-primary">
                                 <span class="material-symbols-outlined">person</span>
                             </div>
                         <?php endif; ?>
-                        <span class="font-label-caps hidden sm:block text-on-surface"><?= htmlspecialchars($_SESSION['username'] ?? $_SESSION['nama'] ?? 'Admin'); ?></span>
+                        <span class="font-label-caps hidden sm:block text-on-surface"><?= htmlspecialchars(
+                            $_SESSION["username"] ??
+                                ($_SESSION["nama"] ?? "Admin"),
+                        ) ?></span>
                     </a>
                     
                     <div class="w-px h-6 bg-outline-variant mx-1"></div>
@@ -369,13 +446,15 @@ function admin_header(string $title, string $active): void
 
 function admin_footer(string $active): void
 {
-?>
+    ?>
         </div>
         <!-- Footer Component -->
         <footer class="bg-surface-container-lowest border-t border-outline-variant w-full py-4 px-md flex flex-col md:flex-row justify-between items-center gap-base z-10 mt-auto">
             <div class="flex items-center gap-base">
                 <span class="font-headline-sm text-headline-sm text-primary font-bold">Barber.co</span>
-                <span class="text-on-surface-variant font-body-sm">© <?= date('Y'); ?>. Hak Cipta Dilindungi.</span>
+                <span class="text-on-surface-variant font-body-sm">© <?= date(
+                    "Y",
+                ) ?>. Hak Cipta Dilindungi.</span>
             </div>
             <div class="flex gap-md">
                 <span class="font-body-sm text-on-surface-variant">Versi 2.0</span>

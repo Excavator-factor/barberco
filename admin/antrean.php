@@ -1,8 +1,8 @@
 <?php
-include '_bootstrap.php';
-include '_chrome.php';
+include "_bootstrap.php";
+include "_chrome.php";
 ?>
-<?php admin_header('Antrean', 'antrean'); ?>
+<?php admin_header("Antrean", "antrean"); ?>
     <div class="p-md">
         <div class="flex justify-between items-end mb-lg mt-4">
             <div>
@@ -16,25 +16,30 @@ include '_chrome.php';
         </div>
         
         <section class="mb-6 grid grid-cols-1 gap-4 md:grid-cols-3">
-            <article class="bg-surface-container border border-outline-variant p-5 rounded-xl shadow-sm"><p class="text-[10px] font-bold uppercase tracking-widest text-on-surface-variant text-primary">Hari Ini</p><div class="flex justify-between mt-2"><h2 class="text-2xl font-bold font-headline-md text-on-surface"><?= $adminDashboardStats['bookingsToday']; ?></h2><span class="material-symbols-outlined text-outline-variant">today</span></div></article>
-            <article class="bg-surface-container border border-outline-variant p-5 rounded-xl shadow-sm"><p class="text-[10px] font-bold uppercase tracking-widest text-on-surface-variant text-primary">Sedang/Belum Dilayani</p><div class="flex justify-between mt-2"><h2 class="text-2xl font-bold font-headline-md text-on-surface"><?= $adminDashboardStats['liveQueue']; ?></h2><span class="material-symbols-outlined text-outline-variant">hourglass_empty</span></div></article>
-            <article class="bg-surface-container border border-outline-variant p-5 rounded-xl shadow-sm"><p class="text-[10px] font-bold uppercase tracking-widest text-on-surface-variant text-primary">Selesai Hari Ini</p><div class="flex justify-between mt-2"><h2 class="text-2xl font-bold font-headline-md text-on-surface"><?= $adminDashboardStats['completedToday']; ?></h2><span class="material-symbols-outlined text-outline-variant">check_circle</span></div></article>
+            <article class="bg-surface-container border border-outline-variant p-5 rounded-xl shadow-sm"><p class="text-[10px] font-bold uppercase tracking-widest text-on-surface-variant text-primary">Hari Ini</p><div class="flex justify-between mt-2"><h2 class="text-2xl font-bold font-headline-md text-on-surface"><?= $adminDashboardStats[
+                "bookingsToday"
+            ] ?></h2><span class="material-symbols-outlined text-outline-variant">today</span></div></article>
+            <article class="bg-surface-container border border-outline-variant p-5 rounded-xl shadow-sm"><p class="text-[10px] font-bold uppercase tracking-widest text-on-surface-variant text-primary">Sedang/Belum Dilayani</p><div class="flex justify-between mt-2"><h2 class="text-2xl font-bold font-headline-md text-on-surface"><?= $adminDashboardStats[
+                "liveQueue"
+            ] ?></h2><span class="material-symbols-outlined text-outline-variant">hourglass_empty</span></div></article>
+            <article class="bg-surface-container border border-outline-variant p-5 rounded-xl shadow-sm"><p class="text-[10px] font-bold uppercase tracking-widest text-on-surface-variant text-primary">Selesai Hari Ini</p><div class="flex justify-between mt-2"><h2 class="text-2xl font-bold font-headline-md text-on-surface"><?= $adminDashboardStats[
+                "completedToday"
+            ] ?></h2><span class="material-symbols-outlined text-outline-variant">check_circle</span></div></article>
         </section>
 
-        <?php
-        // Prepare chart data
-        $statusCounts = ['menunggu' => 0, 'proses' => 0, 'selesai' => 0];
-        $barberLoads = [];
+        <?php // Prepare chart data
 
+
+        $statusCounts = ["menunggu" => 0, "proses" => 0, "selesai" => 0];
+        $barberLoads = [];
         if ($adminQueues && mysqli_num_rows($adminQueues) > 0) {
             mysqli_data_seek($adminQueues, 0);
             while ($q = mysqli_fetch_assoc($adminQueues)) {
-                $st = strtolower($q['status_antrian']);
+                $st = strtolower($q["status_antrian"]);
                 if (isset($statusCounts[$st])) {
                     $statusCounts[$st]++;
                 }
-                
-                $bName = $q['nama_barber'] ?: 'Belum dipilih';
+                $bName = $q["nama_barber"] ?: "Belum dipilih";
                 if (!isset($barberLoads[$bName])) {
                     $barberLoads[$bName] = 0;
                 }
@@ -90,27 +95,55 @@ include '_chrome.php';
                         </tr>
                     </thead>
                     <tbody>
-                        <?php if ($adminQueues && mysqli_num_rows($adminQueues) > 0): ?>
-                            <?php mysqli_data_seek($adminQueues, 0); while ($queue = mysqli_fetch_assoc($adminQueues)): $st = strtolower($queue['status_antrian']); ?>
+                        <?php if (
+                            $adminQueues &&
+                            mysqli_num_rows($adminQueues) > 0
+                        ): ?>
+                            <?php
+                            mysqli_data_seek($adminQueues, 0);
+                            while ($queue = mysqli_fetch_assoc($adminQueues)):
+                                $st = strtolower($queue["status_antrian"]); ?>
                                 <tr>
-                                    <td class="px-4 py-4 text-lg font-bold text-primary align-middle"><?= str_pad((string) $queue['no_antrian'], 2, '0', STR_PAD_LEFT); ?></td>
+                                    <td class="px-4 py-4 text-lg font-bold text-primary align-middle"><?= str_pad(
+                                        (string) $queue["no_antrian"],
+                                        2,
+                                        "0",
+                                        STR_PAD_LEFT,
+                                    ) ?></td>
                                     <td class="px-4 py-4 align-middle">
-                                        <div class="font-bold text-on-surface"><?= htmlspecialchars($queue['nama_pelanggan']); ?></div>
-                                        <div class="text-[10px] uppercase font-medium tracking-widest text-on-surface-variant mt-1"><?= date('H:i', strtotime($queue['waktu_dibuat'])); ?></div>
+                                        <div class="font-bold text-on-surface"><?= htmlspecialchars(
+                                            $queue["nama_pelanggan"],
+                                        ) ?></div>
+                                        <div class="text-[10px] uppercase font-medium tracking-widest text-on-surface-variant mt-1"><?= date(
+                                            "H:i",
+                                            strtotime($queue["waktu_dibuat"]),
+                                        ) ?></div>
                                     </td>
-                                    <td class="px-4 py-4 text-sm font-medium text-on-surface-variant align-middle"><?= htmlspecialchars($queue['nama_layanan']); ?></td>
-                                    <td class="px-4 py-4 text-sm font-medium text-on-surface-variant align-middle"><?= htmlspecialchars($queue['nama_barber']); ?></td>
+                                    <td class="px-4 py-4 text-sm font-medium text-on-surface-variant align-middle"><?= htmlspecialchars(
+                                        $queue["nama_layanan"],
+                                    ) ?></td>
+                                    <td class="px-4 py-4 text-sm font-medium text-on-surface-variant align-middle"><?= htmlspecialchars(
+                                        $queue["nama_barber"],
+                                    ) ?></td>
                                     <td class="px-4 py-4 align-middle text-center">
-                                        <?php if ($st === 'proses'): ?>
-                                            <span class="inline-flex items-center px-3 py-1 text-[10px] font-extrabold uppercase tracking-widest rounded-full bg-primary/20 text-primary border border-primary/50"><?= htmlspecialchars($queue['status_antrian']); ?></span>
-                                        <?php elseif ($st === 'selesai'): ?>
-                                            <span class="inline-flex items-center px-3 py-1 text-[10px] font-extrabold uppercase tracking-widest rounded-full bg-surface-container-high text-primary border border-outline-variant"><?= htmlspecialchars($queue['status_antrian']); ?></span>
+                                        <?php if ($st === "proses"): ?>
+                                            <span class="inline-flex items-center px-3 py-1 text-[10px] font-extrabold uppercase tracking-widest rounded-full bg-primary/20 text-primary border border-primary/50"><?= htmlspecialchars(
+                                                $queue["status_antrian"],
+                                            ) ?></span>
+                                        <?php elseif ($st === "selesai"): ?>
+                                            <span class="inline-flex items-center px-3 py-1 text-[10px] font-extrabold uppercase tracking-widest rounded-full bg-surface-container-high text-primary border border-outline-variant"><?= htmlspecialchars(
+                                                $queue["status_antrian"],
+                                            ) ?></span>
                                         <?php else: ?>
-                                            <span class="inline-flex items-center px-3 py-1 text-[10px] font-extrabold uppercase tracking-widest rounded-full border border-outline-variant text-on-surface-variant"><?= htmlspecialchars($queue['status_antrian']); ?></span>
+                                            <span class="inline-flex items-center px-3 py-1 text-[10px] font-extrabold uppercase tracking-widest rounded-full border border-outline-variant text-on-surface-variant"><?= htmlspecialchars(
+                                                $queue["status_antrian"],
+                                            ) ?></span>
                                         <?php endif; ?>
                                     </td>
                                 </tr>
-                            <?php endwhile; ?>
+                            <?php
+                            endwhile;
+                            ?>
                         <?php endif; ?>
                     </tbody>
                 </table>
@@ -164,7 +197,9 @@ include '_chrome.php';
         data: {
             labels: ['Selesai', 'Di Kursi (Proses)', 'Menunggu'],
             datasets: [{
-                data: [<?= $statusCounts['selesai']; ?>, <?= $statusCounts['proses']; ?>, <?= $statusCounts['menunggu']; ?>],
+                data: [<?= $statusCounts["selesai"] ?>, <?= $statusCounts[
+    "proses"
+] ?>, <?= $statusCounts["menunggu"] ?>],
                 backgroundColor: ['#1e2020', '#f2ca50', '#a3a3a3'],
                 borderColor: ['#333535', '#121414', '#121414'],
                 borderWidth: 2,
@@ -179,10 +214,10 @@ include '_chrome.php';
     new Chart(ctxLoad, {
         type: 'bar',
         data: {
-            labels: <?= json_encode(array_keys($barberLoads)); ?>,
+            labels: <?= json_encode(array_keys($barberLoads)) ?>,
             datasets: [{
                 label: 'Total Antrean Diterima',
-                data: <?= json_encode(array_values($barberLoads)); ?>,
+                data: <?= json_encode(array_values($barberLoads)) ?>,
                 backgroundColor: 'rgba(242, 202, 80, 0.2)',
                 borderColor: '#f2ca50',
                 borderWidth: 1,
@@ -215,4 +250,4 @@ include '_chrome.php';
     document.head.appendChild(style);
 </script>
     </div>
-<?php admin_footer('antrean'); ?>
+<?php admin_footer("antrean"); ?>

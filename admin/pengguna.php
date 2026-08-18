@@ -1,167 +1,14 @@
 <?php
-include '_bootstrap.php';
-include '_chrome.php';
+include "_bootstrap.php";
+include "_chrome.php";
 
 // ─────────────────────────────────────────────
-// HANDLE POST: Tambah Kapster (inline modal)
-// ─────────────────────────────────────────────
-$modalError   = $_GET['error'] ?? '';
-$modalSuccess = $_GET['success'] ?? '';
 
-if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-
-    if (isset($_POST['action']) && $_POST['action'] === 'add_barber') {
-        $nama         = trim(mysqli_real_escape_string($conn, $_POST['nama'] ?? ''));
-        $username     = trim(mysqli_real_escape_string($conn, $_POST['username'] ?? ''));
-        $password     = trim(mysqli_real_escape_string($conn, $_POST['password'] ?? ''));
-        $spesialisasi = trim(mysqli_real_escape_string($conn, $_POST['spesialisasi'] ?? ''));
-        $status       = in_array($_POST['status'] ?? '', ['aktif','nonaktif','cuti']) ? $_POST['status'] : 'aktif';
-
-        if ($nama === '' || $username === '' || $password === '') {
-            $modalError = 'Nama, username, dan password wajib diisi.';
-        } else {
-            $chk = mysqli_query($conn, "SELECT id_user FROM users WHERE username = '$username' LIMIT 1");
-            if ($chk && mysqli_num_rows($chk) > 0) {
-                $modalError = 'Username sudah digunakan. Pilih username lain.';
-            } else {
-                mysqli_begin_transaction($conn);
-                try {
-                    $insUser = mysqli_query($conn, "INSERT INTO users (username, password, role, nama) VALUES ('$username', '$password', 'barber', '$nama')");
-                    if (!$insUser) throw new Exception(mysqli_error($conn));
-                    $newUserId = mysqli_insert_id($conn);
-                    $insBarber = mysqli_query($conn, "INSERT INTO barber (user_id, nama, spesialisasi, status) VALUES ('$newUserId', '$nama', '$spesialisasi', '$status')");
-                    if (!$insBarber) throw new Exception(mysqli_error($conn));
-                    mysqli_commit($conn);
-                    $modalSuccess = "Kapster \"$nama\" berhasil didaftarkan!";
-                } catch (Exception $e) {
-                    mysqli_rollback($conn);
-                    $modalError = 'Gagal mendaftarkan kapster: ' . $e->getMessage();
-                }
-            }
-        }
-    }
-
-    if (isset($_POST['action']) && $_POST['action'] === 'add_user') {
-        $nama     = trim(mysqli_real_escape_string($conn, $_POST['nama'] ?? ''));
-        $username = trim(mysqli_real_escape_string($conn, $_POST['username'] ?? ''));
-        $password = trim(mysqli_real_escape_string($conn, $_POST['password'] ?? ''));
-
-        if ($username === '' || $password === '') {
-            $modalError = 'Username dan password wajib diisi.';
-        } else {
-            $chk = mysqli_query($conn, "SELECT id_user FROM users WHERE username = '$username' LIMIT 1");
-            if ($chk && mysqli_num_rows($chk) > 0) {
-                $modalError = 'Username sudah digunakan. Pilih username lain.';
-            } else {
-                $ins = mysqli_query($conn, "INSERT INTO users (username, password, role, nama) VALUES ('$username', '$password', 'pelanggan', '$nama')");
-                if ($ins) {
-                    $modalSuccess = "Pelanggan \"$nama\" berhasil ditambahkan!";
-                } else {
-                    $modalError = 'Gagal menyimpan data pelanggan.';
-                }
-            }
-        }
-    }
-    
-    // EDIT KAPSTER
-    if (isset($_POST['action']) && $_POST['action'] === 'edit_barber') {
-        $id_barber = (int)($_POST['id_barber'] ?? 0);
-        $nama = trim(mysqli_real_escape_string($conn, $_POST['nama'] ?? ''));
-        $username = trim(mysqli_real_escape_string($conn, $_POST['username'] ?? ''));
-        $password = $_POST['password'] ?? '';
-        $spesialisasi = trim(mysqli_real_escape_string($conn, $_POST['spesialisasi'] ?? ''));
-        $status = in_array($_POST['status'] ?? '', ['aktif','nonaktif','cuti']) ? $_POST['status'] : 'aktif';
-
-        if (!$id_barber || $nama === '' || $username === '') {
-            $modalError = 'Data kapster tidak valid.';
-        } else {
-            $owner = mysqli_query($conn, "SELECT user_id FROM barber WHERE id = $id_barber LIMIT 1");
-            $barberRow = mysqli_fetch_assoc($owner);
-            if (!$barberRow) {
-                $modalError = 'Data barber tidak ditemukan.';
-            } else {
-                $userId = (int) $barberRow['user_id'];
-                $chk = mysqli_query($conn, "SELECT id_user FROM users WHERE username = '$username' AND id_user <> $userId LIMIT 1");
-                if (mysqli_num_rows($chk) > 0) {
-                    $modalError = 'Username sudah digunakan.';
-                } else {
-                    mysqli_begin_transaction($conn);
-                    try {
-                        $avatarFileName = null;
-                        if (isset($_FILES['avatar']) && $_FILES['avatar']['error'] === UPLOAD_ERR_OK) {
-                            $uploadDir = __DIR__ . '/../uploads/avatars/';
-                            if (!is_dir($uploadDir)) { @mkdir($uploadDir, 0777, true); }
-                            $ext = strtolower(pathinfo($_FILES['avatar']['name'], PATHINFO_EXTENSION));
-                            if (in_array($ext, ['jpg', 'jpeg', 'png', 'webp'])) {
-                                $avatarFileName = 'avatar_' . $userId . '_' . time() . '.' . $ext;
-                                move_uploaded_file($_FILES['avatar']['tmp_name'], $uploadDir . $avatarFileName);
-                            }
-                        }
-
-                        $passQuery = "";
-                        if ($password !== '') { $passQuery = ", password = '" . mysqli_real_escape_string($conn, $password) . "'"; }
-                        $avatarQuery = "";
-                        if ($avatarFileName) { $avatarQuery = ", avatar = '" . mysqli_real_escape_string($conn, $avatarFileName) . "'"; }
-                        
-                        $updUser = mysqli_query($conn, "UPDATE users SET nama = '$nama', username = '$username' $passQuery $avatarQuery WHERE id_user = $userId AND role = 'barber'");
-                        if (!$updUser) throw new Exception(mysqli_error($conn));
-                        
-                        $updBarber = mysqli_query($conn, "UPDATE barber SET nama = '$nama', spesialisasi = '$spesialisasi', status = '$status' WHERE id = $id_barber");
-                        if (!$updBarber) throw new Exception(mysqli_error($conn));
-                        
-                        mysqli_commit($conn);
-                        $modalSuccess = 'Data kapster berhasil diperbarui!';
-                    } catch (Exception $e) {
-                        mysqli_rollback($conn);
-                        $modalError = 'Gagal menyimpan kapster: ' . $e->getMessage();
-                    }
-                }
-            }
-        }
-    }
-
-    // EDIT PELANGGAN
-    if (isset($_POST['action']) && $_POST['action'] === 'edit_user') {
-        $id_user = (int)($_POST['id_user'] ?? 0);
-        $nama = trim(mysqli_real_escape_string($conn, $_POST['nama'] ?? ''));
-        $username = trim(mysqli_real_escape_string($conn, $_POST['username'] ?? ''));
-        $password = $_POST['password'] ?? '';
-
-        if (!$id_user || $nama === '' || $username === '') {
-            $modalError = 'Data pelanggan tidak valid.';
-        } else {
-            $chk = mysqli_query($conn, "SELECT id_user FROM users WHERE username = '$username' AND id_user <> $id_user LIMIT 1");
-            if (mysqli_num_rows($chk) > 0) {
-                $modalError = 'Username sudah digunakan orang lain.';
-            } else {
-                $avatarFileName = null;
-                if (isset($_FILES['avatar']) && $_FILES['avatar']['error'] === UPLOAD_ERR_OK) {
-                    $uploadDir = __DIR__ . '/../uploads/avatars/';
-                    if (!is_dir($uploadDir)) { @mkdir($uploadDir, 0777, true); }
-                    $ext = strtolower(pathinfo($_FILES['avatar']['name'], PATHINFO_EXTENSION));
-                    if (in_array($ext, ['jpg', 'jpeg', 'png', 'webp'])) {
-                        $avatarFileName = 'avatar_' . $id_user . '_' . time() . '.' . $ext;
-                        move_uploaded_file($_FILES['avatar']['tmp_name'], $uploadDir . $avatarFileName);
-                    }
-                }
-                
-                $passQuery = "";
-                if ($password !== '') { $passQuery = ", password = '" . mysqli_real_escape_string($conn, $password) . "'"; }
-                $avatarQuery = "";
-                if ($avatarFileName) { $avatarQuery = ", avatar = '" . mysqli_real_escape_string($conn, $avatarFileName) . "'"; }
-                
-                $updUser = mysqli_query($conn, "UPDATE users SET nama = '$nama', username = '$username' $passQuery $avatarQuery WHERE id_user = $id_user AND role = 'pelanggan'");
-                if ($updUser) {
-                    $modalSuccess = 'Data pelanggan berhasil diperbarui!';
-                } else {
-                    $modalError = 'Gagal menyimpan perubahan pelanggan.';
-                }
-            }
-        }
-    }
-}
+$modalError = $_SESSION["modalError"] ?? ($_GET["error"] ?? "");
+$modalSuccess = $_SESSION["modalSuccess"] ?? ($_GET["success"] ?? "");
+unset($_SESSION["modalError"], $_SESSION["modalSuccess"]);
 ?>
-<?php admin_header('Pengguna (Users)', 'pengguna'); ?>
+<?php admin_header("Pengguna (Users)", "pengguna"); ?>
     <div class="p-md">
         <!-- Page Header -->
         <div class="flex flex-wrap justify-between items-start gap-3 mb-lg mt-4">
@@ -186,7 +33,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         <?php if (!empty($customerNotice)): ?>
             <div class="mb-6 p-4 rounded-lg bg-surface-container-high border border-outline-variant text-on-surface-variant flex items-center gap-3">
                 <span class="material-symbols-outlined text-primary">info</span>
-                <span class="font-bold text-sm text-on-surface"><?= htmlspecialchars($customerNotice); ?></span>
+                <span class="font-bold text-sm text-on-surface"><?= htmlspecialchars(
+                    $customerNotice,
+                ) ?></span>
             </div>
         <?php endif; ?>
 
@@ -195,21 +44,27 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             <article class="bg-surface-container border border-outline-variant p-4 rounded-xl shadow-sm">
                 <p class="text-[10px] font-bold uppercase tracking-widest text-on-surface-variant text-primary">Total Pelanggan</p>
                 <div class="flex justify-between items-center mt-2">
-                    <h2 class="text-2xl font-bold font-headline-md text-on-surface"><?= $adminDashboardStats['totalUsers']; ?></h2>
+                    <h2 class="text-2xl font-bold font-headline-md text-on-surface"><?= $adminDashboardStats[
+                        "totalUsers"
+                    ] ?></h2>
                     <span class="material-symbols-outlined text-outline-variant">person</span>
                 </div>
             </article>
             <article class="bg-surface-container border border-outline-variant p-4 rounded-xl shadow-sm">
                 <p class="text-[10px] font-bold uppercase tracking-widest text-on-surface-variant text-primary">Status Kapster</p>
                 <div class="flex justify-between items-center mt-2">
-                    <h2 class="text-2xl font-bold font-headline-md text-on-surface"><span class="text-primary"><?= $adminDashboardStats['activeBarbers']; ?></span> / <?= mysqli_num_rows($adminBarbers); ?></h2>
+                    <h2 class="text-2xl font-bold font-headline-md text-on-surface"><span class="text-primary"><?= $adminDashboardStats[
+                        "activeBarbers"
+                    ] ?></span> / <?= mysqli_num_rows($adminBarbers) ?></h2>
                     <span class="material-symbols-outlined text-outline-variant">content_cut</span>
                 </div>
             </article>
             <article class="bg-surface-container border border-outline-variant p-4 rounded-xl shadow-sm">
                 <p class="text-[10px] font-bold uppercase tracking-widest text-on-surface-variant text-primary">Antrean Menunggu</p>
                 <div class="flex justify-between items-center mt-2">
-                    <h2 class="text-2xl font-bold font-headline-md text-on-surface"><?= $adminDashboardStats['liveQueue']; ?></h2>
+                    <h2 class="text-2xl font-bold font-headline-md text-on-surface"><?= $adminDashboardStats[
+                        "liveQueue"
+                    ] ?></h2>
                     <span class="material-symbols-outlined text-outline-variant">group</span>
                 </div>
             </article>
@@ -221,18 +76,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             </article>
         </section>
 
-        <?php
-        // Prepare chart data
+        <?php // Prepare chart data
+
+
         $barberChartNames = [];
         $barberChartSessions = [];
         if ($adminBarbers && mysqli_num_rows($adminBarbers) > 0) {
             mysqli_data_seek($adminBarbers, 0);
             while ($b = mysqli_fetch_assoc($adminBarbers)) {
-                $barberChartNames[] = $b['nama'] ?: 'Kapster';
-                $barberChartSessions[] = (int) $b['sesi_selesai'];
+                $barberChartNames[] = $b["nama"] ?: "Kapster";
+                $barberChartSessions[] = (int) $b["sesi_selesai"];
             }
         }
-        $totalPelanggan = (int)$adminDashboardStats['totalUsers'];
+        $totalPelanggan = (int) $adminDashboardStats["totalUsers"];
         $totalBarber = mysqli_num_rows($adminBarbers);
         ?>
 
@@ -283,41 +139,94 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                             </tr>
                         </thead>
                         <tbody>
-                            <?php if ($adminBarbers && mysqli_num_rows($adminBarbers) > 0): ?>
-                                <?php mysqli_data_seek($adminBarbers, 0); $station = 1; while ($barber = mysqli_fetch_assoc($adminBarbers)): $isActive = (strtolower($barber['status']) === 'aktif'); ?>
+                            <?php if (
+                                $adminBarbers &&
+                                mysqli_num_rows($adminBarbers) > 0
+                            ): ?>
+                                <?php
+                                mysqli_data_seek($adminBarbers, 0);
+                                $station = 1;
+                                while (
+                                    $barber = mysqli_fetch_assoc($adminBarbers)
+                                ):
+                                    $isActive =
+                                        strtolower($barber["status"]) ===
+                                        "aktif"; ?>
                                     <tr>
-                                        <td class="px-3 py-3 text-primary font-bold">Stasiun <?= str_pad((string)$station++, 2, '0', STR_PAD_LEFT); ?></td>
+                                        <td class="px-3 py-3 text-primary font-bold">Stasiun <?= str_pad(
+                                            (string) $station++,
+                                            2,
+                                            "0",
+                                            STR_PAD_LEFT,
+                                        ) ?></td>
                                         <td class="px-3 py-3">
-                                            <p class="text-sm font-bold text-on-surface"><?= htmlspecialchars($barber['nama'] ?: 'Kapster'); ?></p>
-                                            <p class="text-[10px] font-bold text-on-surface-variant mt-1 uppercase tracking-widest"><?= htmlspecialchars($barber['spesialisasi'] ?: '-'); ?></p>
+                                            <p class="text-sm font-bold text-on-surface"><?= htmlspecialchars(
+                                                $barber["nama"] ?: "Kapster",
+                                            ) ?></p>
+                                            <p class="text-[10px] font-bold text-on-surface-variant mt-1 uppercase tracking-widest"><?= htmlspecialchars(
+                                                $barber["spesialisasi"] ?: "-",
+                                            ) ?></p>
                                         </td>
-                                        <td class="px-3 py-3 text-xl font-bold text-primary"><?= (int) $barber['sesi_selesai']; ?></td>
+                                        <td class="px-3 py-3 text-xl font-bold text-primary"><?= (int) $barber[
+                                            "sesi_selesai"
+                                        ] ?></td>
                                         <td class="px-3 py-3">
                                             <div class="flex items-center gap-2 flex-wrap">
                                                 <form method="post" class="flex items-center gap-2 m-0 p-1 rounded inline-flex border border-outline-variant bg-surface-container-low" action="update_barber_status.php">
-                                                    <input type="hidden" name="barber_id" value="<?= (int) $barber['id']; ?>">
+                                                    <input type="hidden" name="barber_id" value="<?= (int) $barber[
+                                                        "id"
+                                                    ] ?>">
                                                     <input type="hidden" name="redirect" value="pengguna.php">
                                                     <select name="status" class="bg-transparent border-none text-xs font-semibold focus:ring-0 text-primary py-1 pr-6 uppercase tracking-wider">
-                                                        <option value="aktif" <?= $isActive ? 'selected' : ''; ?> class="bg-surface text-on-surface">AKTIF</option>
-                                                        <option value="nonaktif" <?= !$isActive ? 'selected' : ''; ?> class="bg-surface text-error">TIDAK AKTIF</option>
+                                                        <option value="aktif" <?= $isActive
+                                                            ? "selected"
+                                                            : "" ?> class="bg-surface text-on-surface">AKTIF</option>
+                                                        <option value="nonaktif" <?= !$isActive
+                                                            ? "selected"
+                                                            : "" ?> class="bg-surface text-error">TIDAK AKTIF</option>
                                                     </select>
                                                     <button type="submit" class="bg-primary/20 text-primary px-2 py-1 rounded text-[10px] font-bold hover:bg-primary/30 transition shadow-sm border border-primary/20 uppercase tracking-widest">Update</button>
                                                 </form>
-                                                <button onclick="showDetailKapster(<?= (int)$barber['id']; ?>, <?= htmlspecialchars(json_encode($barber['nama'] ?: 'Kapster'), ENT_QUOTES); ?>, <?= htmlspecialchars(json_encode($barber['spesialisasi'] ?: '-'), ENT_QUOTES); ?>, '<?= $isActive ? 'Aktif' : 'Tidak Aktif'; ?>', <?= (int)$barber['sesi_selesai']; ?>)"
+                                                <button onclick="showDetailKapster(<?= (int) $barber[
+                                                    "id"
+                                                ] ?>, <?= htmlspecialchars(
+    json_encode($barber["nama"] ?: "Kapster"),
+    ENT_QUOTES,
+) ?>, <?= htmlspecialchars(
+    json_encode($barber["spesialisasi"] ?: "-"),
+    ENT_QUOTES,
+) ?>, '<?= $isActive ? "Aktif" : "Tidak Aktif" ?>', <?= (int) $barber[
+    "sesi_selesai"
+] ?>)"
                                                     class="inline-flex h-8 w-8 items-center justify-center border border-outline-variant text-on-surface-variant rounded-lg transition-colors hover:text-primary hover:border-primary hover:bg-surface-container-high" title="Lihat Detail">
                                                     <span class="material-symbols-outlined text-[18px]">visibility</span>
                                                 </button>
-                                                <button onclick="openEditKapster(<?= (int)$barber['id']; ?>, <?= htmlspecialchars(json_encode($barber['nama'] ?: ''), ENT_QUOTES); ?>, <?= htmlspecialchars(json_encode($barber['username']), ENT_QUOTES); ?>, <?= htmlspecialchars(json_encode($barber['spesialisasi'] ?: ''), ENT_QUOTES); ?>, '<?= strtolower($barber['status']); ?>')"
+                                                <button onclick="openEditKapster(<?= (int) $barber[
+                                                    "id"
+                                                ] ?>, <?= htmlspecialchars(
+    json_encode($barber["nama"] ?: ""),
+    ENT_QUOTES,
+) ?>, <?= htmlspecialchars(
+    json_encode($barber["username"]),
+    ENT_QUOTES,
+) ?>, <?= htmlspecialchars(
+    json_encode($barber["spesialisasi"] ?: ""),
+    ENT_QUOTES,
+) ?>, '<?= strtolower($barber["status"]) ?>')"
                                                     class="inline-flex h-8 w-8 items-center justify-center border border-outline-variant text-on-surface-variant rounded-lg transition-colors hover:text-primary hover:border-primary hover:bg-surface-container-high" title="Edit">
                                                     <span class="material-symbols-outlined text-[18px]">edit</span>
                                                 </button>
-                                                <a href="hapus_barber.php?id=<?= (int)$barber['id']; ?>" onclick="return confirm('Yakin ingin menghapus kapster ini?');" class="inline-flex h-8 w-8 items-center justify-center border border-outline-variant text-error rounded-lg transition-colors hover:bg-error/10 hover:border-error" title="Hapus">
+                                                <a href="../functions/crud_barber.php?action=delete_barber&id=<?= (int) $barber[
+                                                    "id"
+                                                ] ?>" onclick="return confirm('Yakin ingin menghapus kapster ini?');" class="inline-flex h-8 w-8 items-center justify-center border border-outline-variant text-error rounded-lg transition-colors hover:bg-error/10 hover:border-error" title="Hapus">
                                                     <span class="material-symbols-outlined text-[18px]">delete</span>
                                                 </a>
                                             </div>
                                         </td>
                                     </tr>
-                                <?php endwhile; ?>
+                                <?php
+                                endwhile;
+                                ?>
                             <?php endif; ?>
                         </tbody>
                     </table>
@@ -348,32 +257,64 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                             </tr>
                         </thead>
                         <tbody>
-                            <?php if ($adminCustomers && mysqli_num_rows($adminCustomers) > 0): ?>
-                                <?php mysqli_data_seek($adminCustomers, 0); while ($customer = mysqli_fetch_assoc($adminCustomers)): ?>
+                            <?php if (
+                                $adminCustomers &&
+                                mysqli_num_rows($adminCustomers) > 0
+                            ): ?>
+                                <?php
+                                mysqli_data_seek($adminCustomers, 0);
+                                while (
+                                    $customer = mysqli_fetch_assoc(
+                                        $adminCustomers,
+                                    )
+                                ): ?>
                                     <tr>
                                         <td class="px-3 py-3">
-                                            <p class="text-sm font-bold text-on-surface"><?= htmlspecialchars($customer['nama'] ?: $customer['username']); ?></p>
-                                            <p class="text-[10px] uppercase tracking-widest text-on-surface-variant mt-1 font-bold">ID #<?= str_pad((string) $customer['id_user'], 4, '0', STR_PAD_LEFT); ?></p>
+                                            <p class="text-sm font-bold text-on-surface"><?= htmlspecialchars(
+                                                $customer["nama"] ?:
+                                                $customer["username"],
+                                            ) ?></p>
+                                            <p class="text-[10px] uppercase tracking-widest text-on-surface-variant mt-1 font-bold">ID #<?= str_pad(
+                                                (string) $customer["id_user"],
+                                                4,
+                                                "0",
+                                                STR_PAD_LEFT,
+                                            ) ?></p>
                                         </td>
-                                        <td class="px-3 py-3 text-sm font-medium text-primary">@<?= htmlspecialchars($customer['username']); ?></td>
+                                        <td class="px-3 py-3 text-sm font-medium text-primary">@<?= htmlspecialchars(
+                                            $customer["username"],
+                                        ) ?></td>
                                         <td class="px-3 py-3"><span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-primary/10 text-primary border border-primary/30 uppercase tracking-wider">Pelanggan</span></td>
                                         <td class="px-3 py-3 text-right">
                                             <div class="inline-flex items-center gap-2">
-                                                <button onclick="showDetailPelanggan(<?= (int)$customer['id_user']; ?>, <?= htmlspecialchars(json_encode($customer['nama'] ?: $customer['username']), ENT_QUOTES); ?>, <?= htmlspecialchars(json_encode($customer['username']), ENT_QUOTES); ?>)"
+                                                <button onclick="showDetailPelanggan(<?= (int) $customer[
+                                                    "id_user"
+                                                ] ?>, <?= htmlspecialchars(
+    json_encode($customer["nama"] ?: $customer["username"]),
+    ENT_QUOTES,
+) ?>, <?= htmlspecialchars(json_encode($customer["username"]), ENT_QUOTES) ?>)"
                                                     class="inline-flex h-8 w-8 items-center justify-center border border-outline-variant text-on-surface-variant rounded-lg transition-colors hover:text-primary hover:border-primary hover:bg-surface-container-high" title="Lihat Detail">
                                                     <span class="material-symbols-outlined text-[16px]">visibility</span>
                                                 </button>
-                                                <button onclick="openEditPelanggan(<?= (int)$customer['id_user']; ?>, <?= htmlspecialchars(json_encode($customer['nama'] ?: ''), ENT_QUOTES); ?>, <?= htmlspecialchars(json_encode($customer['username']), ENT_QUOTES); ?>)"
+                                                <button onclick="openEditPelanggan(<?= (int) $customer[
+                                                    "id_user"
+                                                ] ?>, <?= htmlspecialchars(
+    json_encode($customer["nama"] ?: ""),
+    ENT_QUOTES,
+) ?>, <?= htmlspecialchars(json_encode($customer["username"]), ENT_QUOTES) ?>)"
                                                     class="inline-flex h-8 w-8 items-center justify-center border border-outline-variant text-on-surface-variant rounded-lg transition-colors hover:text-primary hover:border-primary hover:bg-surface-container-high" title="Edit">
                                                     <span class="material-symbols-outlined text-[16px]">edit</span>
                                                 </button>
-                                                <a href="hapus_pengguna.php?id=<?= (int)$customer['id_user']; ?>" onclick="return confirm('Yakin ingin menghapus pelanggan ini?');" class="inline-flex h-8 w-8 items-center justify-center border border-outline-variant text-error rounded-lg transition-colors hover:bg-error/10 hover:border-error" title="Hapus">
+                                                <a href="../functions/crud_pengguna.php?action=delete_user&id=<?= (int) $customer[
+                                                    "id_user"
+                                                ] ?>" onclick="return confirm('Yakin ingin menghapus pelanggan ini?');" class="inline-flex h-8 w-8 items-center justify-center border border-outline-variant text-error rounded-lg transition-colors hover:bg-error/10 hover:border-error" title="Hapus">
                                                     <span class="material-symbols-outlined text-[16px]">delete</span>
                                                 </a>
                                             </div>
                                         </td>
                                     </tr>
-                                <?php endwhile; ?>
+                                <?php endwhile;
+                                ?>
                             <?php endif; ?>
                         </tbody>
                     </table>
@@ -401,7 +342,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 <span class="material-symbols-outlined">close</span>
             </button>
         </div>
-        <form method="POST" class="p-5 space-y-4">
+        <form method="POST" action="../functions/crud_barber.php" class="p-5 space-y-4">
             <input type="hidden" name="action" value="add_barber">
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
@@ -470,7 +411,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 <span class="material-symbols-outlined">close</span>
             </button>
         </div>
-        <form method="POST" class="p-5 space-y-4">
+        <form method="POST" action="../functions/crud_pengguna.php" class="p-5 space-y-4">
             <input type="hidden" name="action" value="add_user">
             <div>
                 <label class="mb-1.5 block text-[10px] font-bold uppercase tracking-widest text-on-surface-variant">Nama Lengkap</label>
@@ -519,7 +460,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 <span class="material-symbols-outlined">close</span>
             </button>
         </div>
-        <form method="POST" enctype="multipart/form-data" class="p-5 space-y-4">
+        <form method="POST" action="../functions/crud_barber.php" enctype="multipart/form-data" class="p-5 space-y-4">
             <input type="hidden" name="action" value="edit_barber">
             <input type="hidden" name="id_barber" id="editKapster_id">
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -585,7 +526,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 <span class="material-symbols-outlined">close</span>
             </button>
         </div>
-        <form method="POST" enctype="multipart/form-data" class="p-5 space-y-4">
+        <form method="POST" action="../functions/crud_pengguna.php" enctype="multipart/form-data" class="p-5 space-y-4">
             <input type="hidden" name="action" value="edit_user">
             <input type="hidden" name="id_user" id="editPelanggan_id">
             <div>
@@ -669,7 +610,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <?php if ($modalError): ?>
     document.addEventListener('DOMContentLoaded', function() {
         Swal.fire({
-            icon: 'error', title: 'Gagal', text: <?= json_encode($modalError); ?>,
+            icon: 'error', title: 'Gagal', text: <?= json_encode(
+                $modalError,
+            ) ?>,
             background: '#1e2020', color: '#e2e2e2', confirmButtonColor: '#f2ca50', iconColor: '#ffb4ab'
         });
     });
@@ -677,7 +620,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <?php if ($modalSuccess): ?>
     document.addEventListener('DOMContentLoaded', function() {
         Swal.fire({
-            icon: 'success', title: 'Berhasil!', text: <?= json_encode($modalSuccess); ?>,
+            icon: 'success', title: 'Berhasil!', text: <?= json_encode(
+                $modalSuccess,
+            ) ?>,
             background: '#1e2020', color: '#e2e2e2', confirmButtonColor: '#f2ca50', iconColor: '#f2ca50'
         });
     });
@@ -768,12 +713,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     };
     new Chart(document.getElementById('barberPerformanceChart').getContext('2d'), {
         type: 'bar',
-        data: { labels: <?= json_encode($barberChartNames); ?>, datasets: [{ label: 'Sesi Selesai', data: <?= json_encode($barberChartSessions); ?>, backgroundColor: 'rgba(242, 202, 80, 0.8)', borderColor: '#f2ca50', borderWidth: 1, borderRadius: 4 }] },
+        data: { labels: <?= json_encode(
+            $barberChartNames,
+        ) ?>, datasets: [{ label: 'Sesi Selesai', data: <?= json_encode(
+    $barberChartSessions,
+) ?>, backgroundColor: 'rgba(242, 202, 80, 0.8)', borderColor: '#f2ca50', borderWidth: 1, borderRadius: 4 }] },
         options: chartOptions
     });
     new Chart(document.getElementById('userCompositionChart').getContext('2d'), {
         type: 'doughnut',
-        data: { labels: ['Pelanggan', 'Kapster'], datasets: [{ data: [<?= $totalPelanggan; ?>, <?= $totalBarber; ?>], backgroundColor: ['#f2ca50', '#474746'], borderColor: ['#121414', '#121414'], borderWidth: 2, hoverOffset: 4 }] },
+        data: { labels: ['Pelanggan', 'Kapster'], datasets: [{ data: [<?= $totalPelanggan ?>, <?= $totalBarber ?>], backgroundColor: ['#f2ca50', '#474746'], borderColor: ['#121414', '#121414'], borderWidth: 2, hoverOffset: 4 }] },
         options: { responsive: true, maintainAspectRatio: false, cutout: '70%', plugins: { legend: { position: 'right', labels: { color: '#e2e2e2', font: { family: 'Inter', size: 12 } } } } }
     });
 
@@ -801,4 +750,4 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         if (el) el.addEventListener('click', function(e) { if (e.target === el) el.classList.add('hidden'); });
     });
 </script>
-<?php admin_footer('pengguna'); ?>
+<?php admin_footer("pengguna"); ?>

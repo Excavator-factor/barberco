@@ -1,6 +1,6 @@
 <?php
 session_start();
-include 'config/database.php';
+include "config/database.php";
 
 function landing_scalar_query($conn, string $query): int
 {
@@ -10,21 +10,29 @@ function landing_scalar_query($conn, string $query): int
     }
 
     $row = mysqli_fetch_assoc($result);
-    return (int) ($row['total'] ?? 0);
+    return (int) ($row["total"] ?? 0);
 }
 
 $hasServiceImage = false;
-$imageColumnCheck = @mysqli_query($conn, "SHOW COLUMNS FROM layanan LIKE 'gambar'");
+$imageColumnCheck = @mysqli_query(
+    $conn,
+    "SHOW COLUMNS FROM layanan LIKE 'gambar'",
+);
 if ($imageColumnCheck && mysqli_fetch_assoc($imageColumnCheck)) {
     $hasServiceImage = true;
 }
 
 $serviceColumns = $hasServiceImage
-    ? 'id, nama_layanan, deskripsi, harga, durasi, gambar'
-    : 'id, nama_layanan, deskripsi, harga, durasi';
+    ? "id, nama_layanan, deskripsi, harga, durasi, gambar"
+    : "id, nama_layanan, deskripsi, harga, durasi";
 
-$servicesResult = mysqli_query($conn, "SELECT {$serviceColumns} FROM layanan ORDER BY id ASC");
-$services = $servicesResult ? mysqli_fetch_all($servicesResult, MYSQLI_ASSOC) : [];
+$servicesResult = mysqli_query(
+    $conn,
+    "SELECT {$serviceColumns} FROM layanan ORDER BY id ASC",
+);
+$services = $servicesResult
+    ? mysqli_fetch_all($servicesResult, MYSQLI_ASSOC)
+    : [];
 
 $queueResult = mysqli_query(
     $conn,
@@ -34,55 +42,69 @@ $queueResult = mysqli_query(
      LEFT JOIN layanan l ON l.id = a.layanan_id
      WHERE a.tanggal = CURDATE() AND a.status_antrian IN ('menunggu', 'proses')
      ORDER BY FIELD(a.status_antrian, 'proses', 'menunggu'), a.no_antrian ASC
-     LIMIT 6"
+     LIMIT 6",
 );
-$currentQueues = $queueResult ? mysqli_fetch_all($queueResult, MYSQLI_ASSOC) : [];
+$currentQueues = $queueResult
+    ? mysqli_fetch_all($queueResult, MYSQLI_ASSOC)
+    : [];
 $nowServing = $currentQueues[0] ?? null;
 
-$waitingCount = landing_scalar_query($conn, "SELECT COUNT(*) AS total FROM antrian WHERE tanggal = CURDATE() AND status_antrian = 'menunggu'");
-$processCount = landing_scalar_query($conn, "SELECT COUNT(*) AS total FROM antrian WHERE tanggal = CURDATE() AND status_antrian = 'proses'");
-$servedCount = landing_scalar_query($conn, "SELECT COUNT(*) AS total FROM antrian WHERE tanggal = CURDATE() AND status_antrian = 'selesai'");
-$activeBarbers = landing_scalar_query($conn, "SELECT COUNT(*) AS total FROM barber WHERE LOWER(COALESCE(status, 'aktif')) = 'aktif'");
+$waitingCount = landing_scalar_query(
+    $conn,
+    "SELECT COUNT(*) AS total FROM antrian WHERE tanggal = CURDATE() AND status_antrian = 'menunggu'",
+);
+$processCount = landing_scalar_query(
+    $conn,
+    "SELECT COUNT(*) AS total FROM antrian WHERE tanggal = CURDATE() AND status_antrian = 'proses'",
+);
+$servedCount = landing_scalar_query(
+    $conn,
+    "SELECT COUNT(*) AS total FROM antrian WHERE tanggal = CURDATE() AND status_antrian = 'selesai'",
+);
+$activeBarbers = landing_scalar_query(
+    $conn,
+    "SELECT COUNT(*) AS total FROM barber WHERE LOWER(COALESCE(status, 'aktif')) = 'aktif'",
+);
 $queueTotal = $waitingCount + $processCount + $servedCount;
 $estimatedWait = max(5, $waitingCount * 12);
 $capacity = min(100, max(12, ($waitingCount + $processCount) * 14));
 
 function landing_service_visual(array $service): string
 {
-    $stored = trim((string) ($service['gambar'] ?? ''));
-    if ($stored !== '') {
-        $localPath = __DIR__ . '/' . ltrim($stored, '/');
+    $stored = trim((string) ($service["gambar"] ?? ""));
+    if ($stored !== "") {
+        $localPath = __DIR__ . "/" . ltrim($stored, "/");
         if (is_file($localPath)) {
-            return ltrim($stored, '/');
+            return ltrim($stored, "/");
         }
     }
 
-    $id = (int) ($service['id'] ?? 0);
+    $id = (int) ($service["id"] ?? 0);
     $images = [
-        'https://images.unsplash.com/photo-1622287162716-f311baa1a2b8?auto=format&fit=crop&w=1000&q=80',
-        'https://images.unsplash.com/photo-1585747860715-2ba37e788b70?auto=format&fit=crop&w=1000&q=80',
-        'https://images.unsplash.com/photo-1502823403499-6ccfcf4fb453?auto=format&fit=crop&w=1000&q=80',
-        'https://images.unsplash.com/photo-1605497788044-5a32c7078486?auto=format&fit=crop&w=1000&q=80',
-        'https://images.unsplash.com/photo-1503951914875-452162b0f3f1?auto=format&fit=crop&w=1000&q=80',
-        'https://images.unsplash.com/photo-1621605815971-fbc98d665033?auto=format&fit=crop&w=1000&q=80'
+        "https://images.unsplash.com/photo-1622287162716-f311baa1a2b8?auto=format&fit=crop&w=1000&q=80",
+        "https://images.unsplash.com/photo-1585747860715-2ba37e788b70?auto=format&fit=crop&w=1000&q=80",
+        "https://images.unsplash.com/photo-1502823403499-6ccfcf4fb453?auto=format&fit=crop&w=1000&q=80",
+        "https://images.unsplash.com/photo-1605497788044-5a32c7078486?auto=format&fit=crop&w=1000&q=80",
+        "https://images.unsplash.com/photo-1503951914875-452162b0f3f1?auto=format&fit=crop&w=1000&q=80",
+        "https://images.unsplash.com/photo-1621605815971-fbc98d665033?auto=format&fit=crop&w=1000&q=80",
     ];
     return $images[$id % count($images)];
 }
 
 $is_logged_in = false;
-$user_role = '';
-$book_now_url = '#';
+$user_role = "";
+$book_now_url = "#";
 
-if (isset($_SESSION['role'])) {
+if (isset($_SESSION["role"])) {
     $is_logged_in = true;
-    $user_role = $_SESSION['role'];
+    $user_role = $_SESSION["role"];
 
-    if ($user_role === 'pelanggan') {
-        $book_now_url = 'pelanggan/dashboard.php?open_modal=1';
-    } elseif ($user_role === 'admin') {
-        $book_now_url = 'admin/dashboard.php';
-    } elseif ($user_role === 'barber') {
-        $book_now_url = 'barber/dashboard.php';
+    if ($user_role === "pelanggan") {
+        $book_now_url = "pelanggan/dashboard.php?open_modal=1";
+    } elseif ($user_role === "admin") {
+        $book_now_url = "admin/dashboard.php";
+    } elseif ($user_role === "barber") {
+        $book_now_url = "barber/dashboard.php";
     }
 }
 ?>
@@ -204,10 +226,17 @@ if (isset($_SESSION['role'])) {
                             <p class="text-[11px] font-black uppercase tracking-[0.22em] text-primary">Now Serving</p>
                             <div class="mt-3 flex items-end gap-3">
                                 <span class="font-display text-6xl font-black leading-none text-on-surface">
-                                    #<?= $nowServing ? str_pad((string) $nowServing['no_antrian'], 3, '0', STR_PAD_LEFT) : '---'; ?>
+                                    #<?= $nowServing
+                                        ? str_pad(
+                                            (string) $nowServing["no_antrian"],
+                                            3,
+                                            "0",
+                                            STR_PAD_LEFT,
+                                        )
+                                        : "---" ?>
                                 </span>
                                 <span class="pb-2 text-sm font-bold uppercase tracking-[0.16em] text-on-muted">
-                                    <?= $queueTotal; ?> total
+                                    <?= $queueTotal ?> total
                                 </span>
                             </div>
                         </div>
@@ -221,14 +250,14 @@ if (isset($_SESSION['role'])) {
                         <div class="border border-outline bg-background p-4">
                             <span class="material-symbols-outlined text-primary">schedule</span>
                             <p class="mt-3 text-[11px] font-black uppercase tracking-[0.18em] text-on-muted">Estimasi Tunggu</p>
-                            <h2 class="mt-1 font-display text-3xl font-black text-on-surface"><?= $estimatedWait; ?> Min</h2>
+                            <h2 class="mt-1 font-display text-3xl font-black text-on-surface"><?= $estimatedWait ?> Min</h2>
                         </div>
                         <div class="border border-outline bg-background p-4">
                             <span class="material-symbols-outlined text-primary">groups</span>
                             <p class="mt-3 text-[11px] font-black uppercase tracking-[0.18em] text-on-muted">Kapasitas Toko</p>
-                            <h2 class="mt-1 font-display text-3xl font-black text-on-surface"><?= $capacity; ?>%</h2>
+                            <h2 class="mt-1 font-display text-3xl font-black text-on-surface"><?= $capacity ?>%</h2>
                             <div class="mt-3 h-1 bg-surface-high">
-                                <div class="h-full bg-primary" style="width: <?= $capacity; ?>%"></div>
+                                <div class="h-full bg-primary" style="width: <?= $capacity ?>%"></div>
                             </div>
                         </div>
                     </div>
@@ -238,11 +267,23 @@ if (isset($_SESSION['role'])) {
                             <?php foreach ($currentQueues as $queue): ?>
                                 <article class="flex items-center justify-between gap-4 border border-outline bg-surface-low p-4">
                                     <div>
-                                        <p class="text-[11px] font-black uppercase tracking-[0.18em] text-primary">#<?= str_pad((string) $queue['no_antrian'], 3, '0', STR_PAD_LEFT); ?></p>
-                                        <h3 class="mt-1 font-display text-base font-bold text-on-surface"><?= htmlspecialchars($queue['nama_layanan'] ?? 'Layanan'); ?></h3>
-                                        <p class="mt-1 text-sm text-on-muted"><?= htmlspecialchars($queue['nama_barber'] ?? 'Barber tersedia'); ?></p>
+                                        <p class="text-[11px] font-black uppercase tracking-[0.18em] text-primary">#<?= str_pad(
+                                            (string) $queue["no_antrian"],
+                                            3,
+                                            "0",
+                                            STR_PAD_LEFT,
+                                        ) ?></p>
+                                        <h3 class="mt-1 font-display text-base font-bold text-on-surface"><?= htmlspecialchars(
+                                            $queue["nama_layanan"] ?? "Layanan",
+                                        ) ?></h3>
+                                        <p class="mt-1 text-sm text-on-muted"><?= htmlspecialchars(
+                                            $queue["nama_barber"] ??
+                                                "Barber tersedia",
+                                        ) ?></p>
                                     </div>
-                                    <span class="text-[11px] font-black uppercase tracking-[0.18em] text-on-muted"><?= htmlspecialchars($queue['status_antrian']); ?></span>
+                                    <span class="text-[11px] font-black uppercase tracking-[0.18em] text-on-muted"><?= htmlspecialchars(
+                                        $queue["status_antrian"],
+                                    ) ?></span>
                                 </article>
                             <?php endforeach; ?>
                         <?php else: ?>
@@ -263,7 +304,9 @@ if (isset($_SESSION['role'])) {
                         <img src="https://images.unsplash.com/photo-1599351431202-1e0f0137899a?auto=format&fit=crop&w=1000&q=80" alt="Interior barbershop premium" class="h-full w-full object-cover grayscale transition duration-500 hover:grayscale-0">
                     </div>
                     <div class="absolute -bottom-5 right-5 border border-primary bg-primary px-5 py-4 text-on-primary">
-                        <p class="font-display text-xl font-black uppercase">Est. <?= date('Y'); ?></p>
+                        <p class="font-display text-xl font-black uppercase">Est. <?= date(
+                            "Y",
+                        ) ?></p>
                     </div>
                 </div>
 
@@ -317,20 +360,38 @@ if (isset($_SESSION['role'])) {
                 <?php if ($services): ?>
                     <div id="serviceCarousel" class="hide-scrollbar flex gap-5 overflow-x-auto pb-4">
                         <?php foreach ($services as $service): ?>
-                            <?php $serviceImage = landing_service_visual($service); ?>
+                            <?php $serviceImage = landing_service_visual(
+                                $service,
+                            ); ?>
                             <article class="group relative min-w-[320px] border border-outline bg-surface md:min-w-[400px]">
                                 <div class="aspect-[16/10] overflow-hidden bg-surface-high">
-                                    <img src="<?= htmlspecialchars($serviceImage); ?>" alt="Foto layanan <?= htmlspecialchars($service['nama_layanan']); ?>" class="h-full w-full object-cover grayscale transition duration-500 group-hover:scale-105 group-hover:grayscale-0">
+                                    <img src="<?= htmlspecialchars(
+                                        $serviceImage,
+                                    ) ?>" alt="Foto layanan <?= htmlspecialchars(
+    $service["nama_layanan"],
+) ?>" class="h-full w-full object-cover grayscale transition duration-500 group-hover:scale-105 group-hover:grayscale-0">
                                 </div>
                                 <div class="p-5">
                                     <div class="flex items-start justify-between gap-4">
-                                        <h3 class="font-display text-xl font-bold text-on-surface"><?= htmlspecialchars($service['nama_layanan']); ?></h3>
-                                        <span class="whitespace-nowrap text-lg font-black text-primary">Rp <?= number_format((int) $service['harga'], 0, ',', '.'); ?></span>
+                                        <h3 class="font-display text-xl font-bold text-on-surface"><?= htmlspecialchars(
+                                            $service["nama_layanan"],
+                                        ) ?></h3>
+                                        <span class="whitespace-nowrap text-lg font-black text-primary">Rp <?= number_format(
+                                            (int) $service["harga"],
+                                            0,
+                                            ",",
+                                            ".",
+                                        ) ?></span>
                                     </div>
-                                    <p class="mt-4 min-h-20 text-sm leading-7 text-on-muted"><?= htmlspecialchars($service['deskripsi'] ?: 'Deskripsi layanan tersedia saat pemesanan.'); ?></p>
+                                    <p class="mt-4 min-h-20 text-sm leading-7 text-on-muted"><?= htmlspecialchars(
+                                        $service["deskripsi"] ?:
+                                        "Deskripsi layanan tersedia saat pemesanan.",
+                                    ) ?></p>
                                     <div class="mt-5 flex items-center gap-2 border-t border-outline pt-4 text-[11px] font-black uppercase tracking-[0.18em] text-on-muted">
                                         <span class="material-symbols-outlined text-sm text-primary">schedule</span>
-                                        <span><?= (int) $service['durasi']; ?> Menit</span>
+                                        <span><?= (int) $service[
+                                            "durasi"
+                                        ] ?> Menit</span>
                                     </div>
                                 </div>
                                 <div class="absolute inset-0 flex items-center justify-center bg-primary/90 opacity-0 transition duration-300 group-hover:opacity-100">
@@ -430,7 +491,9 @@ if (isset($_SESSION['role'])) {
 
             <!-- Copyright -->
             <div class="border-t border-outline pt-8 flex flex-col md:flex-row justify-between items-center gap-4">
-                <p class="text-[11px] text-on-muted uppercase tracking-widest font-black">&copy; <?= date('Y'); ?> Barber.co Premium Grooming.</p>
+                <p class="text-[11px] text-on-muted uppercase tracking-widest font-black">&copy; <?= date(
+                    "Y",
+                ) ?> Barber.co Premium Grooming.</p>
                 <div class="flex gap-6 text-[10px] text-on-muted font-bold uppercase tracking-widest">
                     <a href="#" class="hover:text-primary transition-colors">Privasi</a>
                     <a href="#" class="hover:text-primary transition-colors">Syarat & Ketentuan</a>
@@ -468,8 +531,8 @@ if (isset($_SESSION['role'])) {
     </div>
 
     <script>
-        const isLoggedIn = <?= json_encode($is_logged_in); ?>;
-        const bookNowUrl = <?= json_encode($book_now_url); ?>;
+        const isLoggedIn = <?= json_encode($is_logged_in) ?>;
+        const bookNowUrl = <?= json_encode($book_now_url) ?>;
 
         function handleBookNow() {
             if (isLoggedIn) {

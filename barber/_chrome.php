@@ -158,31 +158,43 @@ function barber_head(string $title): void
 
 function barber_header(string $title): void
 {
-    $barberName = $GLOBALS['barberName'] ?? 'Marcus Thorne';
-    ?>
+    $barberName = $GLOBALS["barberName"] ?? "Marcus Thorne"; ?>
     <header class="h-16 flex-shrink-0 w-full bg-surface border-b border-outline-variant flex justify-between items-center px-md sticky top-0 z-40">
         <div class="flex items-center gap-4">
             <button type="button" class="text-primary hover:opacity-80 transition" id="barberSidebarToggle">
                 <span class="material-symbols-outlined" data-icon="menu">menu</span>
             </button>
             <div class="hidden sm:block">
-                <span class="font-headline-md text-headline-md font-bold text-primary"><?= htmlspecialchars($title) ?></span>
+                <span class="font-headline-md text-headline-md font-bold text-primary"><?= htmlspecialchars(
+                    $title,
+                ) ?></span>
             </div>
         </div>
         <div class="flex items-center gap-6">
             <!-- Real Time Clock -->
             <div class="font-label-caps text-label-caps text-primary border-r border-outline-variant pr-6 py-1" id="real-time-clock">
-                <?= date('h:i:s A'); ?>
+                <?= date("h:i:s A") ?>
             </div>
             <div class="flex items-center gap-4">
                 <div class="flex items-center gap-3">
                     <div class="text-right hidden lg:block">
-                        <p class="font-bold text-sm leading-none text-on-surface"><?= htmlspecialchars($barberName) ?></p>
+                        <p class="font-bold text-sm leading-none text-on-surface"><?= htmlspecialchars(
+                            $barberName,
+                        ) ?></p>
                         <p class="text-xs text-on-surface-variant">Master Barber</p>
                     </div>
                     <div class="w-10 h-10 rounded-full border-2 border-primary overflow-hidden flex items-center justify-center bg-surface-container-high text-primary font-bold">
-                        <?php if (!empty($_SESSION['avatar']) && file_exists(__DIR__ . '/../uploads/avatars/' . $_SESSION['avatar'])): ?>
-                            <img class="w-full h-full object-cover" alt="Barber Profile" src="../uploads/avatars/<?= htmlspecialchars($_SESSION['avatar']) ?>"/>
+                        <?php if (
+                            !empty($_SESSION["avatar"]) &&
+                            file_exists(
+                                __DIR__ .
+                                    "/../uploads/avatars/" .
+                                    $_SESSION["avatar"],
+                            )
+                        ): ?>
+                            <img class="w-full h-full object-cover" alt="Barber Profile" src="../uploads/avatars/<?= htmlspecialchars(
+                                $_SESSION["avatar"],
+                            ) ?>"/>
                         <?php else: ?>
                             <span class="material-symbols-outlined">person</span>
                         <?php endif; ?>
@@ -196,14 +208,14 @@ function barber_header(string $title): void
 
 function barber_sidebar(string $active): void
 {
-    $activeQueue = $GLOBALS['activeQueue'] ?? null;
-    $waitingQueues = $GLOBALS['waitingQueues'] ?? [];
-    $barberId = $GLOBALS['barberId'] ?? 0;
+    $activeQueue = $GLOBALS["activeQueue"] ?? null;
+    $waitingQueues = $GLOBALS["waitingQueues"] ?? [];
+    $barberId = $GLOBALS["barberId"] ?? 0;
 
     $firstStartable = null;
     if (!$activeQueue && $waitingQueues) {
         foreach ($waitingQueues as $q) {
-            if (empty($q['barber_id']) || (int)$q['barber_id'] === $barberId) {
+            if (empty($q["barber_id"]) || (int) $q["barber_id"] === $barberId) {
                 $firstStartable = $q;
                 break;
             }
@@ -219,11 +231,15 @@ function barber_sidebar(string $active): void
             </a>
         </div>
         <nav class="flex-grow py-md overflow-y-auto space-y-1">
-            <a class="<?= $active === 'dashboard' ? 'bg-primary text-on-primary font-bold' : 'text-on-surface-variant hover:bg-secondary-container hover:text-on-secondary-container' ?> rounded-lg px-4 py-3 mx-2 my-1 flex items-center gap-3 transition-all duration-200" href="dashboard.php">
+            <a class="<?= $active === "dashboard"
+                ? "bg-primary text-on-primary font-bold"
+                : "text-on-surface-variant hover:bg-secondary-container hover:text-on-secondary-container" ?> rounded-lg px-4 py-3 mx-2 my-1 flex items-center gap-3 transition-all duration-200" href="dashboard.php">
                 <span class="material-symbols-outlined" data-icon="dashboard">dashboard</span>
                 <span class="font-label-caps text-label-caps">Dashboard</span>
             </a>
-            <a class="<?= $active === 'riwayat' ? 'bg-primary text-on-primary font-bold' : 'text-on-surface-variant hover:bg-secondary-container hover:text-on-secondary-container' ?> rounded-lg px-4 py-3 mx-2 my-1 flex items-center gap-3 transition-all duration-200" href="riwayat.php">
+            <a class="<?= $active === "riwayat"
+                ? "bg-primary text-on-primary font-bold"
+                : "text-on-surface-variant hover:bg-secondary-container hover:text-on-secondary-container" ?> rounded-lg px-4 py-3 mx-2 my-1 flex items-center gap-3 transition-all duration-200" href="riwayat.php">
                 <span class="material-symbols-outlined" data-icon="analytics">analytics</span>
                 <span class="font-label-caps text-label-caps">Riwayat Sesi</span>
             </a>
@@ -233,7 +249,9 @@ function barber_sidebar(string $active): void
             <div class="px-md pt-lg pb-base">
                 <p class="font-label-caps text-label-caps text-outline uppercase">Preferences</p>
             </div>
-            <a class="<?= $active === 'profil' ? 'bg-primary text-on-primary font-bold' : 'text-on-surface-variant hover:bg-secondary-container hover:text-on-secondary-container' ?> rounded-lg px-4 py-3 mx-2 my-1 flex items-center gap-3 transition-all duration-200" href="profil.php">
+            <a class="<?= $active === "profil"
+                ? "bg-primary text-on-primary font-bold"
+                : "text-on-surface-variant hover:bg-secondary-container hover:text-on-secondary-container" ?> rounded-lg px-4 py-3 mx-2 my-1 flex items-center gap-3 transition-all duration-200" href="profil.php">
                 <span class="material-symbols-outlined" data-icon="person">person</span>
                 <span class="font-label-caps text-label-caps">Profil & Pengaturan</span>
             </a>
@@ -257,11 +275,17 @@ function barber_mobile_nav(string $active): void
 {
     ?>
     <nav class="md:hidden fixed bottom-0 left-0 right-0 h-16 bg-surface-container border-t border-outline-variant flex justify-around items-center z-50 px-2">
-        <a href="dashboard.php" class="flex flex-col items-center gap-1 <?= $active === 'dashboard' ? 'text-primary' : 'text-on-surface-variant' ?>">
+        <a href="dashboard.php" class="flex flex-col items-center gap-1 <?= $active ===
+        "dashboard"
+            ? "text-primary"
+            : "text-on-surface-variant" ?>">
             <span class="material-symbols-outlined text-xl" data-icon="dashboard">dashboard</span>
             <span class="text-[10px] font-bold uppercase">Dashboard</span>
         </a>
-        <a href="riwayat.php" class="flex flex-col items-center gap-1 <?= $active === 'riwayat' ? 'text-primary' : 'text-on-surface-variant' ?>">
+        <a href="riwayat.php" class="flex flex-col items-center gap-1 <?= $active ===
+        "riwayat"
+            ? "text-primary"
+            : "text-on-surface-variant" ?>">
             <span class="material-symbols-outlined text-xl" data-icon="analytics">analytics</span>
             <span class="text-[10px] font-bold uppercase">Riwayat</span>
         </a>

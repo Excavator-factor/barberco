@@ -1,38 +1,9 @@
 <?php
-include '../config/database.php';
+include "../config/database.php";
 
-$error = '';
-
-if (isset($_POST['register'])) {
-    $nama = trim($_POST['nama']);
-    $username = trim($_POST['username']);
-    $password = password_hash($_POST['password'], PASSWORD_DEFAULT);
-    $role = 'pelanggan';
-
-    // Cek apakah username sudah ada di database
-    $check_stmt = mysqli_prepare($conn, "SELECT id_user FROM users WHERE username = ?");
-    mysqli_stmt_bind_param($check_stmt, "s", $username);
-    mysqli_stmt_execute($check_stmt);
-    mysqli_stmt_store_result($check_stmt);
-
-    if (mysqli_stmt_num_rows($check_stmt) > 0) {
-        $error = 'Username sudah digunakan. Silakan pilih username lain.';
-    } else {
-        $stmt = mysqli_prepare($conn, "INSERT INTO users (nama, username, password, role) VALUES (?, ?, ?, ?)");
-        mysqli_stmt_bind_param($stmt, "ssss", $nama, $username, $password, $role);
-
-        if (mysqli_stmt_execute($stmt)) {
-            header("Location: login.php");
-            exit;
-        }
-
-        $error = 'Pendaftaran gagal. Silakan coba lagi.';
-    }
-    
-    if (isset($check_stmt)) {
-        mysqli_stmt_close($check_stmt);
-    }
-}
+session_start();
+$error = $_SESSION["error"] ?? "";
+unset($_SESSION["error"]);
 ?>
 <!DOCTYPE html>
 <html class="dark" lang="en">
@@ -206,7 +177,10 @@ if (isset($_POST['register'])) {
                             Swal.fire({
                                 icon: 'error',
                                 title: 'Pendaftaran Gagal',
-                                text: '<?= htmlspecialchars($error, ENT_QUOTES); ?>',
+                                text: '<?= htmlspecialchars(
+                                    $error,
+                                    ENT_QUOTES,
+                                ) ?>',
                                 background: '#1e2020',
                                 color: '#e2e2e2',
                                 confirmButtonColor: '#f2ca50',
@@ -216,7 +190,7 @@ if (isset($_POST['register'])) {
                     </script>
                 <?php endif; ?>
 
-                <form class="space-y-base" id="registerForm" method="POST" action="">
+                <form class="space-y-base" id="registerForm" method="POST" action="../functions/auth.php?action=register">
                     <!-- Full Name -->
                     <div class="space-y-xs">
                         <label class="font-label-caps text-label-caps text-on-surface-variant">Nama Lengkap</label>
@@ -268,7 +242,9 @@ if (isset($_POST['register'])) {
     <!-- Footer -->
     <footer class="w-full py-md bg-surface-dim border-t border-outline-variant">
         <div class="max-w-7xl mx-auto px-md flex flex-col md:flex-row justify-between items-center gap-md">
-            <p class="font-label-caps text-label-caps text-on-surface-variant">© <?php echo date('Y'); ?> Barber.co GROOMING CO.</p>
+            <p class="font-label-caps text-label-caps text-on-surface-variant">© <?php echo date(
+                "Y",
+            ); ?> Barber.co GROOMING CO.</p>
             <div class="flex gap-lg">
                 <a class="font-label-caps text-label-caps text-on-surface-variant hover:text-primary transition-colors" href="#">KEBIJAKAN PRIVASI</a>
                 <a class="font-label-caps text-label-caps text-on-surface-variant hover:text-primary transition-colors" href="#">SYARAT LAYANAN</a>

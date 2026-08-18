@@ -1,77 +1,12 @@
 <?php
 error_reporting(E_ALL);
-ini_set('display_errors', 1);
+ini_set("display_errors", 1);
 
 session_start();
-include '../config/database.php';
+include "../config/database.php";
 
-$error = '';
-
-if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $username = mysqli_real_escape_string($conn, trim($_POST['username'] ?? ''));
-    $password = $_POST['password'] ?? '';
-
-    if (!empty($username) && !empty($password)) {
-        $query = "SELECT * FROM users WHERE username = '$username' LIMIT 1";
-        $result = mysqli_query($conn, $query);
-
-        if ($result && mysqli_num_rows($result) > 0) {
-            $user = mysqli_fetch_assoc($result);
-            $dbPassword = $user['password'] ?? '';
-
-            if ($password === $dbPassword || password_verify($password, $dbPassword)) {
-                $uid = $user['id'] ?? $user['id_user'] ?? $user['user_id'] ?? 1;
-                $_SESSION['user_id'] = $uid;
-                $_SESSION['username'] = $user['username'] ?? $user['nama'] ?? 'User';
-                $_SESSION['role'] = strtolower(trim($user['role'] ?? 'pelanggan'));
-                if (!empty($user['avatar'])) {
-                    $_SESSION['avatar'] = $user['avatar'];
-                }
-
-                // --- START REMEMBER ME LOGIC ---
-                if (isset($_POST['remember'])) {
-                    $token = bin2hex(random_bytes(32));
-                    $expiry = date('Y-m-d H:i:s', time() + (86400 * 30)); // 30 hari
-
-                    // Cek ketersediaan kolom (migrasi ringan)
-                    $checkCol = mysqli_query($conn, "SHOW COLUMNS FROM users LIKE 'remember_token'");
-                    if ($checkCol && mysqli_num_rows($checkCol) === 0) {
-                        mysqli_query($conn, "ALTER TABLE users ADD COLUMN remember_token VARCHAR(255) NULL, ADD COLUMN remember_expires DATETIME NULL");
-                    }
-
-                    // Simpan token ke database
-                    mysqli_query($conn, "UPDATE users SET remember_token = '$token', remember_expires = '$expiry' WHERE id_user = $uid");
-
-                    // Set secure cookie
-                    setcookie('remember_me', $token, [
-                        'expires' => time() + (86400 * 30),
-                        'path' => '/',
-                        'secure' => isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on',
-                        'httponly' => true,
-                        'samesite' => 'Lax'
-                    ]);
-                }
-                // --- END REMEMBER ME LOGIC ---
-
-                if ($_SESSION['role'] === 'admin') {
-                    header('Location: ../admin/dashboard.php');
-                } elseif ($_SESSION['role'] === 'barber') {
-                    header('Location: ../barber/dashboard.php');
-                } else {
-                    header('Location: ../pelanggan/dashboard.php');
-                }
-                exit;
-            }
-            $error = 'Password yang Anda masukkan salah!';
-        } elseif ($result) {
-            $error = 'Username tidak ditemukan!';
-        } else {
-            $error = 'Kesalahan Query SQL: ' . mysqli_error($conn);
-        }
-    } else {
-        $error = 'Mohon isi username dan password terlebih dahulu!';
-    }
-}
+$error = $_SESSION["error"] ?? "";
+unset($_SESSION["error"]);
 ?>
 <!DOCTYPE html>
 <html class="dark" lang="en">
@@ -226,7 +161,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         Swal.fire({
                             icon: 'error',
                             title: 'Login Gagal',
-                            text: '<?= htmlspecialchars($error, ENT_QUOTES); ?>',
+                            text: '<?= htmlspecialchars($error, ENT_QUOTES) ?>',
                             background: '#1e2020',
                             color: '#e2e2e2',
                             confirmButtonColor: '#f2ca50',
@@ -236,13 +171,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 </script>
             <?php endif; ?>
 
-            <form class="flex flex-col gap-md" method="POST" action="login.php">
+            <form class="flex flex-col gap-md" method="POST" action="../functions/auth.php?action=login">
                 <!-- Username Field -->
                 <div class="flex flex-col gap-xs">
                     <label class="font-label-caps text-label-caps text-on-surface-variant uppercase" for="username">Username</label>
                     <div class="relative">
                         <span class="material-symbols-outlined absolute left-md top-1/2 -translate-y-1/2 text-on-surface-variant text-body-md">person</span>
-                        <input class="w-full bg-surface-container-lowest border border-outline-variant py-md pl-[52px] pr-md rounded-lg font-body-md text-body-md text-on-surface input-focus-gold transition-all duration-200" id="username" name="username" placeholder="Masukkan username" type="text" value="<?= htmlspecialchars($_POST['username'] ?? ''); ?>" required>
+                        <input class="w-full bg-surface-container-lowest border border-outline-variant py-md pl-[52px] pr-md rounded-lg font-body-md text-body-md text-on-surface input-focus-gold transition-all duration-200" id="username" name="username" placeholder="Masukkan username" type="text" value="<?= htmlspecialchars(
+                            $_POST["username"] ?? "",
+                        ) ?>" required>
                     </div>
                 </div>
 
@@ -287,7 +224,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 <span class="w-[1px] h-3 bg-primary"></span>
                 <a class="font-label-caps text-label-caps text-on-surface-variant hover:text-on-surface transition-colors" href="#">Bantuan</a>
             </nav>
-            <p class="font-label-caps text-label-caps text-on-surface-variant mt-sm">© <?php echo date('Y'); ?> Barber.co Grooming Co.</p>
+            <p class="font-label-caps text-label-caps text-on-surface-variant mt-sm">© <?php echo date(
+                "Y",
+            ); ?> Barber.co Grooming Co.</p>
         </footer>
     </main>
     
