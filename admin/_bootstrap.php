@@ -47,6 +47,14 @@ function admin_ensure_layanan_image_column($conn): void
         );
     }
 
+    $delUserCols = @mysqli_query($conn, "SHOW COLUMNS FROM users LIKE 'is_deleted'");
+    if (!$delUserCols || mysqli_num_rows($delUserCols) == 0) {
+        @mysqli_query(
+            $conn,
+            "ALTER TABLE users ADD COLUMN is_deleted TINYINT(1) NOT NULL DEFAULT 0",
+        );
+    }
+
     $desc = @mysqli_query($conn, "SHOW COLUMNS FROM layanan LIKE 'deskripsi'");
     if ($desc && mysqli_num_rows($desc) > 0) {
         $row = mysqli_fetch_assoc($desc);
@@ -181,11 +189,11 @@ $adminQueues = mysqli_query(
 $adminServices = mysqli_query($conn, "SELECT * FROM layanan WHERE is_deleted = 0 ORDER BY id DESC");
 $adminCustomers = mysqli_query(
     $conn,
-    "SELECT id_user, nama, username FROM users WHERE role = 'pelanggan' ORDER BY COALESCE(NULLIF(nama, ''), username) ASC",
+    "SELECT id_user, nama, username FROM users WHERE role = 'pelanggan' AND is_deleted = 0 ORDER BY COALESCE(NULLIF(nama, ''), username) ASC",
 );
 $adminBarberEditors = mysqli_query(
     $conn,
-    "SELECT id, nama, spesialisasi, status FROM barber ORDER BY nama ASC",
+    "SELECT b.id, b.nama, b.spesialisasi, b.status FROM barber b JOIN users u ON b.user_id = u.id_user WHERE u.is_deleted = 0 ORDER BY b.nama ASC",
 );
 $adminBarbers = mysqli_query(
     $conn,
@@ -195,6 +203,7 @@ $adminBarbers = mysqli_query(
     FROM barber b 
     JOIN users u ON b.user_id = u.id_user
     LEFT JOIN antrian a ON a.barber_id = b.id
+    WHERE u.is_deleted = 0
     GROUP BY b.id, b.nama, b.status, b.spesialisasi, u.username ORDER BY b.nama ASC",
 );
 $adminMonthlyRevenueQuery = mysqli_query(

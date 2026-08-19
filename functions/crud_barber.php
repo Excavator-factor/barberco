@@ -211,39 +211,28 @@ if ($action === "delete_barber") {
         $barberUsr = mysqli_fetch_assoc($ownerResp);
         if ($barberUsr) {
             $userId = (int) $barberUsr["user_id"];
-            $chk = mysqli_query(
-                $conn,
-                "SELECT COUNT(*) as jml FROM antrian WHERE barber_id = $id",
-            );
-            $cekData = mysqli_fetch_assoc($chk);
-            if ($cekData && $cekData["jml"] > 0) {
-                $_SESSION["modalError"] =
-                    "Barber tidak bisa dihapus karena terkait dengan " .
-                    $cekData["jml"] .
-                    " antrean/transaksi.";
-            } else {
-                mysqli_begin_transaction($conn);
-                try {
-                    $delBarber = mysqli_query(
+            mysqli_begin_transaction($conn);
+            try {
+                $delBarber = mysqli_query(
+                    $conn,
+                    "UPDATE barber SET status = 'nonaktif' WHERE id = $id",
+                );
+                if (!$delBarber) {
+                    throw new Exception(mysqli_error($conn));
+                }
+
+                if ($userId > 0) {
+                    $delUser = mysqli_query(
                         $conn,
-                        "DELETE FROM barber WHERE id = $id",
+                        "UPDATE users SET is_deleted = 1 WHERE id_user = $userId AND role = 'barber'",
                     );
-                    if (!$delBarber) {
+                    if (!$delUser) {
                         throw new Exception(mysqli_error($conn));
                     }
-
-                    if ($userId > 0) {
-                        $delUser = mysqli_query(
-                            $conn,
-                            "DELETE FROM users WHERE id_user = $userId AND role = 'barber'",
-                        );
-                        if (!$delUser) {
-                            throw new Exception(mysqli_error($conn));
-                        }
-                    }
-                    mysqli_commit($conn);
-                    $_SESSION["modalSuccess"] =
-                        "Data kemitraan kapster berhasil dicabut.";
+                }
+                mysqli_commit($conn);
+                $_SESSION["modalSuccess"] =
+                    "Data kemitraan kapster berhasil dicabut.";
                 } catch (Exception $e) {
                     mysqli_rollback($conn);
                     $_SESSION["modalError"] =

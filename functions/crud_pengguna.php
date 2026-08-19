@@ -98,24 +98,13 @@ if ($action === "edit_user") {
 if ($action === "delete_user") {
     $id = filter_input(INPUT_GET, "id", FILTER_VALIDATE_INT);
     if ($id) {
-        $chk = mysqli_query(
+        $delUser = mysqli_query(
             $conn,
-            "SELECT COUNT(*) as jml FROM antrian WHERE pelanggan_id = $id",
+            "UPDATE users SET is_deleted = 1 WHERE id_user = $id AND role = 'pelanggan'",
         );
-        $cekData = mysqli_fetch_assoc($chk);
-        if ($cekData && $cekData["jml"] > 0) {
-            $_SESSION["modalError"] =
-                "Pengguna memiliki " .
-                $cekData["jml"] .
-                " riwayat data transaksi dan tidak bisa dihapus.";
-        } else {
-            $delUser = mysqli_query(
-                $conn,
-                "DELETE FROM users WHERE id_user = $id AND role = 'pelanggan'",
-            );
-            if ($delUser) {
-                $_SESSION["modalSuccess"] =
-                    "Akun pelanggan berhasil dihapus selamanya.";
+        if ($delUser) {
+            $_SESSION["modalSuccess"] =
+                "Akun pelanggan berhasil dihapus.";
             } else {
                 $_SESSION["modalError"] =
                     "Gagal menghapus pengguna: " . mysqli_error($conn);

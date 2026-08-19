@@ -22,7 +22,7 @@ function check_login($required_role = null)
 
             $res = @mysqli_query(
                 $conn,
-                "SELECT * FROM users WHERE remember_token = '$token' AND remember_expires > NOW() LIMIT 1",
+                "SELECT * FROM users WHERE remember_token = '$token' AND remember_expires > NOW() AND is_deleted = 0 LIMIT 1",
             );
             if ($res && mysqli_num_rows($res) > 0) {
                 // Token valid, pulihkan sesi pengguna
@@ -94,4 +94,91 @@ if (isset($_SESSION["user_id"]) && isset($GLOBALS["conn"])) {
         "UPDATE users SET terakhir_aktivitas = NOW() WHERE id_user = $uid",
     );
 }
+
+function getExistingCol($conn, $table, $candidates)
+{
+    $res = @mysqli_query($conn, "SHOW COLUMNS FROM `$table`");
+    if (!$res) {
+        return null;
+    }
+    $cols = [];
+    while ($r = mysqli_fetch_assoc($res)) {
+        $cols[] = strtolower($r["Field"]);
+    }
+    foreach ($candidates as $cand) {
+        if (in_array(strtolower($cand), $cols)) {
+            return $cand;
+        }
+    }
+    return null;
+}
+
+$pk_antrian = getExistingCol($conn, "antrian", [
+    "id_antrian",
+    "id",
+    "antrian_id",
+]);
+$col_a_user = getExistingCol($conn, "antrian", [
+    "id_pelanggan",
+    "id_user",
+    "user_id",
+    "pelanggan_id",
+    "id_customer",
+    "id_pemesan",
+    "id_klien",
+    "id_member",
+    "user",
+]);
+$col_a_barber = getExistingCol($conn, "antrian", [
+    "id_barber",
+    "barber_id",
+    "id_kapster",
+    "id_pegawai",
+    "id_karyawan",
+    "id_staff",
+]);
+$col_a_layanan = getExistingCol($conn, "antrian", [
+    "id_layanan",
+    "layanan_id",
+    "id_service",
+    "service_id",
+]);
+$col_a_no = getExistingCol($conn, "antrian", [
+    "no_antrian",
+    "nomor_antrian",
+    "queue_no",
+    "no_antri",
+    "nomor",
+]);
+$col_a_tgl = getExistingCol($conn, "antrian", [
+    "tanggal",
+    "tgl",
+    "created_at",
+    "date",
+    "tgl_antrian",
+]);
+$col_a_status = getExistingCol($conn, "antrian", [
+    "status",
+    "status_antrian",
+    "stts",
+]);
+
+$pk_users = getExistingCol($conn, "users", ["id_user", "user_id", "id"]);
+$col_u_name = getExistingCol($conn, "users", [
+    "nama",
+    "username",
+    "nama_lengkap",
+    "name",
+]);
+
+$pk_layanan = getExistingCol($conn, "layanan", [
+    "id_layanan",
+    "layanan_id",
+    "id",
+]);
+$col_l_nama = getExistingCol($conn, "layanan", [
+    "nama_layanan",
+    "nama",
+    "layanan",
+]);
 ?>

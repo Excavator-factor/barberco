@@ -13,7 +13,7 @@ if ($action === "login") {
         $password = $_POST["password"] ?? "";
 
         if (!empty($username) && !empty($password)) {
-            $query = "SELECT * FROM users WHERE username = '$username' LIMIT 1";
+            $query = "SELECT * FROM users WHERE username = '$username' AND is_deleted = 0 LIMIT 1";
             $result = mysqli_query($conn, $query);
 
             if ($result && mysqli_num_rows($result) > 0) {
@@ -135,6 +135,11 @@ if ($action === "register") {
             );
 
             if (mysqli_stmt_execute($stmt)) {
+                // Hook Notifikasi Admin
+                $notifMsg = "Pelanggan baru terdaftar: " . mysqli_real_escape_string($conn, $nama);
+                $notifUrl = "pengguna.php?t=pelanggan";
+                @mysqli_query($conn, "INSERT INTO admin_notifications (pesan, url) VALUES ('$notifMsg', '$notifUrl')");
+
                 header("Location: ../auth/login.php?registered=1");
                 exit();
             }
