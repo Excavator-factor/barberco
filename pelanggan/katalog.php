@@ -5,7 +5,7 @@ include "_chrome.php";
 // Fetch all services from the layanan table
 $services = [];
 $sql_services =
-    "SELECT * FROM layanan ORDER BY " . ($pk_layanan ?? "1") . " ASC";
+    "SELECT * FROM layanan WHERE is_deleted = 0 ORDER BY " . ($pk_layanan ?? "1") . " ASC";
 $res_services = @mysqli_query($conn, $sql_services);
 if ($res_services) {
     while ($row = mysqli_fetch_assoc($res_services)) {

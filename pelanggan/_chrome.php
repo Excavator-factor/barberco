@@ -264,7 +264,7 @@ function pelanggan_mobile_nav(string $active): void
 function pelanggan_booking_modal()
 {
     global $conn;
-    $q_layanan = mysqli_query($conn, "SELECT * FROM layanan ORDER BY id ASC");
+    $q_layanan = mysqli_query($conn, "SELECT * FROM layanan WHERE is_deleted = 0 ORDER BY id ASC");
     $q_barber = mysqli_query(
         $conn,
         "SELECT * FROM barber WHERE LOWER(status) = 'aktif' ORDER BY id ASC",

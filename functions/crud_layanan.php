@@ -214,43 +214,8 @@ if ($action === "delete") {
         0;
 
     if ($serviceId > 0) {
-        $cekSql = "SELECT COUNT(*) as jml FROM antrian WHERE layanan_id = ?";
-        $stmtCek = mysqli_prepare($conn, $cekSql);
-        mysqli_stmt_bind_param($stmtCek, "i", $serviceId);
-        mysqli_stmt_execute($stmtCek);
-        $cekRes = mysqli_stmt_get_result($stmtCek);
-        $cekRow = $cekRes ? mysqli_fetch_assoc($cekRes) : null;
-        mysqli_stmt_close($stmtCek);
-
-        if ($cekRow && $cekRow["jml"] > 0) {
-            $_SESSION["modalError"] =
-                "Layanan tidak dapat dihapus karena masih terkait dengan data antrian atau transaksi.";
-            header("Location: ../admin/layanan.php");
-            exit();
-        }
-
-        $stmt = mysqli_prepare(
-            $conn,
-            "SELECT gambar FROM layanan WHERE id = ? LIMIT 1",
-        );
-        if ($stmt) {
-            mysqli_stmt_bind_param($stmt, "i", $serviceId);
-            mysqli_stmt_execute($stmt);
-            $result = mysqli_stmt_get_result($stmt);
-            $service = $result ? mysqli_fetch_assoc($result) : null;
-            mysqli_stmt_close($stmt);
-
-            if (!empty($service["gambar"])) {
-                $imageFile =
-                    __DIR__ . "/../" . ltrim((string) $service["gambar"], "/");
-                if (is_file($imageFile)) {
-                    @unlink($imageFile);
-                }
-            }
-        }
-
         try {
-            $stmt = mysqli_prepare($conn, "DELETE FROM layanan WHERE id = ?");
+            $stmt = mysqli_prepare($conn, "UPDATE layanan SET is_deleted = 1 WHERE id = ?");
             if ($stmt) {
                 mysqli_stmt_bind_param($stmt, "i", $serviceId);
                 mysqli_stmt_execute($stmt);

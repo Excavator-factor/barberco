@@ -4,6 +4,25 @@ include_once "../config/helper.php";
 
 check_login("admin");
 
+
+function admin_ensure_notifications_table($conn): void
+{
+    static $checked = false;
+    if ($checked) return;
+    $checked = true;
+    $sql = "CREATE TABLE IF NOT EXISTS admin_notifications (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        pesan VARCHAR(255) NOT NULL,
+        url VARCHAR(255) DEFAULT NULL,
+        is_read TINYINT(1) DEFAULT 0,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    )";
+    @mysqli_query($conn, $sql);
+}
+
+// Ensure trigger
+admin_ensure_notifications_table($conn);
+
 function admin_ensure_layanan_image_column($conn): void
 {
     static $checked = false;
@@ -17,6 +36,14 @@ function admin_ensure_layanan_image_column($conn): void
         @mysqli_query(
             $conn,
             "ALTER TABLE layanan ADD COLUMN gambar VARCHAR(255) NULL AFTER deskripsi",
+        );
+    }
+
+    $delCols = @mysqli_query($conn, "SHOW COLUMNS FROM layanan LIKE 'is_deleted'");
+    if (!$delCols || mysqli_num_rows($delCols) == 0) {
+        @mysqli_query(
+            $conn,
+            "ALTER TABLE layanan ADD COLUMN is_deleted TINYINT(1) NOT NULL DEFAULT 0",
         );
     }
 
@@ -151,7 +178,7 @@ $adminQueues = mysqli_query(
                ORDER BY FIELD(a.status_antrian, 'proses', 'menunggu', 'selesai'), a.no_antrian ASC",
 );
 
-$adminServices = mysqli_query($conn, "SELECT * FROM layanan ORDER BY id DESC");
+$adminServices = mysqli_query($conn, "SELECT * FROM layanan WHERE is_deleted = 0 ORDER BY id DESC");
 $adminCustomers = mysqli_query(
     $conn,
     "SELECT id_user, nama, username FROM users WHERE role = 'pelanggan' ORDER BY COALESCE(NULLIF(nama, ''), username) ASC",

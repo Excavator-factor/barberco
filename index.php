@@ -28,7 +28,7 @@ $serviceColumns = $hasServiceImage
 
 $servicesResult = mysqli_query(
     $conn,
-    "SELECT {$serviceColumns} FROM layanan ORDER BY id ASC",
+    "SELECT {$serviceColumns} FROM layanan WHERE is_deleted = 0 ORDER BY id ASC",
 );
 $services = $servicesResult
     ? mysqli_fetch_all($servicesResult, MYSQLI_ASSOC)
