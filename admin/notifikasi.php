@@ -35,12 +35,8 @@ if ($result) {
 ?>
 
 <?php admin_header("Notifikasi", "notifikasi"); ?>
-<div class="flex h-screen bg-background overflow-hidden relative">
-    <?php admin_render_sidebar("notifikasi"); ?>
-    
-    <main class="flex-1 flex flex-col min-w-0 bg-background overflow-y-auto">
-        <div class="p-md md:p-lg max-w-container-max mx-auto w-full">
-            <div class="flex justify-between items-end mb-lg mt-4">
+<div class="p-md md:p-lg max-w-container-max mx-auto w-full">
+    <div class="flex justify-between items-end mb-lg mt-4">
                 <div>
                     <h1 class="font-headline-lg text-headline-lg text-on-surface">Notifikasi Sistem</h1>
                     <p class="text-on-surface-variant">Pemberitahuan pendaftaran dan log aktivitas.</p>
@@ -94,9 +90,6 @@ if ($result) {
                 <?php endif; ?>
             </div>
             
-        </div>
-        
-    </main>
 </div>
 
 <?php if (isset($_SESSION['modalSuccess'])): ?>
@@ -112,6 +105,4 @@ if ($result) {
 </script>
 <?php unset($_SESSION['modalSuccess']); endif; ?>
 
-<?php admin_render_mobile_nav("notifikasi"); ?>
-</body>
-</html>
+<?php admin_footer("notifikasi"); ?>
