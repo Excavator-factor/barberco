@@ -9,6 +9,7 @@ if (
 }
 
 require_once "../config/database.php";
+require_once "../config/helper.php";
 
 $user_id =
     $_SESSION["id_user"] ?? ($_SESSION["user_id"] ?? ($_SESSION["id"] ?? null));
