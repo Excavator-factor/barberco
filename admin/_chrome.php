@@ -1,12 +1,22 @@
 <?php
 function admin_render_sidebar(string $active): void
 {
+    global $conn;
+    $unreadCount = 0;
+    if ($conn) {
+        $qNotif = @mysqli_query($conn, "SELECT COUNT(*) as unread FROM admin_notifications WHERE is_read = 0");
+        if ($qNotif && $row = mysqli_fetch_assoc($qNotif)) {
+            $unreadCount = (int)$row['unread'];
+        }
+    }
+
     $links = [
         ["dashboard.php", "dashboard", "dashboard", "Dashboard"],
         ["antrean.php", "event_seat", "antrean", "Manajemen Antrean"],
         ["transaksi.php", "receipt_long", "transaksi", "Transaksi"],
         ["pengguna.php", "group", "pengguna", "Pengguna"],
         ["layanan.php", "inventory_2", "layanan", "Layanan"],
+        ["notifikasi.php", "notifications", "notifikasi", "Notifikasi"],
     ];
     $adminName = htmlspecialchars(
         $_SESSION["username"] ?? ($_SESSION["nama"] ?? "Admin"),
@@ -41,6 +51,9 @@ $key
                         <span class="font-label-caps"><?= htmlspecialchars(
                             $label,
                         ) ?></span>
+                        <?php if ($key === 'notifikasi' && $unreadCount > 0): ?>
+                            <span class="ml-auto bg-error text-on-error text-[10px] font-bold px-2 py-0.5 rounded-full"><?= $unreadCount ?></span>
+                        <?php endif; ?>
                     </a>
                 <?php endforeach; ?>
 
@@ -92,6 +105,7 @@ function admin_render_mobile_nav(string $active): void
         ["transaksi.php", "receipt_long", "transaksi"],
         ["pengguna.php", "group", "pengguna"],
         ["layanan.php", "inventory_2", "layanan"],
+        ["notifikasi.php", "notifications", "notifikasi"],
     ]; ?>
     <nav class="fixed bottom-0 left-0 right-0 z-50 flex w-full justify-around border-t border-outline-variant bg-surface-container py-3 md:hidden">
         <?php foreach ($links as [$href, $icon, $key]): ?>
