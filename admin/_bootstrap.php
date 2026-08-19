@@ -39,22 +39,6 @@ function admin_ensure_layanan_image_column($conn): void
         );
     }
 
-    $delCols = @mysqli_query($conn, "SHOW COLUMNS FROM layanan LIKE 'is_deleted'");
-    if (!$delCols || mysqli_num_rows($delCols) == 0) {
-        @mysqli_query(
-            $conn,
-            "ALTER TABLE layanan ADD COLUMN is_deleted TINYINT(1) NOT NULL DEFAULT 0",
-        );
-    }
-
-    $delUserCols = @mysqli_query($conn, "SHOW COLUMNS FROM users LIKE 'is_deleted'");
-    if (!$delUserCols || mysqli_num_rows($delUserCols) == 0) {
-        @mysqli_query(
-            $conn,
-            "ALTER TABLE users ADD COLUMN is_deleted TINYINT(1) NOT NULL DEFAULT 0",
-        );
-    }
-
     $desc = @mysqli_query($conn, "SHOW COLUMNS FROM layanan LIKE 'deskripsi'");
     if ($desc && mysqli_num_rows($desc) > 0) {
         $row = mysqli_fetch_assoc($desc);

@@ -191,4 +191,16 @@ if ($aktivitasColumn && mysqli_num_rows($aktivitasColumn) === 0) {
         );
     }
 }
+
+// Kolom untuk soft-delete layanan
+$isDeletedLayanan = @mysqli_query($conn, "SHOW COLUMNS FROM `layanan` LIKE 'is_deleted'");
+if (!$isDeletedLayanan || mysqli_num_rows($isDeletedLayanan) == 0) {
+    @mysqli_query($conn, "ALTER TABLE `layanan` ADD COLUMN `is_deleted` TINYINT(1) NOT NULL DEFAULT 0");
+}
+
+// Kolom untuk soft-delete users/kapster
+$isDeletedUsers = @mysqli_query($conn, "SHOW COLUMNS FROM `users` LIKE 'is_deleted'");
+if (!$isDeletedUsers || mysqli_num_rows($isDeletedUsers) == 0) {
+    @mysqli_query($conn, "ALTER TABLE `users` ADD COLUMN `is_deleted` TINYINT(1) NOT NULL DEFAULT 0");
+}
 ?>
