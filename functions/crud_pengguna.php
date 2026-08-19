@@ -110,7 +110,6 @@ if ($action === "delete_user") {
                     "Gagal menghapus pengguna: " . mysqli_error($conn);
             }
         }
-    }
     header("Location: ../admin/pengguna.php?t=pelanggan");
     exit();
 }

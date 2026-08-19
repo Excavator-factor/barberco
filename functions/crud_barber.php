@@ -238,7 +238,6 @@ if ($action === "delete_barber") {
                     $_SESSION["modalError"] =
                         "Gagal menghapus barber: " . $e->getMessage();
                 }
-            }
         } else {
             $_SESSION["modalError"] = "Data kapster tidak ditemukan.";
         }
