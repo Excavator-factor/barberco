@@ -36,17 +36,17 @@ if ($result) {
 
 <?php admin_header("Notifikasi", "notifikasi"); ?>
 <div class="p-md md:p-lg max-w-container-max mx-auto w-full">
-    <div class="flex justify-between items-end mb-lg mt-4">
+<div class="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-lg mt-4">
                 <div>
-                    <h1 class="font-headline-lg text-headline-lg text-on-surface">Notifikasi Sistem</h1>
-                    <p class="text-on-surface-variant">Pemberitahuan pendaftaran dan log aktivitas.</p>
+                    <h1 class="font-headline-lg text-headline-lg-mobile md:text-headline-lg text-on-surface">Notifikasi Sistem</h1>
+                    <p class="text-sm md:text-base text-on-surface-variant mt-1">Pemberitahuan pendaftaran dan log aktivitas.</p>
                 </div>
-                <div>
+                <div class="self-end md:self-auto">
                     <form method="POST" action="notifikasi.php" class="inline">
                         <input type="hidden" name="action" value="mark_all_read">
-                        <button type="submit" class="bg-primary text-on-primary px-4 py-2 rounded-lg font-bold hover:bg-primary-container transition-colors flex items-center gap-2 text-sm">
+                        <button type="submit" class="bg-primary text-on-primary px-4 py-3 md:py-2 rounded-lg font-bold hover:bg-primary-container transition-colors flex items-center gap-2 text-sm w-full justify-center md:w-auto">
                             <span class="material-symbols-outlined text-[20px]">done_all</span>
-                            <span class="hidden md:inline">Tandai Dibaca</span>
+                            <span>Tandai Dibaca</span>
                         </button>
                     </form>
                 </div>
@@ -78,7 +78,7 @@ if ($result) {
                     </div>
                 <!-- Pagination -->
                 <?php if ($totalPages > 1): ?>
-                    <div class="mt-6 flex justify-center gap-2">
+                    <div class="mt-6 flex flex-wrap justify-center gap-2">
                         <?php for ($i = 1; $i <= $totalPages; $i++): ?>
                             <a href="?page=<?= $i ?>" class="w-8 h-8 flex justify-center items-center rounded-md font-bold text-sm <?= $i == $page ? 'bg-primary text-on-primary' : 'bg-surface-variant text-on-surface hover:bg-outline-variant' ?>">
                                 <?= $i ?>
