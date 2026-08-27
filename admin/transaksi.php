@@ -36,21 +36,6 @@ for ($i = 1; $i <= 12; $i++) {
 ?>
 <?php admin_header("Transaksi", "transaksi"); ?>
     <div id="transaksiWrapper" class="p-md">
-        <!-- Floating Action Bar for Preview Mode -->
-        <div id="previewActionBar" class="fixed top-0 left-0 right-0 h-16 bg-surface border-b border-outline-variant z-[9999] flex items-center justify-between px-4 sm:px-6 shadow-2xl transition-transform -translate-y-full duration-300 no-print">
-            <div>
-                <h3 class="font-headline-md text-primary font-bold text-base sm:text-lg">Pratinjau Laporan Transaksi</h3>
-            </div>
-            <div class="flex items-center gap-2 sm:gap-3">
-                <button onclick="window.print()" class="bg-primary text-on-primary font-bold px-3 py-1.5 sm:px-4 sm:py-2 rounded-lg flex items-center gap-1 sm:gap-2 hover:opacity-90 transition-opacity text-xs sm:text-sm">
-                    <span class="material-symbols-outlined text-[16px] sm:text-[18px]">print</span> Cetak
-                </button>
-                <button onclick="closePreview()" class="bg-surface-container-high border border-outline-variant text-on-surface hover:text-error hover:border-error px-3 py-1.5 sm:px-4 sm:py-2 rounded-lg flex items-center gap-1 sm:gap-2 font-bold transition-colors text-xs sm:text-sm">
-                    <span class="material-symbols-outlined text-[16px] sm:text-[18px]">close</span> Tutup
-                </button>
-            </div>
-        </div>
-
         <div class="flex justify-between items-end mb-lg mt-4">
             <div>
                 <h1 class="font-headline-lg text-headline-lg text-on-surface">Manajemen Transaksi</h1>
@@ -407,84 +392,72 @@ for ($i = 1; $i <= 12; $i++) {
         }
     });
 
-    // Mode Pratinjau CSS Handler
+    // Mode Pratinjau DOM Overlay Handler
     function openPreview() {
-        document.body.classList.add('preview-mode');
-        document.getElementById('previewActionBar').classList.remove('-translate-y-full');
-        // Tutup otomatis sidebar jika tidak tersembunyi
-        if (!document.body.classList.contains('admin-sidebar-collapsed')) {
-            document.body.classList.add('admin-sidebar-collapsed');
-        }
+        const overlay = document.createElement('div');
+        overlay.id = 'printOverlay';
+        overlay.className = 'fixed inset-0 z-[999999] bg-[#d0c5af] overflow-y-auto flex flex-col';
+        
+        let action = `
+            <div class="sticky top-0 left-0 right-0 h-16 bg-[#1a1c1c] border-b border-[#4d4635] z-[9999] flex items-center justify-between px-4 sm:px-6 shadow-2xl no-print">
+                <div>
+                    <h3 class="font-bold text-[#f2ca50] text-base sm:text-lg" style="font-family:'Montserrat',sans-serif;">Pratinjau Laporan Transaksi</h3>
+                </div>
+                <div class="flex items-center gap-2 sm:gap-3">
+                    <button onclick="window.print()" class="bg-[#f2ca50] text-[#3c2f00] font-bold px-3 py-1.5 sm:px-4 sm:py-2 rounded-lg flex items-center gap-1 sm:gap-2 hover:opacity-90 transition-opacity text-xs sm:text-sm">
+                        <span class="material-symbols-outlined text-[16px] sm:text-[18px]">print</span> Cetak
+                    </button>
+                    <button onclick="document.getElementById('printOverlay').remove();" class="bg-[#282a2b] border border-[#4d4635] text-[#e2e2e2] hover:text-[#ffb4ab] hover:border-[#ffb4ab] px-3 py-1.5 sm:px-4 sm:py-2 rounded-lg flex items-center gap-1 sm:gap-2 font-bold transition-colors text-xs sm:text-sm">
+                        <span class="material-symbols-outlined text-[16px] sm:text-[18px]">close</span> Tutup
+                    </button>
+                </div>
+            </div>
+            <div class="flex-1 p-4 sm:p-8 flex justify-center">
+                <div class="bg-white text-black p-8 sm:p-12 w-full max-w-4xl shadow-2xl print-area" style="min-height: 297mm; font-family: 'Inter', sans-serif;">
+                    <div style="text-align:center;border-bottom:2px solid black;margin-bottom:24px;padding-bottom:16px;">
+                        <h1 style="font-size:24px;font-weight:bold;margin:0;">BARBER.CO</h1>
+                        <p style="margin:4px 0 0 0;">Laporan Transaksi Barbershop</p>
+                        <p style="margin:4px 0 0 0;font-size:12px;">Dicetak: <?= date('d M Y H:i') ?></p>
+                    </div>
+                    <div id="printTableWrapper"></div>
+                </div>
+            </div>
+        `;
+        overlay.innerHTML = action;
+        
+        let tableClone = document.getElementById('transaksiTable').cloneNode(true);
+        tableClone.id = '';
+        tableClone.style = 'width: 100%; border-collapse: collapse; font-size: 13px; text-align: left;';
+        
+        let ths = tableClone.querySelectorAll('th');
+        if(ths.length > 0) ths[ths.length - 1].remove(); // Aksi
+        ths.forEach((th, i) => { 
+            if(i < ths.length - 1) th.style = 'border: 1px solid #777; padding: 10px; background: #e0e0e0; color: black; font-weight: bold; font-size: 11px; text-transform: uppercase;'; 
+        });
+
+        let trs = tableClone.querySelectorAll('tbody tr');
+        trs.forEach(tr => {
+            if(tr.lastElementChild) tr.lastElementChild.remove();
+            tr.querySelectorAll('td').forEach(td => {
+                // Hapus warna-warni text dark theme
+                let html = td.innerHTML.replace(/text-primary|text-on-surface-variant|text-on-surface|bg-primary\/10|bg-error-container\/30|text-error|text-white/g, '');
+                td.innerHTML = html;
+                td.style = 'border: 1px solid #777; padding: 10px; color: black;';
+            });
+        });
+        
+        document.body.appendChild(overlay);
+        document.getElementById('printTableWrapper').appendChild(tableClone);
     }
 
-    function closePreview() {
-        document.body.classList.remove('preview-mode');
-        document.getElementById('previewActionBar').classList.add('-translate-y-full');
-    }
-
-    // Custom CSS for printing and preview
+    // Custom CSS for printing
     const style = document.createElement('style');
     style.innerHTML = `
-        /* CSS PRATINJAU */
-        body.preview-mode { background: #d0c5af !important; animation: none !important; }
-        body.preview-mode #sidebar, body.preview-mode header { display: none !important; }
-        body.preview-mode #transaksiWrapper > *:not(#previewActionBar):not(#laporanContainer) { display: none !important; }
-        body.preview-mode main { margin: 0 !important; margin-top: 64px !important; padding: 20px !important; width: 100% !important; background: #d0c5af !important; }
-        body.preview-mode .bg-surface-container { background: white !important; border: none !important; box-shadow: 0 10px 40px rgba(0,0,0,0.15) !important; border-radius: 4px !important; max-width: 900px !important; margin: 0 auto !important; padding: 40px 30px !important; }
-        
-        /* Tambahkan KOP SURAT buatan lewat pseudo-element hanya di preview dan print */
-        body.preview-mode .bg-surface-container::before {
-            content: "BARBER.CO\\A Laporan Transaksi Barbershop\\A Dicetak: <?= date('d M Y') ?>";
-            white-space: pre-wrap;
-            display: block;
-            text-align: center;
-            font-size: 16px;
-            font-weight: bold;
-            color: black;
-            border-bottom: 2px solid black;
-            padding-bottom: 16px;
-            margin-bottom: 24px;
-            line-height: 1.5;
-            font-family: serif;
-        }
-
-        body.preview-mode table { border-collapse: collapse !important; width: 100% !important; }
-        body.preview-mode th, body.preview-mode td { border: 1px solid #999 !important; color: black !important; padding: 8px !important; font-size: 12px !important; }
-        body.preview-mode th { background: #f0f0f0 !important; color: black !important; font-weight: bold !important; text-transform: uppercase; font-size: 10px !important; border-bottom: 2px solid #555 !important; }
-        body.preview-mode h1, body.preview-mode h2, body.preview-mode h3, body.preview-mode p, body.preview-mode span { color: black !important; }
-        body.preview-mode tr:hover td { background-color: transparent !important; }
-        body.preview-mode .dataTables_wrapper .dataTables_length, body.preview-mode .dataTables_wrapper .dataTables_filter, body.preview-mode .dataTables_wrapper .dataTables_info, body.preview-mode .dataTables_wrapper .dataTables_paginate { display: none !important; }
-        
-        /* Hilangkan elemen hiasan tambahan saat preview */
-        body.preview-mode .w-10.h-10 { display: none !important; }
-        body.preview-mode .flex.items-center.gap-3 div:last-child h2, body.preview-mode .flex.items-center.gap-3 div:last-child p { display: none !important; }
-
         @media print {
-            body { background: white !important; color: black !important; animation: none !important; }
-            #sidebar, header, .no-print, section:not(:last-child) { display: none !important; }
-            main { margin: 0 !important; padding: 0 !important; width: 100% !important; background: white !important; }
-            .bg-surface-container { background: transparent !important; border: none !important; box-shadow: none !important; max-width: 100% !important; padding: 0 !important; }
-            
-            .bg-surface-container::before {
-                content: "BARBER.CO\\A Laporan Transaksi Barbershop\\A Dicetak: <?= date('d M Y') ?>";
-                white-space: pre-wrap;
-                display: block;
-                text-align: center;
-                font-size: 16px;
-                font-weight: bold;
-                color: black;
-                border-bottom: 2px solid black;
-                padding-bottom: 16px;
-                margin-bottom: 24px;
-                line-height: 1.5;
-                font-family: serif;
-            }
-
-            table { border-collapse: collapse !important; width: 100% !important; margin-top: 0px;}
-            th, td { border: 1px solid #ccc !important; color: black !important; padding: 6px 8px !important; font-size: 11px !important;}
-            th { background: #f0f0f0 !important; color: black !important; font-weight: bold !important; font-size: 9px !important; border-bottom: 2px solid #555 !important; }
-            h1, h2, h3, p, span { color: black !important; }
-            .dataTables_wrapper .dataTables_length, .dataTables_wrapper .dataTables_filter, .dataTables_wrapper .dataTables_info, .dataTables_wrapper .dataTables_paginate { display: none !important; }
+            body > *:not(#printOverlay) { display: none !important; }
+            #printOverlay { position: static !important; background: white !important; overflow: visible !important; }
+            #printOverlay .no-print { display: none !important; }
+            .print-area { box-shadow: none !important; margin: 0 !important; padding: 0 !important; max-width: 100% !important; }
         }
     `;
     document.head.appendChild(style);
