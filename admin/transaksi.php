@@ -426,23 +426,26 @@ for ($i = 1; $i <= 12; $i++) {
         overlay.innerHTML = action;
         
         let tableClone = document.getElementById('transaksiTable').cloneNode(true);
-        tableClone.id = '';
+        tableClone.className = '';
         tableClone.style = 'width: 100%; border-collapse: collapse; font-size: 13px; text-align: left;';
         
         let ths = tableClone.querySelectorAll('th');
         if(ths.length > 0) ths[ths.length - 1].remove(); // Aksi
         ths.forEach((th, i) => { 
-            if(i < ths.length - 1) th.style = 'border: 1px solid #777; padding: 10px; background: #e0e0e0; color: black; font-weight: bold; font-size: 11px; text-transform: uppercase;'; 
+            th.className = '';
+            if(i < ths.length - 1) th.style = 'border: 1px solid #777; padding: 10px; background: #e0e0e0; color: black; font-weight: bold; font-size: 11px; text-transform: uppercase; white-space: normal;'; 
         });
 
         let trs = tableClone.querySelectorAll('tbody tr');
         trs.forEach(tr => {
+            tr.className = '';
             if(tr.lastElementChild) tr.lastElementChild.remove();
             tr.querySelectorAll('td').forEach(td => {
+                td.className = '';
                 // Hapus warna-warni text dark theme
                 let html = td.innerHTML.replace(/text-primary|text-on-surface-variant|text-on-surface|bg-primary\/10|bg-error-container\/30|text-error|text-white/g, '');
                 td.innerHTML = html;
-                td.style = 'border: 1px solid #777; padding: 10px; color: black;';
+                td.style = 'border: 1px solid #777; padding: 10px; color: black; white-space: normal; word-break: break-word;';
             });
         });
         

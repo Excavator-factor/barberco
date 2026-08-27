@@ -447,7 +447,7 @@ admin_ensure_layanan_image_column($conn);
         overlay.innerHTML = action;
         
         let tableClone = document.getElementById('servicesTable').cloneNode(true);
-        tableClone.id = '';
+        tableClone.className = '';
         tableClone.style = 'width: 100%; border-collapse: collapse; font-size: 13px; text-align: left;';
         
         let ths = tableClone.querySelectorAll('th');
@@ -457,18 +457,20 @@ admin_ensure_layanan_image_column($conn);
         }
         
         ths.forEach((th, i) => { 
-            // Kita sudah menghapus awal dan akhir di DOM-clone, list node tetap, referensinya akan terupdate
-            th.style = 'border: 1px solid #777; padding: 10px; background: #e0e0e0; color: black; font-weight: bold; font-size: 11px; text-transform: uppercase;'; 
+            th.className = '';
+            th.style = 'border: 1px solid #777; padding: 10px; background: #e0e0e0; color: black; font-weight: bold; font-size: 11px; text-transform: uppercase; white-space: normal;'; 
         });
 
         let trs = tableClone.querySelectorAll('tbody tr');
         trs.forEach(tr => {
+            tr.className = '';
             if(tr.firstElementChild) tr.firstElementChild.remove(); // Hapus Foto
             if(tr.lastElementChild) tr.lastElementChild.remove(); // Hapus Aksi
             tr.querySelectorAll('td').forEach(td => {
+                td.className = '';
                 let html = td.innerHTML.replace(/text-primary|text-on-surface-variant|text-on-surface|bg-primary\/10|bg-error-container\/30|text-error|text-white/g, '');
                 td.innerHTML = html;
-                td.style = 'border: 1px solid #777; padding: 10px; color: black;';
+                td.style = 'border: 1px solid #777; padding: 10px; color: black; white-space: normal; word-break: break-word;';
             });
         });
         
