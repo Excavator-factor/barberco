@@ -136,9 +136,10 @@ if ($action === "register") {
 
             if (mysqli_stmt_execute($stmt)) {
                 // Hook Notifikasi Admin
-                $notifMsg = "Pelanggan baru terdaftar: " . mysqli_real_escape_string($conn, $nama);
+                $notifMsg = "Pelanggan Baru Terdaftar";
+                $notifDesc = "Nama: " . mysqli_real_escape_string($conn, $nama) . "\nUsername: " . mysqli_real_escape_string($conn, $username);
                 $notifUrl = "pengguna.php?t=pelanggan";
-                @mysqli_query($conn, "INSERT INTO admin_notifications (pesan, url) VALUES ('$notifMsg', '$notifUrl')");
+                @mysqli_query($conn, "INSERT INTO admin_notifications (pesan, deskripsi, url) VALUES ('$notifMsg', '$notifDesc', '$notifUrl')");
 
                 header("Location: ../auth/login.php?registered=1");
                 exit();

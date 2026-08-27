@@ -2,6 +2,12 @@
 include "_bootstrap.php";
 include "_chrome.php";
 
+// AUTO-MIGRATE: Tambahkan kolom deskripsi jika belum ada
+$checkCol = mysqli_query($conn, "SHOW COLUMNS FROM admin_notifications LIKE 'deskripsi'");
+if ($checkCol && mysqli_num_rows($checkCol) === 0) {
+    mysqli_query($conn, "ALTER TABLE admin_notifications ADD COLUMN deskripsi TEXT NULL AFTER pesan");
+}
+
 $action = $_POST['action'] ?? '';
 if ($action === 'mark_all_read') {
     mysqli_query($conn, "UPDATE admin_notifications SET is_read = 1 WHERE is_read = 0");
@@ -69,7 +75,10 @@ if ($result) {
                                         </div>
                                         <div>
                                             <p class="font-bold <?= $n['is_read'] == 0 ? 'text-primary' : 'text-on-surface' ?>"><?= htmlspecialchars($n['pesan']) ?></p>
-                                            <p class="text-xs text-on-surface-variant mt-1"><?= date('d F Y, H:i', strtotime($n['created_at'])) ?></p>
+                                            <?php if (!empty($n['deskripsi'])): ?>
+                                                <p class="text-sm text-on-surface-variant mt-1"><?= nl2br(htmlspecialchars($n['deskripsi'])) ?></p>
+                                            <?php endif; ?>
+                                            <p class="text-xs text-on-surface-variant mt-2 font-medium opacity-70"><?= date('d F Y, H:i', strtotime($n['created_at'])) ?></p>
                                         </div>
                                     </div>
                                 </div>
