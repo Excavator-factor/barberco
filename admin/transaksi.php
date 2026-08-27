@@ -35,7 +35,7 @@ for ($i = 1; $i <= 12; $i++) {
 }
 ?>
 <?php admin_header("Transaksi", "transaksi"); ?>
-    <div class="p-md">
+    <div id="transaksiWrapper" class="p-md">
         <!-- Floating Action Bar for Preview Mode -->
         <div id="previewActionBar" class="fixed top-0 left-0 right-0 h-16 bg-surface border-b border-outline-variant z-[9999] flex items-center justify-between px-4 sm:px-6 shadow-2xl transition-transform -translate-y-full duration-300 no-print">
             <div>
@@ -428,7 +428,7 @@ for ($i = 1; $i <= 12; $i++) {
         /* CSS PRATINJAU */
         body.preview-mode { background: #d0c5af !important; animation: none !important; }
         body.preview-mode #sidebar, body.preview-mode header { display: none !important; }
-        body.preview-mode .p-md > *:not(#previewActionBar):not(#laporanContainer) { display: none !important; }
+        body.preview-mode #transaksiWrapper > *:not(#previewActionBar):not(#laporanContainer) { display: none !important; }
         body.preview-mode main { margin: 0 !important; margin-top: 64px !important; padding: 20px !important; width: 100% !important; background: #d0c5af !important; }
         body.preview-mode .bg-surface-container { background: white !important; border: none !important; box-shadow: 0 10px 40px rgba(0,0,0,0.15) !important; border-radius: 4px !important; max-width: 900px !important; margin: 0 auto !important; padding: 40px 30px !important; }
         
