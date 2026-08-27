@@ -75,7 +75,7 @@ admin_ensure_layanan_image_column($conn);
             </article>
         </section>
 
-        <section class="bg-surface-container border border-outline-variant rounded-xl shadow-lg mb-lg">
+        <section id="laporanContainer" class="bg-surface-container border border-outline-variant rounded-xl shadow-lg mb-lg">
             <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between p-5 border-b border-outline-variant bg-surface-container-low">
                 <div>
                     <h2 class="text-xl font-bold font-headline-md text-primary">Daftar Layanan</h2>
@@ -447,7 +447,8 @@ admin_ensure_layanan_image_column($conn);
     styleLayanan.innerHTML = `
         /* CSS PRATINJAU */
         body.preview-mode { background: #d0c5af !important; animation: none !important; }
-        body.preview-mode #sidebar, body.preview-mode header, body.preview-mode .no-print, body.preview-mode section:not(:last-child) { display: none !important; }
+        body.preview-mode #sidebar, body.preview-mode header { display: none !important; }
+        body.preview-mode .p-md > *:not(#previewActionBar):not(#laporanContainer) { display: none !important; }
         body.preview-mode main { margin: 0 !important; margin-top: 64px !important; padding: 20px !important; width: 100% !important; background: #d0c5af !important; }
         body.preview-mode .bg-surface-container { background: white !important; border: none !important; box-shadow: 0 10px 40px rgba(0,0,0,0.15) !important; border-radius: 4px !important; max-width: 900px !important; margin: 0 auto !important; padding: 40px 30px !important; }
         

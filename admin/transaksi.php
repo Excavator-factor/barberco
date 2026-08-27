@@ -113,7 +113,7 @@ for ($i = 1; $i <= 12; $i++) {
         </section>
 
         <!-- Data Table Section -->
-        <section class="grid grid-cols-1 gap-6 lg:grid-cols-12 mb-lg">
+        <section id="laporanContainer" class="grid grid-cols-1 gap-6 lg:grid-cols-12 mb-lg">
             <article class="bg-surface-container border border-outline-variant overflow-hidden rounded-xl shadow-lg lg:col-span-12">
                 <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between p-6 border-b border-outline-variant bg-surface-container-low">
                     <div class="flex items-center gap-3">
@@ -427,7 +427,8 @@ for ($i = 1; $i <= 12; $i++) {
     style.innerHTML = `
         /* CSS PRATINJAU */
         body.preview-mode { background: #d0c5af !important; animation: none !important; }
-        body.preview-mode #sidebar, body.preview-mode header, body.preview-mode .no-print, body.preview-mode section:not(:last-child) { display: none !important; }
+        body.preview-mode #sidebar, body.preview-mode header { display: none !important; }
+        body.preview-mode .p-md > *:not(#previewActionBar):not(#laporanContainer) { display: none !important; }
         body.preview-mode main { margin: 0 !important; margin-top: 64px !important; padding: 20px !important; width: 100% !important; background: #d0c5af !important; }
         body.preview-mode .bg-surface-container { background: white !important; border: none !important; box-shadow: 0 10px 40px rgba(0,0,0,0.15) !important; border-radius: 4px !important; max-width: 900px !important; margin: 0 auto !important; padding: 40px 30px !important; }
         
