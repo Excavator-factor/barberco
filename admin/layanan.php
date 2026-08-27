@@ -24,6 +24,21 @@ admin_ensure_layanan_image_column($conn);
 ?>
 <?php admin_header("Layanan & Harga", "layanan"); ?>
     <div class="p-md space-y-8">
+        <!-- Floating Action Bar for Preview Mode -->
+        <div id="previewActionBar" class="fixed top-0 left-0 right-0 h-16 bg-surface border-b border-outline-variant z-[9999] flex items-center justify-between px-4 sm:px-6 shadow-2xl transition-transform -translate-y-full duration-300 no-print">
+            <div>
+                <h3 class="font-headline-md text-primary font-bold text-base sm:text-lg">Pratinjau Daftar Layanan</h3>
+            </div>
+            <div class="flex items-center gap-2 sm:gap-3">
+                <button onclick="window.print()" class="bg-primary text-on-primary font-bold px-3 py-1.5 sm:px-4 sm:py-2 rounded-lg flex items-center gap-1 sm:gap-2 hover:opacity-90 transition-opacity text-xs sm:text-sm">
+                    <span class="material-symbols-outlined text-[16px] sm:text-[18px]">print</span> Cetak
+                </button>
+                <button onclick="closePreview()" class="bg-surface-container-high border border-outline-variant text-on-surface hover:text-error hover:border-error px-3 py-1.5 sm:px-4 sm:py-2 rounded-lg flex items-center gap-1 sm:gap-2 font-bold transition-colors text-xs sm:text-sm">
+                    <span class="material-symbols-outlined text-[16px] sm:text-[18px]">close</span> Tutup
+                </button>
+            </div>
+        </div>
+
         <div class="flex flex-wrap justify-between items-start gap-3 mb-lg mt-4">
             <div>
                 <h1 class="font-headline-lg text-headline-lg text-on-surface">Layanan & Harga</h1>
@@ -66,8 +81,8 @@ admin_ensure_layanan_image_column($conn);
                     <h2 class="text-xl font-bold font-headline-md text-primary">Daftar Layanan</h2>
                     <p class="mt-1 text-xs font-bold uppercase tracking-widest text-on-surface-variant">Data lengkap layanan barbershop</p>
                 </div>
-                <button onclick="window.print()" class="mt-3 sm:mt-0 border border-outline-variant bg-surface rounded-lg px-4 py-2 flex items-center gap-2 text-xs font-bold uppercase tracking-widest text-on-surface hover:text-primary hover:border-primary transition-colors no-print shadow-sm">
-                    <span class="material-symbols-outlined text-[18px]">print</span> Cetak
+                <button onclick="openPreview()" class="mt-3 sm:mt-0 border border-outline-variant bg-surface rounded-lg px-4 py-2 flex items-center gap-2 text-xs font-bold uppercase tracking-widest text-on-surface hover:text-primary hover:border-primary transition-colors no-print shadow-sm">
+                    <span class="material-symbols-outlined text-[18px]">visibility</span> Laporan
                 </button>
             </div>
             <div class="p-4 overflow-x-auto">
@@ -412,5 +427,92 @@ admin_ensure_layanan_image_column($conn);
         document.getElementById('editLayanan_durasi').value = durasi;
         document.getElementById('modalEditLayanan').classList.remove('hidden');
     }
+
+    // Mode Pratinjau CSS Handler
+    function openPreview() {
+        document.body.classList.add('preview-mode');
+        document.getElementById('previewActionBar').classList.remove('-translate-y-full');
+        if (!document.body.classList.contains('admin-sidebar-collapsed')) {
+            document.body.classList.add('admin-sidebar-collapsed');
+        }
+    }
+
+    function closePreview() {
+        document.body.classList.remove('preview-mode');
+        document.getElementById('previewActionBar').classList.add('-translate-y-full');
+    }
+
+    // Custom CSS for printing and preview
+    const styleLayanan = document.createElement('style');
+    styleLayanan.innerHTML = `
+        /* CSS PRATINJAU */
+        body.preview-mode { background: #d0c5af !important; animation: none !important; }
+        body.preview-mode #sidebar, body.preview-mode header, body.preview-mode .no-print, body.preview-mode section:not(:last-child) { display: none !important; }
+        body.preview-mode main { margin: 0 !important; margin-top: 64px !important; padding: 20px !important; width: 100% !important; background: #d0c5af !important; }
+        body.preview-mode .bg-surface-container { background: white !important; border: none !important; box-shadow: 0 10px 40px rgba(0,0,0,0.15) !important; border-radius: 4px !important; max-width: 900px !important; margin: 0 auto !important; padding: 40px 30px !important; }
+        
+        /* Tambahkan KOP SURAT buatan lewat pseudo-element hanya di preview dan print */
+        body.preview-mode .bg-surface-container::before {
+            content: "BARBER.CO\\A Daftar Layanan & Harga\\A Dicetak: <?= date('d M Y') ?>";
+            white-space: pre-wrap;
+            display: block;
+            text-align: center;
+            font-size: 16px;
+            font-weight: bold;
+            color: black;
+            border-bottom: 2px solid black;
+            padding-bottom: 16px;
+            margin-bottom: 24px;
+            line-height: 1.5;
+            font-family: serif;
+        }
+
+        body.preview-mode table { border-collapse: collapse !important; width: 100% !important; }
+        body.preview-mode th, body.preview-mode td { border: 1px solid #999 !important; color: black !important; padding: 8px !important; font-size: 12px !important; }
+        body.preview-mode th { background: #f0f0f0 !important; color: black !important; font-weight: bold !important; text-transform: uppercase; font-size: 10px !important; border-bottom: 2px solid #555 !important; }
+        body.preview-mode h1, body.preview-mode h2, body.preview-mode h3, body.preview-mode p, body.preview-mode span { color: black !important; }
+        body.preview-mode tr:hover td { background-color: transparent !important; }
+        body.preview-mode .dataTables_wrapper .dataTables_length, body.preview-mode .dataTables_wrapper .dataTables_filter, body.preview-mode .dataTables_wrapper .dataTables_info, body.preview-mode .dataTables_wrapper .dataTables_paginate { display: none !important; }
+        
+        /* Hapus elemen aksi & foto pada print */
+        body.preview-mode td:last-child, body.preview-mode th:last-child { display: none !important; } /* Aksi */
+        body.preview-mode td:first-child, body.preview-mode th:first-child { display: none !important; } /* Foto */
+        
+        /* Hilangkan elemen hiasan tambahan saat preview */
+        body.preview-mode .flex.items-center.gap-3 div:last-child h2, body.preview-mode .flex.items-center.gap-3 div:last-child p { display: none !important; }
+        body.preview-mode .text-xl.font-bold { display: none !important; }
+        body.preview-mode p.mt-1.text-xs { display: none !important; }
+
+        @media print {
+            body { background: white !important; color: black !important; animation: none !important; }
+            #sidebar, header, .no-print, section:not(:last-child) { display: none !important; }
+            main { margin: 0 !important; padding: 0 !important; width: 100% !important; background: white !important; }
+            .bg-surface-container { background: transparent !important; border: none !important; box-shadow: none !important; max-width: 100% !important; padding: 0 !important; }
+            
+            .bg-surface-container::before {
+                content: "BARBER.CO\\A Daftar Layanan & Harga\\A Dicetak: <?= date('d M Y') ?>";
+                white-space: pre-wrap;
+                display: block;
+                text-align: center;
+                font-size: 16px;
+                font-weight: bold;
+                color: black;
+                border-bottom: 2px solid black;
+                padding-bottom: 16px;
+                margin-bottom: 24px;
+                line-height: 1.5;
+                font-family: serif;
+            }
+
+            table { border-collapse: collapse !important; width: 100% !important; margin-top: 0px;}
+            th, td { border: 1px solid #ccc !important; color: black !important; padding: 6px 8px !important; font-size: 11px !important;}
+            th { background: #f0f0f0 !important; color: black !important; font-weight: bold !important; font-size: 9px !important; border-bottom: 2px solid #555 !important; }
+            h1, h2, h3, p, span { color: black !important; }
+            .dataTables_wrapper .dataTables_length, .dataTables_wrapper .dataTables_filter, .dataTables_wrapper .dataTables_info, .dataTables_wrapper .dataTables_paginate { display: none !important; }
+            td:last-child, th:last-child, td:first-child, th:first-child { display: none !important; }
+            .text-xl.font-bold, p.mt-1.text-xs { display: none !important; }
+        }
+    `;
+    document.head.appendChild(styleLayanan);
 </script>
 <?php admin_footer("layanan"); ?>
