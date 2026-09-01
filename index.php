@@ -149,6 +149,13 @@ if (isset($_SESSION["role"])) {
                 }
             }
         };
+
+        function toggleMobileMenu() {
+            const menu = document.getElementById('mobileMenu');
+            menu.classList.toggle('hidden');
+            menu.classList.toggle('flex');
+            document.body.style.overflow = menu.classList.contains('hidden') ? '' : 'hidden';
+        }
     </script>
     <style>
         .material-symbols-outlined {
@@ -166,6 +173,15 @@ if (isset($_SESSION["role"])) {
                 url('https://images.unsplash.com/photo-1622287162716-f311baa1a2b8?auto=format&fit=crop&w=1800&q=80');
             background-position: center;
             background-size: cover;
+        }
+
+        @media (max-width: 767px) {
+            .hero-photo {
+                background-image:
+                    linear-gradient(to bottom, rgba(16, 19, 19, .95) 0%, rgba(16, 19, 19, .65) 45%, rgba(16, 19, 19, .95) 100%),
+                    url('https://images.unsplash.com/photo-1622287162716-f311baa1a2b8?auto=format&fit=crop&w=1800&q=80');
+                background-position: 65% center;
+            }
         }
 
         .gold-line {
@@ -191,30 +207,48 @@ if (isset($_SESSION["role"])) {
                 <a class="transition hover:text-primary" href="#about">About</a>
                 <a class="transition hover:text-primary" href="#layanan">Layanan</a>
             </nav>
-            <div class="flex items-center gap-3">
-                <button onclick="handleBookNow()" class="border border-primary bg-primary px-4 py-2 text-[12px] font-black uppercase tracking-[0.16em] text-on-primary transition hover:bg-transparent hover:text-primary">
+            <div class="flex items-center gap-2 sm:gap-3">
+                <button onclick="handleBookNow()" class="border border-primary bg-primary px-3 sm:px-4 py-2 text-[10px] sm:text-[12px] font-black uppercase tracking-[0.16em] text-on-primary transition hover:bg-transparent hover:text-primary">
                     Ambil Antrean
+                </button>
+                <button onclick="toggleMobileMenu()" class="md:hidden flex h-[34px] w-[34px] sm:h-[38px] sm:w-[38px] items-center justify-center border border-outline bg-surface text-primary transition hover:border-primary hover:bg-primary/10">
+                    <span class="material-symbols-outlined text-[20px]">menu</span>
                 </button>
             </div>
         </div>
     </header>
 
+    <!-- Mobile Navigation Overlay -->
+    <div id="mobileMenu" class="fixed inset-0 z-[60] hidden bg-background/95 backdrop-blur-md flex-col items-center justify-center space-y-8">
+        <button onclick="toggleMobileMenu()" class="absolute top-6 right-6 text-on-surface hover:text-primary">
+            <span class="material-symbols-outlined text-4xl">close</span>
+        </button>
+        <a class="font-display text-2xl font-black uppercase tracking-widest text-on-muted hover:text-primary transition" href="#status" onclick="toggleMobileMenu()">Status</a>
+        <a class="font-display text-2xl font-black uppercase tracking-widest text-on-muted hover:text-primary transition" href="#about" onclick="toggleMobileMenu()">About</a>
+        <a class="font-display text-2xl font-black uppercase tracking-widest text-on-muted hover:text-primary transition" href="#layanan" onclick="toggleMobileMenu()">Layanan</a>
+        <?php if ($is_logged_in): ?>
+             <a class="font-display text-2xl font-black uppercase tracking-widest text-primary hover:opacity-80 transition" href="<?= htmlspecialchars(
+                 $book_now_url,
+             ) ?>">Dashboard</a>
+        <?php endif; ?>
+    </div>
+
     <main>
         <section class="hero-photo relative overflow-hidden border-b border-outline">
-            <div class="mx-auto grid min-h-[calc(100vh-4rem)] max-w-[1440px] items-end gap-10 px-5 py-16 md:px-8 lg:grid-cols-[1.1fr_0.9fr] lg:py-20">
-                <div class="max-w-4xl pb-4">
+            <div class="mx-auto grid min-h-[calc(100vh-4rem)] max-w-[1440px] content-center md:content-end md:items-end gap-8 px-5 py-10 md:gap-10 md:py-16 md:px-8 lg:grid-cols-[1.1fr_0.9fr] lg:py-20">
+                <div class="max-w-4xl pb-4 mt-8 md:mt-0">
                     <p class="mb-5 text-[12px] font-black uppercase tracking-[0.24em] text-primary">Premium grooming queue system</p>
-                    <h1 class="font-display text-[44px] font-black uppercase leading-[1.03] text-on-surface md:text-[72px] lg:text-[84px]">
+                    <h1 class="font-display text-4xl min-[400px]:text-[44px] sm:text-5xl font-black uppercase leading-[1.03] text-on-surface md:text-[72px] lg:text-[84px]">
                         Cukur rapi, antrean jelas, waktu lebih terukur.
                     </h1>
                     <p class="mt-6 max-w-2xl text-lg leading-8 text-on-muted">
                         Barber.co menggabungkan suasana barbershop premium dengan sistem antrean real-time untuk pelanggan, barber, dan admin.
                     </p>
-                    <div class="mt-9 flex flex-wrap gap-4">
-                        <button onclick="handleBookNow()" class="border border-primary bg-primary px-7 py-4 text-[12px] font-black uppercase tracking-[0.18em] text-on-primary transition hover:bg-transparent hover:text-primary">
+                    <div class="mt-9 flex flex-col sm:flex-row gap-4">
+                        <button onclick="handleBookNow()" class="w-full sm:w-auto border border-primary bg-primary px-7 py-4 text-[12px] font-black uppercase tracking-[0.18em] text-on-primary transition hover:bg-transparent hover:text-primary">
                             Book Service
                         </button>
-                        <a href="#status" class="border border-outline-strong bg-background/60 px-7 py-4 text-[12px] font-black uppercase tracking-[0.18em] text-on-surface transition hover:border-primary hover:text-primary">
+                        <a href="#status" class="w-full sm:w-auto border border-outline-strong bg-background/60 px-7 py-4 text-[12px] font-black uppercase tracking-[0.18em] text-on-surface transition hover:border-primary hover:text-primary text-center">
                             Lihat Status
                         </a>
                     </div>
@@ -358,12 +392,12 @@ if (isset($_SESSION["role"])) {
                 </div>
 
                 <?php if ($services): ?>
-                    <div id="serviceCarousel" class="hide-scrollbar flex gap-5 overflow-x-auto pb-4">
+                    <div id="serviceCarousel" class="hide-scrollbar flex gap-5 overflow-x-auto pb-4 snap-x snap-mandatory scroll-smooth">
                         <?php foreach ($services as $service): ?>
                             <?php $serviceImage = landing_service_visual(
                                 $service,
                             ); ?>
-                            <article class="group relative min-w-[320px] border border-outline bg-surface md:min-w-[400px]">
+                            <article class="group relative w-[85vw] min-[400px]:w-auto min-[400px]:min-w-[280px] sm:min-w-[320px] border border-outline bg-surface md:min-w-[400px] shrink-0 snap-center">
                                 <div class="aspect-[16/10] overflow-hidden bg-surface-high">
                                     <img src="<?= htmlspecialchars(
                                         $serviceImage,
@@ -508,7 +542,7 @@ if (isset($_SESSION["role"])) {
         <div onclick="closeAuthModal()" class="backdrop-blur-sm" style="position: absolute; inset: 0; background-color: rgba(0,0,0,0.8);"></div>
         
         <!-- Modal Content (Absolute Centered) -->
-        <div class="bg-surface shadow-[0_28px_80px_rgba(0,0,0,0.5)] border border-outline" style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 100%; max-width: 28rem; padding: 1.75rem;">
+        <div class="bg-surface shadow-[0_28px_80px_rgba(0,0,0,0.5)] border border-outline" style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: calc(100% - 2rem); max-width: 28rem; padding: 1.75rem;">
             <div class="flex items-start justify-between gap-4 border-b border-outline pb-5">
                 <div>
                     <p class="text-[11px] font-black uppercase tracking-[0.22em] text-primary">Akses Layanan</p>

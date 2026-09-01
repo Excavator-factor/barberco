@@ -1,11 +1,27 @@
 <?php
 date_default_timezone_set("Asia/Jakarta");
 
-// Konfigurasi Database Hosting InfinityFree
-$host = "sql308.infinityfree.com";
-$user = "if0_42597733";
-$pass = "PratamaS123";
-$db = "if0_42597733_barber_db"; // Sesuaikan nama DB sesuai yang dibuat di Control Panel InfinityFree
+// Konfigurasi Database
+$envPath = __DIR__ . '/../.env';
+if (file_exists($envPath)) {
+    $lines = file($envPath, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
+    foreach ($lines as $line) {
+        if (strpos(trim($line), '#') === 0) continue;
+        $parts = explode('=', $line, 2);
+        if (count($parts) === 2) {
+            $name = trim($parts[0]);
+            $value = trim($parts[1]);
+            // Menghapus tanda kutip jika ada
+            $value = trim($value, "\"'");
+            $_ENV[$name] = $value;
+        }
+    }
+}
+
+$host = $_ENV['DB_HOST'] ?? "localhost";
+$user = $_ENV['DB_USER'] ?? "root";
+$pass = $_ENV['DB_PASS'] ?? "";
+$db   = $_ENV['DB_NAME'] ?? "barber_db"; // Sesuaikan nama DB sesuai yang dibuat di Control Panel InfinityFree
 
 // Langsung sertakan $db pada koneksi karena di hosting free tidak diizinkan query CREATE DATABASE
 $conn = mysqli_connect($host, $user, $pass, $db);

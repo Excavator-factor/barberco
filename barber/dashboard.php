@@ -19,7 +19,7 @@ include "_chrome.php";
 
         <!-- Dashboard Canvas -->
         <div class="flex-1 overflow-y-auto custom-scrollbar">
-            <div class="p-md md:p-lg max-w-7xl w-full mx-auto">
+            <div class="p-md pb-24 md:p-lg max-w-7xl w-full mx-auto">
             <?php if ($message): ?>
                 <div class="mb-6 p-4 rounded-lg flex items-center justify-between border <?= $messageType ===
                 "error"

@@ -95,9 +95,9 @@ $recentHistory = array_slice($history_queues, 0, 4);
                     <h1 class="mt-3 font-display text-4xl font-black text-on-surface md:text-5xl">Selamat datang kembali, <span class="text-primary"><?= htmlspecialchars(
                         $username,
                     ) ?></span></h1>
-                    <p class="mt-3 text-lg leading-8 text-on-muted">Pantau status antrean, lihat riwayat, dan pesan layanan berikutnya dari satu tempat.</p>
+                    <p class="mt-3 text-sm md:text-lg leading-8 text-on-muted">Pantau status antrean, lihat riwayat, dan pesan layanan berikutnya dari satu tempat.</p>
                 </div>
-                <a href="#" onclick="openBookingModal(); return false;" class="inline-flex items-center justify-center gap-2 border border-primary bg-primary px-6 py-4 text-[12px] font-black uppercase tracking-[0.16em] text-on-primary transition hover:bg-transparent hover:text-primary">
+                <a href="#" onclick="openBookingModal(); return false;" class="w-full md:w-auto inline-flex items-center justify-center gap-2 border border-primary bg-primary px-6 py-4 md:py-4 py-5 text-[12px] font-black uppercase tracking-[0.16em] text-on-primary transition hover:bg-transparent hover:text-primary">
                     <span class="material-symbols-outlined">add_circle</span>
                     Pesan Layanan Baru
                 </a>

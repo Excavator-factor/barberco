@@ -134,7 +134,7 @@ unset($_SESSION["error"]);
 </head>
 <body class="bg-background text-on-surface font-body-md min-h-screen flex flex-col items-center justify-center selection:bg-primary selection:text-on-primary">
     <!-- Top Navigation -->
-    <nav class="fixed top-0 w-full flex justify-between items-center px-md py-base bg-surface z-50 border-b border-outline-variant">
+    <nav class="fixed top-0 w-full flex justify-between items-center px-4 md:px-md py-base bg-surface z-50 border-b border-outline-variant">
         <div class="font-headline-md text-headline-md font-extrabold text-primary tracking-tighter">
             Barber.co
         </div>
@@ -144,7 +144,7 @@ unset($_SESSION["error"]);
     </nav>
     
     <!-- Main Registration Container -->
-    <main class="w-full max-w-[1200px] grid grid-cols-1 lg:grid-cols-2 min-h-[85vh] mt-xl mb-lg mx-md bg-surface-container-low border border-outline-variant overflow-hidden">
+    <main class="w-full max-w-[1200px] grid grid-cols-1 lg:grid-cols-2 min-h-[85vh] mt-xl mb-lg mx-4 md:mx-md bg-surface-container-low border border-outline-variant overflow-hidden">
         
         <!-- Left Side: Aesthetic/Brand Panel -->
         <section class="hidden lg:flex flex-col justify-end p-xl relative overflow-hidden group">
@@ -241,7 +241,7 @@ unset($_SESSION["error"]);
     
     <!-- Footer -->
     <footer class="w-full py-md bg-surface-dim border-t border-outline-variant">
-        <div class="max-w-7xl mx-auto px-md flex flex-col md:flex-row justify-between items-center gap-md">
+        <div class="max-w-7xl mx-auto px-4 md:px-md flex flex-col md:flex-row justify-between items-center gap-md">
             <p class="font-label-caps text-label-caps text-on-surface-variant">© <?php echo date(
                 "Y",
             ); ?> Barber.co GROOMING CO.</p>

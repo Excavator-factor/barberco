@@ -138,7 +138,7 @@ unset($_SESSION["error"]);
         @keyframes pageFadeOut { from { opacity: 1; transform: translateY(0); } to { opacity: 0; transform: translateY(-8px); } }
     </style>
 </head>
-<body class="min-h-screen flex flex-col justify-center items-center text-on-surface p-md">
+<body class="min-h-screen flex flex-col justify-center items-center text-on-surface p-4 md:p-md">
     <!-- Login Container -->
     <main class="w-full max-w-[440px] flex flex-col gap-lg animate-in fade-in duration-700 z-10">
         <!-- Brand Identity -->
