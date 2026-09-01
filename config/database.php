@@ -11,7 +11,6 @@ if (file_exists($envPath)) {
         if (count($parts) === 2) {
             $name = trim($parts[0]);
             $value = trim($parts[1]);
-            // Menghapus tanda kutip jika ada
             $value = trim($value, "\"'");
             $_ENV[$name] = $value;
         }
@@ -21,14 +20,22 @@ if (file_exists($envPath)) {
 $host = $_ENV['DB_HOST'] ?? "localhost";
 $user = $_ENV['DB_USER'] ?? "root";
 $pass = $_ENV['DB_PASS'] ?? "";
-$db   = $_ENV['DB_NAME'] ?? "barber_db"; // Sesuaikan nama DB sesuai yang dibuat di Control Panel InfinityFree
+$db   = $_ENV['DB_NAME'] ?? "barber_db";
 
-// Langsung sertakan $db pada koneksi karena di hosting free tidak diizinkan query CREATE DATABASE
-$conn = mysqli_connect($host, $user, $pass, $db);
+// Matikan exception otomatis untuk mysqli (agar bisa menangkap error dengan baik)
+mysqli_report(MYSQLI_REPORT_OFF);
+
+// Langsung sertakan $db pada koneksi
+$conn = @mysqli_connect($host, $user, $pass, $db);
 
 if (!$conn) {
-    die("Koneksi gagal: " . mysqli_connect_error());
+    if (!file_exists($envPath)) {
+        die("<h1>Koneksi Database Gagal (500)</h1><p>Sepertinya file <b>.env</b> tidak ditemukan di server. Harap upload file .env secara manual ke file manager (htdocs) di InfinityFree.</p>");
+    } else {
+        die("<h1>Koneksi Database Gagal (500)</h1><p>" . mysqli_connect_error() . "</p><p>Pastikan kredensial di dalam file .env sudah benar.</p>");
+    }
 }
+
 
 // Auto-import struktur awal dari barber_db.sql jika database belum memiliki tabel.
 $checkUsersTbl = mysqli_query($conn, "SHOW TABLES LIKE 'users'");
