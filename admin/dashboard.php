@@ -2,43 +2,7 @@
 include "_bootstrap.php";
 include "_chrome.php";
 
-$waConfigPath = __DIR__ . "/../config/wa_gateway.json";
-$waGateway = [
-    "enabled" => false,
-    "base_url" => "",
-    "token" => "",
-    "sender" => "",
-    "template" => "Halo {nama}, antrean Anda di Barber.co sudah diperbarui.",
-];
-
-if (is_file($waConfigPath)) {
-    $decoded = json_decode((string) file_get_contents($waConfigPath), true);
-    if (is_array($decoded)) {
-        $waGateway = array_merge($waGateway, $decoded);
-    }
-}
-
-$waNotice = "";
-if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST["save_wa_gateway"])) {
-    $waGateway = [
-        "enabled" => isset($_POST["wa_enabled"]) ? true : false,
-        "base_url" => trim((string) ($_POST["wa_base_url"] ?? "")),
-        "token" => trim((string) ($_POST["wa_token"] ?? "")),
-        "sender" => trim((string) ($_POST["wa_sender"] ?? "")),
-        "template" => trim((string) ($_POST["wa_template"] ?? "")),
-    ];
-
-    if ($waGateway["template"] === "") {
-        $waGateway["template"] =
-            "Halo {nama}, antrean Anda di Barber.co sudah diperbarui.";
-    }
-
-    @file_put_contents(
-        $waConfigPath,
-        json_encode($waGateway, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES),
-    );
-    $waNotice = "Pengaturan WA Gateway tersimpan.";
-}
+require_once __DIR__ . "/../functions/whatsapp.php";
 
 $monthLabels = array_values($months);
 $monthlyRevenueValues = array_values($adminMonthlyRevenue);
@@ -79,11 +43,7 @@ $popDataJson = json_encode($popData);
                 </div>
             </div>
 
-            <?php if ($waNotice): ?>
-                <div class="mb-lg border border-primary bg-primary/10 px-4 py-3 text-sm font-semibold text-primary rounded"><?= htmlspecialchars(
-                    $waNotice,
-                ) ?></div>
-            <?php endif; ?>
+
 
             <!-- Stats Grid -->
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-md mb-lg">
@@ -267,57 +227,58 @@ $popDataJson = json_encode($popData);
                     </div>
                 </div>
 
-                <!-- WhatsApp Gateway Settings -->
-                <div class="bg-surface-container border border-outline-variant p-md" id="whatsapp">
-                    <div class="flex items-center gap-base mb-md justify-between border-b border-outline-variant pb-2">
-                        <div class="flex items-center gap-base">
-                            <span class="material-symbols-outlined text-primary">settings_input_component</span>
-                            <h3 class="font-headline-md text-white">WhatsApp Gateway</h3>
+                <!-- WhatsApp Gateway Quick Access Card -->
+                <?php
+                $dashWaConfig = get_pengaturan_wa();
+                $isWaActive = (int)($dashWaConfig['status_wa'] ?? 1) === 1;
+                $hasToken = !empty($dashWaConfig['token_fonnte']);
+                ?>
+                <div class="bg-surface-container border border-outline-variant p-md flex flex-col justify-between rounded-xl" id="whatsapp">
+                    <div>
+                        <div class="flex items-center justify-between mb-md border-b border-outline-variant pb-3">
+                            <div class="flex items-center gap-2">
+                                <div class="w-8 h-8 rounded bg-primary/10 border border-primary/20 flex items-center justify-center text-primary">
+                                    <span class="material-symbols-outlined text-[20px]">chat</span>
+                                </div>
+                                <div>
+                                    <h3 class="font-headline-md text-white text-base">Notifikasi WhatsApp</h3>
+                                    <p class="text-[11px] text-on-surface-variant">Fonnte Gateway & Direct WA</p>
+                                </div>
+                            </div>
+                            <span class="px-2.5 py-1 rounded text-[10px] font-bold <?= $isWaActive ? 'bg-green-500/10 text-green-400 border border-green-500/20' : 'bg-red-500/10 text-red-400 border border-red-500/20' ?>">
+                                <?= $isWaActive ? 'AKTIF' : 'NONAKTIF' ?>
+                            </span>
                         </div>
-                        <span class="px-2 py-1 rounded bg-surface-container-high border border-outline-variant text-[10px] font-bold text-on-surface-variant">
-                            <?= !empty($waGateway["enabled"])
-                                ? "ACTIVE"
-                                : "DISABLED" ?>
-                        </span>
+
+                        <div class="space-y-3 mb-6">
+                            <div class="flex justify-between items-center text-xs p-3 rounded bg-background border border-outline-variant">
+                                <span class="text-on-surface-variant">Token Fonnte API:</span>
+                                <span class="font-bold flex items-center gap-1 <?= $hasToken ? 'text-green-400' : 'text-primary' ?>">
+                                    <span class="material-symbols-outlined text-sm"><?= $hasToken ? 'check_circle' : 'pending' ?></span>
+                                    <?= $hasToken ? 'Sudah Dikonfigurasi' : 'Belum Diisi' ?>
+                                </span>
+                            </div>
+                            <div class="flex justify-between items-center text-xs p-3 rounded bg-background border border-outline-variant">
+                                <span class="text-on-surface-variant">Nomor Admin Penerima:</span>
+                                <span class="font-bold text-on-surface">
+                                    <?= htmlspecialchars($dashWaConfig['nomor_admin'] ?: 'Belum diisi') ?>
+                                </span>
+                            </div>
+                            <div class="flex justify-between items-center text-xs p-3 rounded bg-background border border-outline-variant">
+                                <span class="text-on-surface-variant">Pemicu Otomatis:</span>
+                                <span class="text-xs text-on-surface">
+                                    Booking, Panggilan & Selesai
+                                </span>
+                            </div>
+                        </div>
                     </div>
-                    
-                    <form method="POST" class="space-y-4">
-                        <label class="flex items-center gap-2 text-sm text-on-surface">
-                            <input type="checkbox" name="wa_enabled" class="bg-background border-outline-variant text-primary rounded ring-0 focus:ring-primary focus:ring-offset-background" <?= !empty(
-                                $waGateway["enabled"]
-                            )
-                                ? "checked"
-                                : "" ?>>
-                            Aktifkan Notifikasi WhatsApp
-                        </label>
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <div>
-                                <label class="block font-label-caps text-on-surface-variant mb-xs">URL Dasar</label>
-                                <input name="wa_base_url" class="w-full bg-background border border-outline-variant p-2 text-sm focus:border-primary focus:ring-0 rounded text-on-surface" type="text" value="<?= htmlspecialchars(
-                                    $waGateway["base_url"],
-                                ) ?>" placeholder="https://gateway.example.com/api/send"/>
-                            </div>
-                            <div>
-                                <label class="block font-label-caps text-on-surface-variant mb-xs">Token</label>
-                                <input name="wa_token" class="w-full bg-background border border-outline-variant p-2 text-sm focus:border-primary focus:ring-0 rounded text-on-surface" type="text" value="<?= htmlspecialchars(
-                                    $waGateway["token"],
-                                ) ?>"/>
-                            </div>
-                            <div>
-                                <label class="block font-label-caps text-on-surface-variant mb-xs">Pengirim / ID Perangkat</label>
-                                <input name="wa_sender" class="w-full bg-background border border-outline-variant p-2 text-sm focus:border-primary focus:ring-0 rounded text-on-surface" type="text" value="<?= htmlspecialchars(
-                                    $waGateway["sender"],
-                                ) ?>"/>
-                            </div>
-                            <div>
-                                <label class="block font-label-caps text-on-surface-variant mb-xs">Templat Pesan</label>
-                                <input name="wa_template" class="w-full bg-background border border-outline-variant p-2 text-sm focus:border-primary focus:ring-0 rounded text-on-surface" type="text" value="<?= htmlspecialchars(
-                                    $waGateway["template"],
-                                ) ?>" placeholder="Halo {nama}..."/>
-                            </div>
-                        </div>
-                        <button type="submit" name="save_wa_gateway" value="1" class="bg-primary text-on-primary font-bold w-full py-3 rounded active:scale-95 transition-transform mt-4 text-sm mt-2">SIMPAN KONFIGURASI GATEWAY</button>
-                    </form>
+
+                    <div class="pt-2 border-t border-outline-variant">
+                        <a href="pengaturan_wa.php" class="bg-primary text-on-primary font-bold w-full py-3 rounded-lg active:scale-95 transition-all text-xs flex items-center justify-center gap-2 no-underline hover:bg-primary-container shadow">
+                            <span class="material-symbols-outlined text-[18px]">tune</span>
+                            <span>BUKA PENGATURAN WA & TES KIRIM</span>
+                        </a>
+                    </div>
                 </div>
             </section>
 <script>

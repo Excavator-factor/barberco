@@ -16,8 +16,8 @@ function admin_render_sidebar(string $active): void
         ["transaksi.php", "receipt_long", "transaksi", "Transaksi"],
         ["pengguna.php", "group", "pengguna", "Pengguna"],
         ["layanan.php", "inventory_2", "layanan", "Layanan"],
-        ["notifikasi.php", "notifications", "notifikasi", "Notifikasi"],
         ["pengaturan_wa.php", "chat", "pengaturan_wa", "Pengaturan WA"],
+        ["notifikasi.php", "notifications", "notifikasi", "Notifikasi"],
     ];
     $adminName = htmlspecialchars(
         $_SESSION["username"] ?? ($_SESSION["nama"] ?? "Admin"),
@@ -62,9 +62,13 @@ $key
             
             <div class="mt-lg px-md">
                 <p class="font-label-caps text-on-surface-variant opacity-50 mb-base">Aksi Cepat</p>
-                <a href="../index.php" target="_blank" class="w-full bg-primary-container text-on-primary-container font-bold py-3 rounded-lg flex items-center justify-center gap-base active:scale-95 transition-transform no-underline">
-                    <span class="material-symbols-outlined">public</span>
+                <a href="../index.php" target="_blank" class="w-full bg-primary-container text-on-primary-container font-bold py-2.5 rounded-lg flex items-center justify-center gap-base active:scale-95 transition-transform no-underline text-xs mb-2">
+                    <span class="material-symbols-outlined text-sm">public</span>
                     <span>Halaman Utama</span>
+                </a>
+                <a href="pengaturan_wa.php" class="w-full bg-surface-variant border border-primary/40 text-primary font-bold py-2.5 rounded-lg flex items-center justify-center gap-base active:scale-95 transition-transform no-underline text-xs hover:bg-primary hover:text-on-primary">
+                    <span class="material-symbols-outlined text-sm">chat</span>
+                    <span>Pengaturan WA</span>
                 </a>
             </div>
         </div>
@@ -84,6 +88,10 @@ $key
                     ? 'style="font-variation-settings: \'FILL\' 1;"'
                     : "" ?>>person</span>
                 <span class="font-label-caps">Profil Anda</span>
+            </a>
+            <a class="flex items-center gap-base text-on-surface-variant hover:text-primary px-4 py-2 transition-all <?= $active === 'pengaturan_wa' ? 'text-primary' : '' ?>" href="pengaturan_wa.php">
+                <span class="material-symbols-outlined text-base" <?= $active === 'pengaturan_wa' ? 'style="font-variation-settings: \'FILL\' 1;"' : '' ?>>chat</span>
+                <span class="font-label-caps">Pengaturan WA</span>
             </a>
             <a class="flex items-center gap-base text-on-surface-variant hover:text-primary px-4 py-2 transition-all" href="backup_database.php">
                 <span class="material-symbols-outlined text-base">download</span>
@@ -407,6 +415,10 @@ function admin_header(string $title, string $active): void
                     "layanan"
                         ? "text-primary font-bold border-b-2 border-primary pb-1"
                         : "" ?>" href="layanan.php">Layanan</a>
+                    <a class="text-on-surface-variant hover:text-primary transition-colors font-body-md <?= $active ===
+                    "pengaturan_wa"
+                        ? "text-primary font-bold border-b-2 border-primary pb-1"
+                        : "" ?>" href="pengaturan_wa.php">Pengaturan WA</a>
                 </nav>
             </div>
             <div class="flex items-center gap-md">
