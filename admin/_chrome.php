@@ -17,6 +17,7 @@ function admin_render_sidebar(string $active): void
         ["pengguna.php", "group", "pengguna", "Pengguna"],
         ["layanan.php", "inventory_2", "layanan", "Layanan"],
         ["notifikasi.php", "notifications", "notifikasi", "Notifikasi"],
+        ["pengaturan_wa.php", "chat", "pengaturan_wa", "Pengaturan WA"],
     ];
     $adminName = htmlspecialchars(
         $_SESSION["username"] ?? ($_SESSION["nama"] ?? "Admin"),
@@ -106,6 +107,7 @@ function admin_render_mobile_nav(string $active): void
         ["pengguna.php", "group", "pengguna"],
         ["layanan.php", "inventory_2", "layanan"],
         ["notifikasi.php", "notifications", "notifikasi"],
+        ["pengaturan_wa.php", "chat", "pengaturan_wa"],
     ]; ?>
     <nav class="fixed bottom-0 left-0 right-0 z-50 flex w-full justify-around border-t border-outline-variant bg-surface-container py-3 md:hidden">
         <?php foreach ($links as [$href, $icon, $key]): ?>

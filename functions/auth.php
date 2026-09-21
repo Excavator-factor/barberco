@@ -106,6 +106,7 @@ if ($action === "register") {
     if (isset($_POST["register"])) {
         $nama = trim($_POST["nama"]);
         $username = trim($_POST["username"]);
+        $no_hp = preg_replace('/[^0-9]/', '', trim($_POST["no_hp"] ?? ''));
         $password = password_hash($_POST["password"], PASSWORD_DEFAULT);
         $role = "pelanggan";
 
@@ -123,21 +124,22 @@ if ($action === "register") {
         } else {
             $stmt = mysqli_prepare(
                 $conn,
-                "INSERT INTO users (nama, username, password, role) VALUES (?, ?, ?, ?)",
+                "INSERT INTO users (nama, username, password, role, no_hp) VALUES (?, ?, ?, ?, ?)",
             );
             mysqli_stmt_bind_param(
                 $stmt,
-                "ssss",
+                "sssss",
                 $nama,
                 $username,
                 $password,
                 $role,
+                $no_hp
             );
 
             if (mysqli_stmt_execute($stmt)) {
                 // Hook Notifikasi Admin
                 $notifMsg = "Pelanggan Baru Terdaftar";
-                $notifDesc = "Nama: " . mysqli_real_escape_string($conn, $nama) . "\nUsername: " . mysqli_real_escape_string($conn, $username);
+                $notifDesc = "Nama: " . mysqli_real_escape_string($conn, $nama) . "\nUsername: " . mysqli_real_escape_string($conn, $username) . "\nWhatsApp: " . mysqli_real_escape_string($conn, $no_hp);
                 $notifUrl = "pengguna.php?t=pelanggan";
                 @mysqli_query($conn, "INSERT INTO admin_notifications (pesan, deskripsi, url) VALUES ('$notifMsg', '$notifDesc', '$notifUrl')");
 

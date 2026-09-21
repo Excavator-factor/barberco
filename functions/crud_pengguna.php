@@ -16,6 +16,7 @@ if ($action === "add_user") {
         $username = trim(
             mysqli_real_escape_string($conn, $_POST["username"] ?? ""),
         );
+        $no_hp = preg_replace('/[^0-9]/', '', trim($_POST["no_hp"] ?? ""));
         $password = trim(
             mysqli_real_escape_string($conn, $_POST["password"] ?? ""),
         );
@@ -34,7 +35,7 @@ if ($action === "add_user") {
                 $hash = password_hash($password, PASSWORD_DEFAULT);
                 $ins = mysqli_query(
                     $conn,
-                    "INSERT INTO users (username, password, role, nama) VALUES ('$username', '$password', 'pelanggan', '$nama')",
+                    "INSERT INTO users (username, password, role, nama, no_hp) VALUES ('$username', '$password', 'pelanggan', '$nama', '$no_hp')",
                 );
                 if ($ins) {
                     $_SESSION[
@@ -57,6 +58,7 @@ if ($action === "edit_user") {
         $username = trim(
             mysqli_real_escape_string($conn, $_POST["username"] ?? ""),
         );
+        $no_hp = preg_replace('/[^0-9]/', '', trim($_POST["no_hp"] ?? ""));
         $password = $_POST["password"] ?? "";
 
         if (!$id_user || $nama === "" || $username === "") {
@@ -79,7 +81,7 @@ if ($action === "edit_user") {
 
                 $updUser = mysqli_query(
                     $conn,
-                    "UPDATE users SET nama = '$nama', username = '$username' $passQuery WHERE id_user = $id_user AND role = 'pelanggan'",
+                    "UPDATE users SET nama = '$nama', username = '$username', no_hp = '$no_hp' $passQuery WHERE id_user = $id_user AND role = 'pelanggan'",
                 );
                 if ($updUser) {
                     $_SESSION["modalSuccess"] =

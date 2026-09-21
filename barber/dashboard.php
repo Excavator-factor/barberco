@@ -1,6 +1,7 @@
 <?php
 include "_bootstrap.php";
 include "_chrome.php";
+require_once __DIR__ . "/../functions/whatsapp.php";
 ?>
 <!DOCTYPE html>
 <html class="dark" lang="id">
@@ -138,6 +139,12 @@ include "_chrome.php";
                                         SELESAI
                                     </button>
                                 </form>
+                                <?php if (!empty($activeQueue['no_hp'])): ?>
+                                    <a href="<?= buat_link_wa($activeQueue['no_hp'], "Halo {$activeQueue['nama_pelanggan']}, saya kapster Anda di Barber.co.") ?>" target="_blank" class="w-full border border-[#25D366]/60 text-[#25D366] hover:bg-[#25D366] hover:text-black py-2 px-3 rounded text-xs font-bold transition-all flex items-center justify-center gap-1.5 no-underline">
+                                        <span class="material-symbols-outlined text-[16px]">chat</span>
+                                        <span>Chat WA Pelanggan</span>
+                                    </a>
+                                <?php endif; ?>
                             </div>
                         <?php else: ?>
                             <div class="w-full py-8 text-center flex flex-col items-center">
@@ -270,17 +277,24 @@ include "_chrome.php";
                                             ? "Berikutnya"
                                             : "Antrean #" . ($index + 1) ?></p>
                                     </div>
-                                    <?php if (!$activeQueue && $isOwnOrOpen): ?>
-                                        <form method="POST" action="dashboard.php" class="flex-shrink-0">
-                                            <input type="hidden" name="queue_id" value="<?= (int) $q[
-                                                "id"
-                                            ] ?>">
-                                            <button type="submit" name="action" value="start" class="bg-primary text-on-primary px-3 py-2 rounded-lg font-bold text-xs hover:scale-105 active:scale-95 transition-all flex items-center gap-1">
-                                                <span>Mulai</span>
-                                                <span class="material-symbols-outlined text-sm" data-icon="chevron_right">chevron_right</span>
-                                            </button>
-                                        </form>
-                                    <?php endif; ?>
+                                    <div class="flex items-center gap-1.5 flex-shrink-0">
+                                        <?php if (!empty($q['no_hp'])): ?>
+                                            <a href="<?= buat_link_wa($q['no_hp'], "Halo {$q['nama_pelanggan']}, nomor antrean Anda #{$q['no_antrian']} di Barber.co sebentar lagi akan dipanggil. Mohon bersiap ya!") ?>" target="_blank" title="Panggil/Chat WA" class="border border-[#25D366]/40 hover:bg-[#25D366] hover:text-black text-[#25D366] p-2 rounded-lg transition-colors flex items-center justify-center">
+                                                <span class="material-symbols-outlined text-[16px]">chat</span>
+                                            </a>
+                                        <?php endif; ?>
+                                        <?php if (!$activeQueue && $isOwnOrOpen): ?>
+                                            <form method="POST" action="dashboard.php">
+                                                <input type="hidden" name="queue_id" value="<?= (int) $q[
+                                                    "id"
+                                                ] ?>">
+                                                <button type="submit" name="action" value="start" class="bg-primary text-on-primary px-3 py-2 rounded-lg font-bold text-xs hover:scale-105 active:scale-95 transition-all flex items-center gap-1">
+                                                    <span>Mulai</span>
+                                                    <span class="material-symbols-outlined text-sm" data-icon="chevron_right">chevron_right</span>
+                                                </button>
+                                            </form>
+                                        <?php endif; ?>
+                                    </div>
                                 </div>
                             <?php
                             endforeach; ?>

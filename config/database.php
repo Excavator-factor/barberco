@@ -226,4 +226,29 @@ $isDeletedUsers = @mysqli_query($conn, "SHOW COLUMNS FROM `users` LIKE 'is_delet
 if (!$isDeletedUsers || mysqli_num_rows($isDeletedUsers) == 0) {
     @mysqli_query($conn, "ALTER TABLE `users` ADD COLUMN `is_deleted` TINYINT(1) NOT NULL DEFAULT 0");
 }
+
+// Kolom no_hp untuk notifikasi WhatsApp pengguna
+$nohpColumn = @mysqli_query($conn, "SHOW COLUMNS FROM `users` LIKE 'no_hp'");
+if (!$nohpColumn || mysqli_num_rows($nohpColumn) === 0) {
+    @mysqli_query($conn, "ALTER TABLE `users` ADD COLUMN `no_hp` VARCHAR(25) NOT NULL DEFAULT '' AFTER `nama`");
+}
+
+// Tabel pengaturan_wa untuk menyimpan konfigurasi Fonnte WhatsApp Gateway
+$checkWaTbl = @mysqli_query($conn, "SHOW TABLES LIKE 'pengaturan_wa'");
+if ($checkWaTbl && mysqli_num_rows($checkWaTbl) === 0) {
+    $createWaSql = "CREATE TABLE IF NOT EXISTS `pengaturan_wa` (
+        `id` INT NOT NULL AUTO_INCREMENT,
+        `token_fonnte` VARCHAR(255) DEFAULT '',
+        `nomor_admin` VARCHAR(25) DEFAULT '',
+        `status_wa` TINYINT(1) NOT NULL DEFAULT 1,
+        `notif_booking` TINYINT(1) NOT NULL DEFAULT 1,
+        `notif_panggilan` TINYINT(1) NOT NULL DEFAULT 1,
+        `notif_selesai` TINYINT(1) NOT NULL DEFAULT 1,
+        `updated_at` DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+        PRIMARY KEY (`id`)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;";
+    if (@mysqli_query($conn, $createWaSql)) {
+        @mysqli_query($conn, "INSERT INTO `pengaturan_wa` (`id`, `token_fonnte`, `nomor_admin`, `status_wa`, `notif_booking`, `notif_panggilan`, `notif_selesai`) VALUES (1, '', '', 1, 1, 1, 1)");
+    }
+}
 ?>

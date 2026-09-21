@@ -9,6 +9,7 @@ $profilError = "";
 if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST["update_profil"])) {
     $nama = trim((string) ($_POST["nama"] ?? ""));
     $username = trim((string) ($_POST["username"] ?? ""));
+    $no_hp = preg_replace('/[^0-9]/', '', trim((string) ($_POST["no_hp"] ?? "")));
     $password = trim((string) ($_POST["password"] ?? ""));
 
     if ($nama === "" || $username === "") {
@@ -55,55 +56,60 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST["update_profil"])) {
                     if ($avatarFileName) {
                         $stmt = mysqli_prepare(
                             $conn,
-                            "UPDATE users SET nama = ?, username = ?, avatar = ? WHERE id_user = ?",
-                        );
-                        mysqli_stmt_bind_param(
-                            $stmt,
-                            "sssi",
-                            $nama,
-                            $username,
-                            $avatarFileName,
-                            $userId,
-                        );
-                    } else {
-                        $stmt = mysqli_prepare(
-                            $conn,
-                            "UPDATE users SET nama = ?, username = ? WHERE id_user = ?",
-                        );
-                        mysqli_stmt_bind_param(
-                            $stmt,
-                            "ssi",
-                            $nama,
-                            $username,
-                            $userId,
-                        );
-                    }
-                } else {
-                    if ($avatarFileName) {
-                        $stmt = mysqli_prepare(
-                            $conn,
-                            "UPDATE users SET nama = ?, username = ?, password = ?, avatar = ? WHERE id_user = ?",
+                            "UPDATE users SET nama = ?, username = ?, no_hp = ?, avatar = ? WHERE id_user = ?",
                         );
                         mysqli_stmt_bind_param(
                             $stmt,
                             "ssssi",
                             $nama,
                             $username,
-                            $password,
+                            $no_hp,
                             $avatarFileName,
                             $userId,
                         );
                     } else {
                         $stmt = mysqli_prepare(
                             $conn,
-                            "UPDATE users SET nama = ?, username = ?, password = ? WHERE id_user = ?",
+                            "UPDATE users SET nama = ?, username = ?, no_hp = ? WHERE id_user = ?",
                         );
                         mysqli_stmt_bind_param(
                             $stmt,
                             "sssi",
                             $nama,
                             $username,
-                            $password,
+                            $no_hp,
+                            $userId,
+                        );
+                    }
+                } else {
+                    $hashedPwd = password_hash($password, PASSWORD_DEFAULT);
+                    if ($avatarFileName) {
+                        $stmt = mysqli_prepare(
+                            $conn,
+                            "UPDATE users SET nama = ?, username = ?, no_hp = ?, password = ?, avatar = ? WHERE id_user = ?",
+                        );
+                        mysqli_stmt_bind_param(
+                            $stmt,
+                            "sssssi",
+                            $nama,
+                            $username,
+                            $no_hp,
+                            $hashedPwd,
+                            $avatarFileName,
+                            $userId,
+                        );
+                    } else {
+                        $stmt = mysqli_prepare(
+                            $conn,
+                            "UPDATE users SET nama = ?, username = ?, no_hp = ?, password = ? WHERE id_user = ?",
+                        );
+                        mysqli_stmt_bind_param(
+                            $stmt,
+                            "ssssi",
+                            $nama,
+                            $username,
+                            $no_hp,
+                            $hashedPwd,
                             $userId,
                         );
                     }
@@ -126,7 +132,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST["update_profil"])) {
 
 $stmt = mysqli_prepare(
     $conn,
-    "SELECT nama, username, avatar FROM users WHERE id_user = ? LIMIT 1",
+    "SELECT nama, username, avatar, no_hp FROM users WHERE id_user = ? LIMIT 1",
 );
 mysqli_stmt_bind_param($stmt, "i", $userId);
 mysqli_stmt_execute($stmt);
@@ -137,6 +143,7 @@ mysqli_stmt_close($stmt);
 $currentNama = $user["nama"] ?? ($_SESSION["nama"] ?? "");
 $currentUsername = $user["username"] ?? ($_SESSION["username"] ?? "");
 $currentAvatar = $user["avatar"] ?? null;
+$currentNoHp = $user["no_hp"] ?? "";
 ?>
 <!DOCTYPE html>
 <html class="dark" lang="id">
@@ -254,6 +261,12 @@ $currentAvatar = $user["avatar"] ?? null;
                                 $currentUsername,
                             ) ?></span>
                         </div>
+                        <div class="flex items-center gap-3 text-on-surface-variant">
+                            <span class="material-symbols-outlined text-sm text-primary">chat</span>
+                            <span class="text-sm"><?= htmlspecialchars(
+                                $currentNoHp ?: 'WhatsApp belum diatur',
+                            ) ?></span>
+                        </div>
                     </div>
                 </div>
 
@@ -278,6 +291,13 @@ $currentAvatar = $user["avatar"] ?? null;
                                 <input name="username" class="w-full h-12 px-4 rounded-lg form-input text-sm" placeholder="@username" type="text" value="<?= htmlspecialchars(
                                     $currentUsername,
                                 ) ?>" required>
+                            </div>
+                            <div class="space-y-2 md:col-span-2">
+                                <label class="font-bold text-[11px] text-white tracking-widest ml-1 uppercase flex justify-between items-center">
+                                    <span>Nomor WhatsApp (Aktif)</span>
+                                    <span class="text-primary normal-case text-[10px] tracking-normal font-normal">Menerima tiket antrean & notifikasi panggilan</span>
+                                </label>
+                                <input name="no_hp" class="w-full h-12 px-4 rounded-lg form-input text-sm" placeholder="Contoh: 081234567890" type="tel" value="<?= htmlspecialchars($currentNoHp) ?>">
                             </div>
                         </div>
                         <div class="w-full h-px bg-white/10 my-6"></div>

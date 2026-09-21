@@ -97,7 +97,7 @@ switch ($riwayatFilter) {
 if ($barberId > 0) {
     // Active queue
     $activeSql =
-        "SELECT a.*, COALESCE(NULLIF(u.nama, ''), u.username, 'Pelanggan') AS nama_pelanggan, l.nama_layanan, l.harga, l.durasi FROM antrian a JOIN users u ON u.id_user = a.pelanggan_id JOIN layanan l ON l.id = a.layanan_id WHERE a.status_antrian = 'proses' AND a.barber_id = ? ORDER BY a.waktu_dibuat ASC LIMIT 1";
+        "SELECT a.*, COALESCE(NULLIF(u.nama, ''), u.username, 'Pelanggan') AS nama_pelanggan, u.no_hp, l.nama_layanan, l.harga, l.durasi FROM antrian a JOIN users u ON u.id_user = a.pelanggan_id JOIN layanan l ON l.id = a.layanan_id WHERE a.status_antrian = 'proses' AND a.barber_id = ? ORDER BY a.waktu_dibuat ASC LIMIT 1";
     $stmt = mysqli_prepare($conn, $activeSql);
     mysqli_stmt_bind_param($stmt, "i", $barberId);
     mysqli_stmt_execute($stmt);
@@ -106,7 +106,7 @@ if ($barberId > 0) {
 
     // Waiting queues
     $waitingSql =
-        "SELECT a.*, COALESCE(NULLIF(u.nama, ''), u.username, 'Pelanggan') AS nama_pelanggan, l.nama_layanan, l.harga, l.durasi, b.nama AS nama_barber FROM antrian a JOIN users u ON u.id_user = a.pelanggan_id JOIN layanan l ON l.id = a.layanan_id LEFT JOIN barber b ON b.id = a.barber_id WHERE a.tanggal = ? AND a.status_antrian = 'menunggu' ORDER BY a.no_antrian ASC";
+        "SELECT a.*, COALESCE(NULLIF(u.nama, ''), u.username, 'Pelanggan') AS nama_pelanggan, u.no_hp, l.nama_layanan, l.harga, l.durasi, b.nama AS nama_barber FROM antrian a JOIN users u ON u.id_user = a.pelanggan_id JOIN layanan l ON l.id = a.layanan_id LEFT JOIN barber b ON b.id = a.barber_id WHERE a.tanggal = ? AND a.status_antrian = 'menunggu' ORDER BY a.no_antrian ASC";
     $stmt = mysqli_prepare($conn, $waitingSql);
     mysqli_stmt_bind_param($stmt, "s", $today);
     mysqli_stmt_execute($stmt);

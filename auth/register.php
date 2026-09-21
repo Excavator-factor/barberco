@@ -208,6 +208,18 @@ unset($_SESSION["error"]);
                             <input class="w-full bg-background border border-outline-variant rounded-none py-3 pl-12 pr-4 text-on-surface font-body-md form-input-focus placeholder:text-on-secondary-fixed-variant" name="username" placeholder="johndoe" type="text" required />
                         </div>
                     </div>
+
+                    <!-- WhatsApp Number -->
+                    <div class="space-y-xs">
+                        <label class="font-label-caps text-label-caps text-on-surface-variant flex justify-between items-center">
+                            <span>Nomor WhatsApp (Aktif)</span>
+                            <span class="text-primary text-[10px] normal-case tracking-normal">Untuk tiket & panggilan antrean</span>
+                        </label>
+                        <div class="relative">
+                            <span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-outline text-sm">chat</span>
+                            <input class="w-full bg-background border border-outline-variant rounded-none py-3 pl-12 pr-4 text-on-surface font-body-md form-input-focus placeholder:text-on-secondary-fixed-variant" name="no_hp" placeholder="Contoh: 081234567890" type="tel" pattern="[0-9]{10,15}" title="Masukkan 10-15 digit angka nomor WhatsApp aktif" required />
+                        </div>
+                    </div>
                     
                     <!-- Password -->
                     <div class="space-y-xs">

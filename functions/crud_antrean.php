@@ -66,6 +66,40 @@ if ($action === "book_queue") {
                       VALUES ('$user_id', '$layanan_id', $barber_id_sql, '$next_no', 'menunggu', '$today')";
 
             if (mysqli_query($conn, $query)) {
+                $newAntrianId = mysqli_insert_id($conn);
+
+                // Kirim Notifikasi WhatsApp Otomatis
+                require_once __DIR__ . "/whatsapp.php";
+                $custRes = mysqli_query($conn, "SELECT nama, username, no_hp FROM users WHERE id_user = '$user_id' LIMIT 1");
+                $custRow = $custRes ? mysqli_fetch_assoc($custRes) : null;
+                $custName = $custRow['nama'] ?? ($custRow['username'] ?? 'Pelanggan');
+                $custPhone = $custRow['no_hp'] ?? '';
+
+                $layRes = mysqli_query($conn, "SELECT nama_layanan, harga FROM layanan WHERE id = '$layanan_id' LIMIT 1");
+                $layRow = $layRes ? mysqli_fetch_assoc($layRes) : null;
+                $serviceName = $layRow['nama_layanan'] ?? 'Layanan Grooming';
+                $servicePrice = $layRow['harga'] ?? 0;
+
+                $barberName = 'Kapster Bertugas';
+                if ($barber_id_sql !== "NULL") {
+                    $barberRes = mysqli_query($conn, "SELECT nama FROM barber WHERE id = '$barber_input' LIMIT 1");
+                    if ($barberRes && ($bRow = mysqli_fetch_assoc($barberRes))) {
+                        $barberName = $bRow['nama'];
+                    }
+                }
+
+                $waData = [
+                    'nama_pelanggan' => $custName,
+                    'no_hp_pelanggan' => $custPhone,
+                    'no_antrian' => $next_no,
+                    'nama_layanan' => $serviceName,
+                    'harga' => $servicePrice,
+                    'nama_barber' => $barberName,
+                    'tanggal' => date('d-m-Y')
+                ];
+                @kirim_notifikasi_wa('booking_pelanggan', $waData);
+                @kirim_notifikasi_wa('booking_admin', $waData);
+
                 header(
                     "Location: ../pelanggan/dashboard.php?open_payment_modal=1",
                 );
@@ -147,6 +181,26 @@ if ($action === "start" || $action === "finish") {
                         "text" => "Antrean berhasil dimulai!",
                         "type" => "success",
                     ];
+
+                    // Kirim Notifikasi WhatsApp Panggilan ke Pelanggan
+                    require_once __DIR__ . "/whatsapp.php";
+                    $detailQ = mysqli_query($conn, "SELECT a.no_antrian, u.nama, u.username, u.no_hp, l.nama_layanan, l.harga, b.nama as barber_name 
+                        FROM antrian a 
+                        JOIN users u ON a.pelanggan_id = u.id_user 
+                        JOIN layanan l ON a.layanan_id = l.id 
+                        LEFT JOIN barber b ON a.barber_id = b.id 
+                        WHERE a.id = $queueId LIMIT 1");
+                    if ($detailQ && ($qRow = mysqli_fetch_assoc($detailQ))) {
+                        $waData = [
+                            'nama_pelanggan' => $qRow['nama'] ?: $qRow['username'],
+                            'no_hp_pelanggan' => $qRow['no_hp'],
+                            'no_antrian' => $qRow['no_antrian'],
+                            'nama_layanan' => $qRow['nama_layanan'],
+                            'harga' => $qRow['harga'],
+                            'nama_barber' => $qRow['barber_name'] ?: 'Kapster Bertugas',
+                        ];
+                        @kirim_notifikasi_wa('panggilan_giliran', $waData);
+                    }
                 } else {
                     $_SESSION["barber_flash"] = [
                         "text" =>
@@ -209,6 +263,33 @@ if ($action === "start" || $action === "finish") {
                         "Antrean telah diselesaikan. Sesi berhasil ditutup!",
                     "type" => "success",
                 ];
+
+                // Kirim Notifikasi WhatsApp Selesai & Struk ke Pelanggan
+                require_once __DIR__ . "/whatsapp.php";
+                $detailQ = mysqli_query($conn, "SELECT a.no_antrian, u.nama, u.username, u.no_hp, l.nama_layanan, l.harga, b.nama as barber_name, t.total_harga, t.metode_pembayaran 
+                    FROM antrian a 
+                    JOIN users u ON a.pelanggan_id = u.id_user 
+                    JOIN layanan l ON a.layanan_id = l.id 
+                    LEFT JOIN barber b ON a.barber_id = b.id 
+                    LEFT JOIN transaksi t ON t.antrian_id = a.id 
+                    WHERE a.id = $queueId LIMIT 1");
+                if ($detailQ && ($qRow = mysqli_fetch_assoc($detailQ))) {
+                    $protocol = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? "https" : "http";
+                    $host = $_SERVER['HTTP_HOST'] ?? 'localhost';
+                    $urlStruk = $transaksi_id > 0 ? "{$protocol}://{$host}/pelanggan/struk.php?id={$transaksi_id}" : "";
+
+                    $waData = [
+                        'nama_pelanggan' => $qRow['nama'] ?: $qRow['username'],
+                        'no_hp_pelanggan' => $qRow['no_hp'],
+                        'no_antrian' => $qRow['no_antrian'],
+                        'nama_layanan' => $qRow['nama_layanan'],
+                        'harga' => $qRow['total_harga'] ?: $qRow['harga'],
+                        'nama_barber' => $qRow['barber_name'] ?: 'Kapster Bertugas',
+                        'metode_pembayaran' => $qRow['metode_pembayaran'] ?: 'Tunai',
+                        'url_struk' => $urlStruk
+                    ];
+                    @kirim_notifikasi_wa('selesai_antrean', $waData);
+                }
 
                 if ($transaksi_id > 0) {
                     header(

@@ -164,10 +164,29 @@ $barberName = $data["nama_barber"] ?? "Artisan";
         </div>
     </div>
 
-    <div class="text-center mt-8 no-print mb-8">
-        <button onclick="window.print()" class="border border-[#f2ca50] bg-[#f2ca50] text-black px-6 py-2 text-xs font-bold uppercase tracking-widest mr-2 hover:bg-transparent hover:text-[#f2ca50]">
+    <?php
+    require_once __DIR__ . "/../functions/whatsapp.php";
+    $targetNoHp = $data['no_hp'] ?? '';
+    $waText = "💈 *STRUK PEMBAYARAN BARBER.CO* 💈\n"
+        . "------------------------------------\n"
+        . "Halo " . ($data['nama_pelanggan'] ?? 'Pelanggan') . ",\n"
+        . "Terima kasih telah mempercayakan grooming Anda kepada Barber.co!\n\n"
+        . "📌 No. Antrean: #" . $data['no_antrian'] . "\n"
+        . "✂️ Layanan: " . $data['nama_layanan'] . "\n"
+        . "👤 Kapster: " . $barberName . "\n"
+        . "💰 Total: Rp " . number_format($data['total_harga'], 0, ',', '.') . "\n"
+        . "💳 Metode: " . strtoupper($data['metode_pembayaran'] ?? 'CASH') . " (LUNAS)\n"
+        . "📅 Waktu: " . date('d/m/Y H:i', strtotime($data['waktu_bayar'])) . "\n\n"
+        . "Sampai jumpa di kunjungan berikutnya! ✨";
+    $waLink = !empty($targetNoHp) ? buat_link_wa($targetNoHp, $waText) : "https://api.whatsapp.com/send?text=" . rawurlencode($waText);
+    ?>
+    <div class="text-center mt-8 no-print mb-8 flex flex-wrap justify-center gap-2">
+        <button onclick="window.print()" class="border border-[#f2ca50] bg-[#f2ca50] text-black px-6 py-2 text-xs font-bold uppercase tracking-widest hover:bg-transparent hover:text-[#f2ca50] transition-colors">
             Print Struk
         </button>
+        <a href="<?= $waLink ?>" target="_blank" class="border border-[#25D366] bg-[#25D366] text-black px-6 py-2 text-xs font-bold uppercase tracking-widest hover:bg-transparent hover:text-[#25D366] transition-colors inline-flex items-center gap-1.5">
+            <span>Kirim WA ke Pelanggan</span>
+        </a>
         <a href="dashboard.php" class="border border-[#4d4635] px-6 py-2 text-xs font-bold uppercase tracking-widest text-[#d0c5af] hover:border-[#f2ca50] hover:text-[#f2ca50] transition-colors">
             Kembali
         </a>
