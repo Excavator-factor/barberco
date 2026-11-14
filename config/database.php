@@ -36,6 +36,9 @@ if (!$conn) {
     }
 }
 
+// Sinkronkan timezone MySQL dengan Asia/Jakarta (+07:00)
+@mysqli_query($conn, "SET time_zone = '+07:00'");
+
 
 // Auto-import struktur awal dari barber_db.sql jika database belum memiliki tabel.
 $checkUsersTbl = mysqli_query($conn, "SHOW TABLES LIKE 'users'");

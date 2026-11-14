@@ -25,14 +25,19 @@ if ($action === "login") {
                     password_verify($password, $dbPassword)
                 ) {
                     $uid =
-                        $user["id"] ??
-                        ($user["id_user"] ?? ($user["user_id"] ?? 1));
+                        (int)($user["id_user"] ??
+                        ($user["id"] ?? ($user["user_id"] ?? 1)));
                     $_SESSION["user_id"] = $uid;
+                    $_SESSION["id_user"] = $uid;
+                    $_SESSION["nama"] = $user["nama"] ?? "";
                     $_SESSION["username"] =
                         $user["username"] ?? ($user["nama"] ?? "User");
                     $_SESSION["role"] = strtolower(
                         trim($user["role"] ?? "pelanggan"),
                     );
+                    if (!empty($user["no_hp"])) {
+                        $_SESSION["no_hp"] = $user["no_hp"];
+                    }
                     if (!empty($user["avatar"])) {
                         $_SESSION["avatar"] = $user["avatar"];
                     }

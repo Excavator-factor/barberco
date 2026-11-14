@@ -37,7 +37,7 @@ if ($active_queue) {
     $qNo = (int) $active_queue["no_antrian"];
     $cntQ = mysqli_query(
         $conn,
-        "SELECT COUNT(*) as wait_count FROM antrian WHERE tanggal = '$qDate' AND no_antrian < $qNo AND LOWER(status_antrian) NOT IN ('selesai', 'dibatalkan')",
+        "SELECT COUNT(*) as wait_count FROM antrian WHERE no_antrian < $qNo AND LOWER(status_antrian) IN ('menunggu', 'proses')",
     );
     $waitRow = $cntQ ? mysqli_fetch_assoc($cntQ) : null;
     $peopleAhead = $waitRow ? (int) $waitRow["wait_count"] : 0;
@@ -53,7 +53,7 @@ if ($active_queue) {
     // Shop Load calculation (1-5)
     $activeCountQ = mysqli_query(
         $conn,
-        "SELECT COUNT(*) as active_c FROM antrian WHERE tanggal = '$qDate' AND LOWER(status_antrian) NOT IN ('selesai', 'dibatalkan')",
+        "SELECT COUNT(*) as active_c FROM antrian WHERE LOWER(status_antrian) IN ('menunggu', 'proses')",
     );
     $loadRow = $activeCountQ ? mysqli_fetch_assoc($activeCountQ) : null;
     $totalActive = $loadRow ? (int) $loadRow["active_c"] : 0;
@@ -370,12 +370,13 @@ $recentHistory = array_slice($history_queues, 0, 4);
 
     <?php if ($active_queue && !empty($active_queue['id'])): ?>
         <script>
-            // Real-time polling untuk mengecek apakah kapster sudah menyelesaikan cukur
+            // Real-time polling untuk mengecek apakah status antrian berubah (misal dari menunggu -> proses -> selesai)
+            const currentQueueStatus = <?= json_encode(strtolower((string)($active_queue['status_antrian'] ?? 'menunggu'))) ?>;
             setInterval(() => {
                 fetch('api_check_status.php?queue_id=<?= (int)$active_queue["id"] ?>')
                     .then(res => res.json())
                     .then(data => {
-                        if (data && (data.need_payment || data.status_antrian === 'selesai')) {
+                        if (data && (data.need_payment || data.status_antrian === 'selesai' || (data.status_antrian && data.status_antrian !== currentQueueStatus))) {
                             window.location.reload();
                         }
                     })

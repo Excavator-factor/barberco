@@ -34,13 +34,15 @@ $services = $servicesResult
     ? mysqli_fetch_all($servicesResult, MYSQLI_ASSOC)
     : [];
 
+$today = date("Y-m-d");
+
 $queueResult = mysqli_query(
     $conn,
     "SELECT a.no_antrian, a.status_antrian, COALESCE(NULLIF(b.nama, ''), 'Barber tersedia') AS nama_barber, l.nama_layanan, COALESCE(l.durasi, 30) AS durasi
      FROM antrian a
      LEFT JOIN barber b ON b.id = a.barber_id
      LEFT JOIN layanan l ON l.id = a.layanan_id
-     WHERE a.tanggal = CURDATE() AND a.status_antrian IN ('menunggu', 'proses')
+     WHERE a.status_antrian IN ('menunggu', 'proses')
      ORDER BY FIELD(a.status_antrian, 'proses', 'menunggu'), a.no_antrian ASC
      LIMIT 6",
 );
@@ -51,15 +53,15 @@ $nowServing = $currentQueues[0] ?? null;
 
 $waitingCount = landing_scalar_query(
     $conn,
-    "SELECT COUNT(*) AS total FROM antrian WHERE tanggal = CURDATE() AND status_antrian = 'menunggu'",
+    "SELECT COUNT(*) AS total FROM antrian WHERE status_antrian = 'menunggu'",
 );
 $processCount = landing_scalar_query(
     $conn,
-    "SELECT COUNT(*) AS total FROM antrian WHERE tanggal = CURDATE() AND status_antrian = 'proses'",
+    "SELECT COUNT(*) AS total FROM antrian WHERE status_antrian = 'proses'",
 );
 $servedCount = landing_scalar_query(
     $conn,
-    "SELECT COUNT(*) AS total FROM antrian WHERE tanggal = CURDATE() AND status_antrian = 'selesai'",
+    "SELECT COUNT(*) AS total FROM antrian WHERE (tanggal = '$today' OR tanggal = CURDATE()) AND status_antrian = 'selesai'",
 );
 $activeBarbers = landing_scalar_query(
     $conn,
@@ -259,7 +261,7 @@ if (isset($_SESSION["role"])) {
                         <div>
                             <p class="text-[11px] font-black uppercase tracking-[0.22em] text-primary">Now Serving</p>
                             <div class="mt-3 flex items-end gap-3">
-                                <span class="font-display text-6xl font-black leading-none text-on-surface">
+                                <span id="live-now-serving" class="font-display text-6xl font-black leading-none text-on-surface">
                                     #<?= $nowServing
                                         ? str_pad(
                                             (string) $nowServing["no_antrian"],
@@ -269,7 +271,7 @@ if (isset($_SESSION["role"])) {
                                         )
                                         : "---" ?>
                                 </span>
-                                <span class="pb-2 text-sm font-bold uppercase tracking-[0.16em] text-on-muted">
+                                <span id="live-queue-total" class="pb-2 text-sm font-bold uppercase tracking-[0.16em] text-on-muted">
                                     <?= $queueTotal ?> total
                                 </span>
                             </div>
@@ -284,19 +286,19 @@ if (isset($_SESSION["role"])) {
                         <div class="border border-outline bg-background p-4">
                             <span class="material-symbols-outlined text-primary">schedule</span>
                             <p class="mt-3 text-[11px] font-black uppercase tracking-[0.18em] text-on-muted">Estimasi Tunggu</p>
-                            <h2 class="mt-1 font-display text-3xl font-black text-on-surface"><?= $estimatedWait ?> Min</h2>
+                            <h2 id="live-est-wait" class="mt-1 font-display text-3xl font-black text-on-surface"><?= $estimatedWait ?> Min</h2>
                         </div>
                         <div class="border border-outline bg-background p-4">
                             <span class="material-symbols-outlined text-primary">groups</span>
                             <p class="mt-3 text-[11px] font-black uppercase tracking-[0.18em] text-on-muted">Kapasitas Toko</p>
-                            <h2 class="mt-1 font-display text-3xl font-black text-on-surface"><?= $capacity ?>%</h2>
+                            <h2 id="live-capacity-text" class="mt-1 font-display text-3xl font-black text-on-surface"><?= $capacity ?>%</h2>
                             <div class="mt-3 h-1 bg-surface-high">
-                                <div class="h-full bg-primary" style="width: <?= $capacity ?>%"></div>
+                                <div id="live-capacity-bar" class="h-full bg-primary" style="width: <?= $capacity ?>%"></div>
                             </div>
                         </div>
                     </div>
 
-                    <div class="space-y-3">
+                    <div id="live-queue-list" class="space-y-3">
                         <?php if ($currentQueues): ?>
                             <?php foreach ($currentQueues as $queue): ?>
                                 <article class="flex items-center justify-between gap-4 border border-outline bg-surface-low p-4">
@@ -597,6 +599,54 @@ if (isset($_SESSION["role"])) {
             prevButton.addEventListener('click', () => carousel.scrollBy({ left: -380, behavior: 'smooth' }));
             nextButton.addEventListener('click', () => carousel.scrollBy({ left: 380, behavior: 'smooth' }));
         }
+
+        // Real-time polling Live Queue di Landing Page
+        function fetchLiveQueue() {
+            fetch('api_live_status.php')
+                .then(res => res.json())
+                .then(data => {
+                    if (!data || !data.success) return;
+
+                    const elNowServing = document.getElementById('live-now-serving');
+                    if (elNowServing) elNowServing.textContent = '#' + data.now_serving;
+
+                    const elTotal = document.getElementById('live-queue-total');
+                    if (elTotal) elTotal.textContent = data.queue_total + ' total';
+
+                    const elWait = document.getElementById('live-est-wait');
+                    if (elWait) elWait.textContent = data.estimated_wait + ' Min';
+
+                    const elCapText = document.getElementById('live-capacity-text');
+                    if (elCapText) elCapText.textContent = data.capacity + '%';
+
+                    const elCapBar = document.getElementById('live-capacity-bar');
+                    if (elCapBar) elCapBar.style.width = data.capacity + '%';
+
+                    const elList = document.getElementById('live-queue-list');
+                    if (elList) {
+                        if (data.queues && data.queues.length > 0) {
+                            elList.innerHTML = data.queues.map(q => {
+                                const qNo = String(q.no_antrian).padStart(3, '0');
+                                const svc = q.nama_layanan ? q.nama_layanan : 'Layanan';
+                                const barber = q.nama_barber ? q.nama_barber : 'Barber tersedia';
+                                const stts = q.status_antrian ? q.status_antrian : 'menunggu';
+                                return `<article class="flex items-center justify-between gap-4 border border-outline bg-surface-low p-4">
+                                    <div>
+                                        <p class="text-[11px] font-black uppercase tracking-[0.18em] text-primary">#${qNo}</p>
+                                        <h3 class="mt-1 font-display text-base font-bold text-on-surface">${svc}</h3>
+                                        <p class="mt-1 text-sm text-on-muted">${barber}</p>
+                                    </div>
+                                    <span class="text-[11px] font-black uppercase tracking-[0.18em] text-on-muted">${stts}</span>
+                                </article>`;
+                            }).join('');
+                        } else {
+                            elList.innerHTML = `<div class="border border-dashed border-outline p-6 text-sm leading-7 text-on-muted">Belum ada antrean aktif hari ini. Jadilah pelanggan pertama yang masuk ke kursi.</div>`;
+                        }
+                    }
+                })
+                .catch(() => {});
+        }
+        setInterval(fetchLiveQueue, 4000);
     </script>
 </body>
 </html>

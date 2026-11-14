@@ -405,5 +405,21 @@ require_once __DIR__ . "/../functions/whatsapp.php";
 
 <?php barber_mobile_nav("dashboard"); ?>
 <?php barber_scripts(); ?>
+<script>
+    // Real-time polling barber dashboard: otomatis update jika ada pelanggan baru yang mengambil antrean
+    const initialWaiting = <?= count($waitingQueues) ?>;
+    setInterval(() => {
+        fetch('../api_live_status.php')
+            .then(res => res.json())
+            .then(data => {
+                if (data && data.success && typeof data.waiting_count !== 'undefined') {
+                    if (data.waiting_count !== initialWaiting) {
+                        window.location.reload();
+                    }
+                }
+            })
+            .catch(() => {});
+    }, 5000);
+</script>
 </body>
 </html>
