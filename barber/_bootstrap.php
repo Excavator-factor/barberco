@@ -55,6 +55,155 @@ function barber_flash(string $text, string $type = "success"): void
     $_SESSION["barber_flash"] = ["text" => $text, "type" => $type];
 }
 
+if ($_SERVER["REQUEST_METHOD"] === "POST") {
+    $action = $_POST["action"] ?? "";
+    $queueId = filter_input(INPUT_POST, "queue_id", FILTER_VALIDATE_INT);
+
+    if ($action === "toggle_status") {
+        $newStatus = ($_POST["status"] ?? "") === "active" ? "active" : "off_duty";
+        if ($barberId > 0) {
+            $stmt = mysqli_prepare($conn, "UPDATE barber SET status = ? WHERE id = ?");
+            if ($stmt) {
+                mysqli_stmt_bind_param($stmt, "si", $newStatus, $barberId);
+                mysqli_stmt_execute($stmt);
+                mysqli_stmt_close($stmt);
+            }
+            barber_flash("Status berhasil diubah menjadi " . ($newStatus === "active" ? "Aktif" : "Tidak Bertugas") . ".");
+        }
+        header("Location: dashboard.php");
+        exit();
+    }
+
+    if ($action === "start" && $queueId) {
+        if ($barberId <= 0) {
+            barber_flash("Profil barber belum tersedia.", "error");
+        } else {
+            $activeCheck = mysqli_prepare(
+                $conn,
+                "SELECT id FROM antrian WHERE barber_id = ? AND status_antrian = 'proses' LIMIT 1"
+            );
+            mysqli_stmt_bind_param($activeCheck, "i", $barberId);
+            mysqli_stmt_execute($activeCheck);
+            $hasActive = mysqli_num_rows(mysqli_stmt_get_result($activeCheck)) > 0;
+            mysqli_stmt_close($activeCheck);
+
+            if ($hasActive) {
+                barber_flash("Selesaikan antrean aktif terlebih dahulu.", "error");
+            } else {
+                $stmt = mysqli_prepare(
+                    $conn,
+                    "UPDATE antrian SET status_antrian = 'proses', barber_id = ? WHERE id = ? AND status_antrian = 'menunggu' AND (barber_id IS NULL OR barber_id = ?)"
+                );
+                mysqli_stmt_bind_param($stmt, "iii", $barberId, $queueId, $barberId);
+                mysqli_stmt_execute($stmt);
+                $changed = mysqli_stmt_affected_rows($stmt);
+                mysqli_stmt_close($stmt);
+
+                if ($changed) {
+                    barber_flash("Antrean berhasil dimulai!", "success");
+
+                    require_once __DIR__ . "/../functions/whatsapp.php";
+                    $detailQ = mysqli_query($conn, "SELECT a.no_antrian, u.nama, u.username, u.no_hp, l.nama_layanan, l.harga, b.nama as barber_name 
+                        FROM antrian a 
+                        JOIN users u ON a.pelanggan_id = u.id_user 
+                        JOIN layanan l ON a.layanan_id = l.id 
+                        LEFT JOIN barber b ON a.barber_id = b.id 
+                        WHERE a.id = $queueId LIMIT 1");
+                    if ($detailQ && ($qRow = mysqli_fetch_assoc($detailQ))) {
+                        $waData = [
+                            'nama_pelanggan' => $qRow['nama'] ?: $qRow['username'],
+                            'no_hp_pelanggan' => $qRow['no_hp'],
+                            'no_antrian' => $qRow['no_antrian'],
+                            'nama_layanan' => $qRow['nama_layanan'],
+                            'harga' => $qRow['harga'],
+                            'nama_barber' => $qRow['barber_name'] ?: 'Kapster Bertugas',
+                        ];
+                        @kirim_notifikasi_wa('panggilan_giliran', $waData);
+                    }
+                } else {
+                    barber_flash("Antrean tidak dapat dimulai. Mungkin sudah diambil barber lain.", "error");
+                }
+            }
+        }
+        header("Location: dashboard.php");
+        exit();
+    }
+
+    if ($action === "finish" && $queueId) {
+        if ($barberId <= 0) {
+            barber_flash("Profil barber belum tersedia.", "error");
+        } else {
+            $stmt = mysqli_prepare(
+                $conn,
+                "UPDATE antrian SET status_antrian = 'selesai', barber_id = COALESCE(barber_id, ?) WHERE id = ? AND status_antrian = 'proses' AND (barber_id IS NULL OR barber_id = ?)"
+            );
+            mysqli_stmt_bind_param($stmt, "iii", $barberId, $queueId, $barberId);
+            mysqli_stmt_execute($stmt);
+            $changed = mysqli_stmt_affected_rows($stmt);
+            mysqli_stmt_close($stmt);
+
+            if ($changed) {
+                $chkTrx = mysqli_prepare($conn, "SELECT id FROM transaksi WHERE antrian_id = ? LIMIT 1");
+                mysqli_stmt_bind_param($chkTrx, "i", $queueId);
+                mysqli_stmt_execute($chkTrx);
+                $resTrx = mysqli_stmt_get_result($chkTrx);
+                $trxRow = mysqli_fetch_assoc($resTrx);
+                $transaksi_id = $trxRow ? (int) $trxRow["id"] : 0;
+                mysqli_stmt_close($chkTrx);
+
+                if (!$transaksi_id) {
+                    $layananRes = mysqli_query($conn, "SELECT l.harga FROM antrian a JOIN layanan l ON l.id = a.layanan_id WHERE a.id = $queueId LIMIT 1");
+                    if ($layananRes && ($lRow = mysqli_fetch_assoc($layananRes))) {
+                        $price = (int) $lRow["harga"];
+                        $insTrx = mysqli_prepare($conn, "INSERT INTO transaksi (antrian_id, total_harga, metode_pembayaran, status_pembayaran, waktu_bayar) VALUES (?, ?, 'cash', 'lunas', NOW(6))");
+                        mysqli_stmt_bind_param($insTrx, "ii", $queueId, $price);
+                        mysqli_stmt_execute($insTrx);
+                        $transaksi_id = mysqli_insert_id($conn);
+                        mysqli_stmt_close($insTrx);
+                    }
+                }
+
+                barber_flash("Antrean telah diselesaikan. Sesi berhasil ditutup!", "success");
+
+                require_once __DIR__ . "/../functions/whatsapp.php";
+                $detailQ = mysqli_query($conn, "SELECT a.no_antrian, u.nama, u.username, u.no_hp, l.nama_layanan, l.harga, b.nama as barber_name, t.total_harga, t.metode_pembayaran 
+                    FROM antrian a 
+                    JOIN users u ON a.pelanggan_id = u.id_user 
+                    JOIN layanan l ON a.layanan_id = l.id 
+                    LEFT JOIN barber b ON a.barber_id = b.id 
+                    LEFT JOIN transaksi t ON t.antrian_id = a.id 
+                    WHERE a.id = $queueId LIMIT 1");
+                if ($detailQ && ($qRow = mysqli_fetch_assoc($detailQ))) {
+                    $protocol = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? "https" : "http";
+                    $host = $_SERVER['HTTP_HOST'] ?? 'localhost';
+                    $urlStruk = $transaksi_id > 0 ? "{$protocol}://{$host}/pelanggan/struk.php?id={$transaksi_id}" : "";
+
+                    $waData = [
+                        'nama_pelanggan' => $qRow['nama'] ?: $qRow['username'],
+                        'no_hp_pelanggan' => $qRow['no_hp'],
+                        'no_antrian' => $qRow['no_antrian'],
+                        'nama_layanan' => $qRow['nama_layanan'],
+                        'harga' => $qRow['total_harga'] ?: $qRow['harga'],
+                        'nama_barber' => $qRow['barber_name'] ?: 'Kapster Bertugas',
+                        'metode_pembayaran' => $qRow['metode_pembayaran'] ?: 'Tunai',
+                        'url_struk' => $urlStruk
+                    ];
+                    @kirim_notifikasi_wa('selesai_antrean', $waData);
+                }
+
+                if ($transaksi_id > 0) {
+                    header("Location: struk.php?id=" . $transaksi_id . "&auto_print=1");
+                    exit();
+                }
+            } else {
+                barber_flash("Antrean tidak dapat diselesaikan.", "error");
+            }
+        }
+        header("Location: dashboard.php");
+        exit();
+    }
+}
+
 $today = date("Y-m-d");
 $activeQueue = null;
 $waitingQueues = [];

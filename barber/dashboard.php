@@ -131,10 +131,11 @@ require_once __DIR__ . "/../functions/whatsapp.php";
                             </div>
                             <div class="flex flex-col gap-2 w-full md:w-auto">
                                 <form method="POST" action="dashboard.php" onsubmit="return confirm('Selesaikan antrean ini?');">
+                                    <input type="hidden" name="action" value="finish">
                                     <input type="hidden" name="queue_id" value="<?= (int) $activeQueue[
                                         "id"
                                     ] ?>">
-                                    <button type="submit" name="action" value="finish" class="w-full bg-primary text-on-primary font-bold py-3 px-6 rounded hover:scale-105 active:scale-95 transition-all flex items-center justify-center gap-2">
+                                    <button type="submit" class="w-full bg-primary text-on-primary font-bold py-3 px-6 rounded hover:scale-105 active:scale-95 transition-all flex items-center justify-center gap-2">
                                         <span class="material-symbols-outlined" data-icon="task_alt">task_alt</span>
                                         SELESAI
                                     </button>
@@ -172,10 +173,11 @@ require_once __DIR__ . "/../functions/whatsapp.php";
                                 ?>
                                 <?php if ($nextQueue): ?>
                                     <form method="POST" action="dashboard.php">
+                                        <input type="hidden" name="action" value="start">
                                         <input type="hidden" name="queue_id" value="<?= (int) $nextQueue[
                                             "id"
                                         ] ?>">
-                                        <button type="submit" name="action" value="start" class="bg-primary text-on-primary font-bold py-3 px-8 rounded-lg hover:scale-105 active:scale-95 transition-all flex items-center gap-2 shadow-lg">
+                                        <button type="submit" class="bg-primary text-on-primary font-bold py-3 px-8 rounded-lg hover:scale-105 active:scale-95 transition-all flex items-center gap-2 shadow-lg">
                                             <span class="material-symbols-outlined">play_arrow</span>
                                             MULAI BERIKUTNYA (#<?= str_pad(
                                                 (string) $nextQueue[
@@ -294,10 +296,11 @@ require_once __DIR__ . "/../functions/whatsapp.php";
                                         <?php endif; ?>
                                         <?php if (!$activeQueue && $isOwnOrOpen): ?>
                                             <form method="POST" action="dashboard.php">
+                                                <input type="hidden" name="action" value="start">
                                                 <input type="hidden" name="queue_id" value="<?= (int) $q[
                                                     "id"
                                                 ] ?>">
-                                                <button type="submit" name="action" value="start" class="bg-primary text-on-primary px-3 py-2 rounded-lg font-bold text-xs hover:scale-105 active:scale-95 transition-all flex items-center gap-1">
+                                                <button type="submit" class="bg-primary text-on-primary px-3 py-2 rounded-lg font-bold text-xs hover:scale-105 active:scale-95 transition-all flex items-center gap-1">
                                                     <span>Mulai</span>
                                                     <span class="material-symbols-outlined text-sm" data-icon="chevron_right">chevron_right</span>
                                                 </button>

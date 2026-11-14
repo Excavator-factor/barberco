@@ -229,9 +229,9 @@ if ($action === "start" || $action === "finish") {
         } else {
             $stmt = mysqli_prepare(
                 $conn,
-                "UPDATE antrian SET status_antrian = 'selesai' WHERE id = ? AND status_antrian = 'proses' AND barber_id = ?",
+                "UPDATE antrian SET status_antrian = 'selesai', barber_id = COALESCE(barber_id, ?) WHERE id = ? AND status_antrian = 'proses' AND (barber_id IS NULL OR barber_id = ?)",
             );
-            mysqli_stmt_bind_param($stmt, "ii", $queueId, $barberId);
+            mysqli_stmt_bind_param($stmt, "iii", $barberId, $queueId, $barberId);
             mysqli_stmt_execute($stmt);
             $changed = mysqli_stmt_affected_rows($stmt);
             mysqli_stmt_close($stmt);
