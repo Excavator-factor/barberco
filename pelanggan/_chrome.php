@@ -304,6 +304,15 @@ function pelanggan_booking_modal()
         "https://images.unsplash.com/photo-1503951914875-452162b0f3f1?auto=format&fit=crop&w=1000&q=80",
         "https://images.unsplash.com/photo-1621605815971-fbc98d665033?auto=format&fit=crop&w=1000&q=80",
     ];
+
+    $currentUserId = (int) ($_SESSION["user_id"] ?? ($_SESSION["id_user"] ?? 0));
+    $userPhone = $_SESSION["no_hp"] ?? "";
+    if ($currentUserId > 0) {
+        $qUserPhone = mysqli_query($conn, "SELECT no_hp FROM users WHERE id_user = $currentUserId LIMIT 1");
+        if ($qUserPhone && ($rowUser = mysqli_fetch_assoc($qUserPhone))) {
+            $userPhone = $rowUser["no_hp"] ?: $userPhone;
+        }
+    }
     ?>
     <div id="bookingModal" class="fixed inset-0 z-[100] hidden flex items-center justify-center p-4">
         <!-- Backdrop -->
@@ -442,6 +451,18 @@ function pelanggan_booking_modal()
                                 <span class="font-display text-2xl font-black text-primary" id="summary-biaya">-</span>
                             </div>
                         </div>
+
+                        <div class="bg-surface-panel p-5 border border-outline space-y-3">
+                            <label class="block text-[11px] font-bold uppercase tracking-widest text-on-surface flex justify-between items-center">
+                                <span>Nomor WhatsApp (Aktif)</span>
+                                <span class="text-primary text-[10px] normal-case tracking-normal">Untuk notifikasi panggilan barber</span>
+                            </label>
+                            <div class="relative">
+                                <span class="material-symbols-outlined absolute left-3.5 top-1/2 -translate-y-1/2 text-primary text-[18px]">chat</span>
+                                <input type="tel" name="no_hp" id="booking_no_hp" value="<?= htmlspecialchars($userPhone) ?>" placeholder="Contoh: 081234567890" pattern="[0-9]{10,15}" title="Masukkan 10-15 digit angka nomor WhatsApp aktif" class="w-full bg-surface-high border border-outline py-2.5 pl-10 pr-3 text-sm text-on-surface focus:border-primary focus:outline-none transition">
+                            </div>
+                            <p class="text-[11px] text-on-muted">Nomor ini akan disimpan ke data pribadi pelanggan Anda agar barber dapat mengirim notifikasi WhatsApp saat giliran antrean tiba.</p>
+                        </div>
                     </div>
                 </div>
 
@@ -532,7 +553,24 @@ function pelanggan_booking_modal()
 
         function nextStep() { goToStep(currentStep + 1); }
         function prevStep() { goToStep(currentStep - 1); }
-        function submitBooking() { document.getElementById("bookingForm").submit(); }
+        function submitBooking() {
+            const waInput = document.getElementById("booking_no_hp");
+            if (waInput && waInput.value.trim() !== "") {
+                const digits = waInput.value.replace(/[^0-9]/g, '');
+                if (digits.length < 10 || digits.length > 15) {
+                    Swal.fire({
+                        icon: "error",
+                        title: "Nomor WhatsApp Tidak Valid",
+                        text: "Harap masukkan nomor WhatsApp yang benar (10-15 digit angka) agar barber bisa menghubungi Anda.",
+                        background: "#1e2020",
+                        color: "#e2e2e2",
+                        confirmButtonColor: "#f2ca50"
+                    });
+                    return;
+                }
+            }
+            document.getElementById("bookingForm").submit();
+        }
     </script>
 <?php
 }

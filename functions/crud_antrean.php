@@ -68,6 +68,16 @@ if ($action === "book_queue") {
             if (mysqli_query($conn, $query)) {
                 $newAntrianId = mysqli_insert_id($conn);
 
+                // Update nomor WhatsApp pelanggan jika diisi saat booking
+                if (isset($_POST["no_hp"])) {
+                    $postedWa = preg_replace('/[^0-9]/', '', trim((string)$_POST["no_hp"]));
+                    if (!empty($postedWa)) {
+                        $escapedWa = mysqli_real_escape_string($conn, $postedWa);
+                        mysqli_query($conn, "UPDATE users SET no_hp = '$escapedWa' WHERE id_user = '$user_id'");
+                        $_SESSION["no_hp"] = $postedWa;
+                    }
+                }
+
                 // Kirim Notifikasi WhatsApp Otomatis
                 require_once __DIR__ . "/whatsapp.php";
                 $custRes = mysqli_query($conn, "SELECT nama, username, no_hp FROM users WHERE id_user = '$user_id' LIMIT 1");

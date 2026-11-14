@@ -173,7 +173,7 @@ $adminQueues = mysqli_query(
 $adminServices = mysqli_query($conn, "SELECT * FROM layanan WHERE is_deleted = 0 ORDER BY id DESC");
 $adminCustomers = mysqli_query(
     $conn,
-    "SELECT id_user, nama, username FROM users WHERE role = 'pelanggan' AND is_deleted = 0 ORDER BY COALESCE(NULLIF(nama, ''), username) ASC",
+    "SELECT id_user, nama, username, no_hp FROM users WHERE role = 'pelanggan' AND is_deleted = 0 ORDER BY COALESCE(NULLIF(nama, ''), username) ASC",
 );
 $adminBarberEditors = mysqli_query(
     $conn,

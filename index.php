@@ -397,13 +397,13 @@ if (isset($_SESSION["role"])) {
                             <?php $serviceImage = landing_service_visual(
                                 $service,
                             ); ?>
-                            <article class="group relative w-[85vw] min-[400px]:w-auto min-[400px]:min-w-[280px] sm:min-w-[320px] border border-outline bg-surface md:min-w-[400px] shrink-0 snap-center">
-                                <div class="aspect-[16/10] overflow-hidden bg-surface-high">
+                            <article class="group relative w-[85vw] max-w-[340px] sm:w-[320px] md:w-[360px] border border-outline bg-surface shrink-0 snap-center">
+                                <div class="relative h-48 sm:h-52 w-full overflow-hidden bg-surface-high">
                                     <img src="<?= htmlspecialchars(
                                         $serviceImage,
                                     ) ?>" alt="Foto layanan <?= htmlspecialchars(
     $service["nama_layanan"],
-) ?>" class="h-full w-full object-cover grayscale transition duration-500 group-hover:scale-105 group-hover:grayscale-0">
+) ?>" class="h-full w-full object-cover object-center grayscale transition duration-500 group-hover:scale-105 group-hover:grayscale-0">
                                 </div>
                                 <div class="p-5">
                                     <div class="flex items-start justify-between gap-4">
@@ -594,8 +594,8 @@ if (isset($_SESSION["role"])) {
         const nextButton = document.getElementById('serviceNext');
 
         if (carousel && prevButton && nextButton) {
-            prevButton.addEventListener('click', () => carousel.scrollBy({ left: -420, behavior: 'smooth' }));
-            nextButton.addEventListener('click', () => carousel.scrollBy({ left: 420, behavior: 'smooth' }));
+            prevButton.addEventListener('click', () => carousel.scrollBy({ left: -380, behavior: 'smooth' }));
+            nextButton.addEventListener('click', () => carousel.scrollBy({ left: 380, behavior: 'smooth' }));
         }
     </script>
 </body>

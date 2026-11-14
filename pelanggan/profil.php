@@ -119,6 +119,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST["update_profil"])) {
 
                 $_SESSION["nama"] = $nama;
                 $_SESSION["username"] = $username;
+                $_SESSION["no_hp"] = $no_hp;
                 $GLOBALS["username"] = $username;
                 if ($avatarFileName) {
                     $_SESSION["avatar"] = $avatarFileName;
@@ -262,10 +263,14 @@ $currentNoHp = $user["no_hp"] ?? "";
                             ) ?></span>
                         </div>
                         <div class="flex items-center gap-3 text-on-surface-variant">
-                            <span class="material-symbols-outlined text-sm text-primary">chat</span>
-                            <span class="text-sm"><?= htmlspecialchars(
-                                $currentNoHp ?: 'WhatsApp belum diatur',
-                            ) ?></span>
+                            <span class="material-symbols-outlined text-sm text-[#25D366]">chat</span>
+                            <?php if ($currentNoHp): ?>
+                                <a href="https://wa.me/<?= preg_replace('/^0/', '62', preg_replace('/[^0-9]/', '', $currentNoHp)) ?>" target="_blank" class="text-sm font-mono text-on-surface hover:text-[#25D366] hover:underline" title="Buka WhatsApp">
+                                    <?= htmlspecialchars($currentNoHp) ?>
+                                </a>
+                            <?php else: ?>
+                                <span class="text-sm italic opacity-70">WhatsApp belum diatur</span>
+                            <?php endif; ?>
                         </div>
                     </div>
                 </div>
@@ -295,9 +300,9 @@ $currentNoHp = $user["no_hp"] ?? "";
                             <div class="space-y-2 md:col-span-2">
                                 <label class="font-bold text-[11px] text-white tracking-widest ml-1 uppercase flex justify-between items-center">
                                     <span>Nomor WhatsApp (Aktif)</span>
-                                    <span class="text-primary normal-case text-[10px] tracking-normal font-normal">Menerima tiket antrean & notifikasi panggilan</span>
+                                    <span class="text-primary normal-case text-[10px] tracking-normal font-normal">Menerima tiket antrean & notifikasi panggilan barber</span>
                                 </label>
-                                <input name="no_hp" class="w-full h-12 px-4 rounded-lg form-input text-sm" placeholder="Contoh: 081234567890" type="tel" value="<?= htmlspecialchars($currentNoHp) ?>">
+                                <input name="no_hp" class="w-full h-12 px-4 rounded-lg form-input text-sm" placeholder="Contoh: 081234567890" type="tel" pattern="[0-9]{10,15}" title="Masukkan 10-15 digit angka nomor WhatsApp aktif" value="<?= htmlspecialchars($currentNoHp) ?>">
                             </div>
                         </div>
                         <div class="w-full h-px bg-white/10 my-6"></div>

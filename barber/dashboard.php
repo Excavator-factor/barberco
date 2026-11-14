@@ -142,8 +142,13 @@ require_once __DIR__ . "/../functions/whatsapp.php";
                                 <?php if (!empty($activeQueue['no_hp'])): ?>
                                     <a href="<?= buat_link_wa($activeQueue['no_hp'], "Halo {$activeQueue['nama_pelanggan']}, saya kapster Anda di Barber.co.") ?>" target="_blank" class="w-full border border-[#25D366]/60 text-[#25D366] hover:bg-[#25D366] hover:text-black py-2 px-3 rounded text-xs font-bold transition-all flex items-center justify-center gap-1.5 no-underline">
                                         <span class="material-symbols-outlined text-[16px]">chat</span>
-                                        <span>Chat WA Pelanggan</span>
+                                        <span>Chat WA (<?= htmlspecialchars($activeQueue['no_hp']) ?>)</span>
                                     </a>
+                                <?php else: ?>
+                                    <span class="w-full border border-outline-variant text-on-surface-variant/70 py-2 px-3 rounded text-xs flex items-center justify-center gap-1.5 cursor-not-allowed" title="Pelanggan belum mengisi nomor WhatsApp">
+                                        <span class="material-symbols-outlined text-[16px]">chat</span>
+                                        <span>WA Belum Diatur</span>
+                                    </span>
                                 <?php endif; ?>
                             </div>
                         <?php else: ?>
@@ -279,9 +284,13 @@ require_once __DIR__ . "/../functions/whatsapp.php";
                                     </div>
                                     <div class="flex items-center gap-1.5 flex-shrink-0">
                                         <?php if (!empty($q['no_hp'])): ?>
-                                            <a href="<?= buat_link_wa($q['no_hp'], "Halo {$q['nama_pelanggan']}, nomor antrean Anda #{$q['no_antrian']} di Barber.co sebentar lagi akan dipanggil. Mohon bersiap ya!") ?>" target="_blank" title="Panggil/Chat WA" class="border border-[#25D366]/40 hover:bg-[#25D366] hover:text-black text-[#25D366] p-2 rounded-lg transition-colors flex items-center justify-center">
+                                            <a href="<?= buat_link_wa($q['no_hp'], "Halo {$q['nama_pelanggan']}, nomor antrean Anda #{$q['no_antrian']} di Barber.co sebentar lagi akan dipanggil. Mohon bersiap ya!") ?>" target="_blank" title="Panggil/Chat WA (<?= htmlspecialchars($q['no_hp']) ?>)" class="border border-[#25D366]/40 hover:bg-[#25D366] hover:text-black text-[#25D366] p-2 rounded-lg transition-colors flex items-center justify-center">
                                                 <span class="material-symbols-outlined text-[16px]">chat</span>
                                             </a>
+                                        <?php else: ?>
+                                            <span title="Nomor WhatsApp belum diisi oleh pelanggan" class="border border-outline-variant/40 text-on-surface-variant/40 p-2 rounded-lg flex items-center justify-center cursor-not-allowed">
+                                                <span class="material-symbols-outlined text-[16px]">chat</span>
+                                            </span>
                                         <?php endif; ?>
                                         <?php if (!$activeQueue && $isOwnOrOpen): ?>
                                             <form method="POST" action="dashboard.php">

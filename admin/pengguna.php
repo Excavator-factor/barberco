@@ -1,6 +1,7 @@
 <?php
 include "_bootstrap.php";
 include "_chrome.php";
+require_once __DIR__ . "/../functions/whatsapp.php";
 
 // ─────────────────────────────────────────────
 
@@ -252,6 +253,7 @@ unset($_SESSION["modalError"], $_SESSION["modalSuccess"]);
                             <tr>
                                 <th class="px-3 py-4">Informasi Akun</th>
                                 <th class="px-3 py-4">Username</th>
+                                <th class="px-3 py-4">Nomor WhatsApp</th>
                                 <th class="px-3 py-4">Role Akses</th>
                                 <th class="px-3 py-4 text-right">Aksi</th>
                             </tr>
@@ -284,6 +286,16 @@ unset($_SESSION["modalError"], $_SESSION["modalSuccess"]);
                                         <td class="px-3 py-3 text-sm font-medium text-primary">@<?= htmlspecialchars(
                                             $customer["username"],
                                         ) ?></td>
+                                        <td class="px-3 py-3 text-sm">
+                                            <?php if (!empty($customer['no_hp'])): ?>
+                                                <a href="<?= buat_link_wa($customer['no_hp'], 'Halo ' . ($customer['nama'] ?: $customer['username']) . ', kami dari Barber.co.') ?>" target="_blank" class="inline-flex items-center gap-1.5 text-[#25D366] hover:underline font-mono text-xs">
+                                                    <span class="material-symbols-outlined text-[15px]">chat</span>
+                                                    <span><?= htmlspecialchars($customer['no_hp']) ?></span>
+                                                </a>
+                                            <?php else: ?>
+                                                <span class="text-xs text-on-surface-variant italic opacity-70">Belum diatur</span>
+                                            <?php endif; ?>
+                                        </td>
                                         <td class="px-3 py-3"><span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-primary/10 text-primary border border-primary/30 uppercase tracking-wider">Pelanggan</span></td>
                                         <td class="px-3 py-3 text-right">
                                             <div class="inline-flex items-center gap-2">
@@ -292,7 +304,7 @@ unset($_SESSION["modalError"], $_SESSION["modalSuccess"]);
                                                 ] ?>, <?= htmlspecialchars(
     json_encode($customer["nama"] ?: $customer["username"]),
     ENT_QUOTES,
-) ?>, <?= htmlspecialchars(json_encode($customer["username"]), ENT_QUOTES) ?>)"
+) ?>, <?= htmlspecialchars(json_encode($customer["username"]), ENT_QUOTES) ?>, <?= htmlspecialchars(json_encode($customer["no_hp"] ?? ""), ENT_QUOTES) ?>)"
                                                     class="inline-flex h-8 w-8 items-center justify-center border border-outline-variant text-on-surface-variant rounded-lg transition-colors hover:text-primary hover:border-primary hover:bg-surface-container-high" title="Lihat Detail">
                                                     <span class="material-symbols-outlined text-[16px]">visibility</span>
                                                 </button>
@@ -301,7 +313,7 @@ unset($_SESSION["modalError"], $_SESSION["modalSuccess"]);
                                                 ] ?>, <?= htmlspecialchars(
     json_encode($customer["nama"] ?: ""),
     ENT_QUOTES,
-) ?>, <?= htmlspecialchars(json_encode($customer["username"]), ENT_QUOTES) ?>)"
+) ?>, <?= htmlspecialchars(json_encode($customer["username"]), ENT_QUOTES) ?>, <?= htmlspecialchars(json_encode($customer["no_hp"] ?? ""), ENT_QUOTES) ?>)"
                                                     class="inline-flex h-8 w-8 items-center justify-center border border-outline-variant text-on-surface-variant rounded-lg transition-colors hover:text-primary hover:border-primary hover:bg-surface-container-high" title="Edit">
                                                     <span class="material-symbols-outlined text-[16px]">edit</span>
                                                 </button>
@@ -393,7 +405,7 @@ unset($_SESSION["modalError"], $_SESSION["modalSuccess"]);
 </div>
 
 <!-- ══════════════════════════════════════════
-     MODAL — TAMBAH PELANGGAN
+     MODAL: TAMBAH PELANGGAN
 ══════════════════════════════════════════ -->
 <div id="modalTambahPelanggan" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4" style="background:rgba(0,0,0,0.7);backdrop-filter:blur(4px);">
     <div class="bg-surface-container border border-outline-variant rounded-xl shadow-2xl w-full max-w-md">
@@ -421,6 +433,11 @@ unset($_SESSION["modalError"], $_SESSION["modalSuccess"]);
             <div>
                 <label class="mb-1.5 block text-[10px] font-bold uppercase tracking-widest text-on-surface-variant">Username *</label>
                 <input name="username" type="text" required placeholder="Contoh: budi123"
+                    class="w-full bg-surface border border-outline-variant py-2.5 px-3 rounded-lg text-on-surface text-sm focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all">
+            </div>
+            <div>
+                <label class="mb-1.5 block text-[10px] font-bold uppercase tracking-widest text-on-surface-variant">Nomor WhatsApp (Aktif)</label>
+                <input name="no_hp" type="tel" placeholder="Contoh: 081234567890" pattern="[0-9]{10,15}" title="Nomor WhatsApp aktif untuk menerima notifikasi antrean"
                     class="w-full bg-surface border border-outline-variant py-2.5 px-3 rounded-lg text-on-surface text-sm focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all">
             </div>
             <div>
@@ -508,7 +525,7 @@ unset($_SESSION["modalError"], $_SESSION["modalSuccess"]);
 </div>
 
 <!-- ══════════════════════════════════════════
-     MODAL — EDIT PELANGGAN
+     MODAL: EDIT PELANGGAN
 ══════════════════════════════════════════ -->
 <div id="modalEditPelanggan" class="hidden fixed inset-0 z-[60] flex items-center justify-center p-4" style="background:rgba(0,0,0,0.7);backdrop-filter:blur(4px);">
     <div class="bg-surface-container border border-outline-variant rounded-xl shadow-2xl w-full max-w-md">
@@ -537,6 +554,11 @@ unset($_SESSION["modalError"], $_SESSION["modalSuccess"]);
             <div>
                 <label class="mb-1.5 block text-[10px] font-bold uppercase tracking-widest text-on-surface-variant">Username *</label>
                 <input name="username" id="editPelanggan_username" type="text" required
+                    class="w-full bg-surface border border-outline-variant py-2.5 px-3 rounded-lg text-on-surface text-sm focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all">
+            </div>
+            <div>
+                <label class="mb-1.5 block text-[10px] font-bold uppercase tracking-widest text-on-surface-variant">Nomor WhatsApp (Aktif)</label>
+                <input name="no_hp" id="editPelanggan_no_hp" type="tel" placeholder="Contoh: 081234567890" pattern="[0-9]{10,15}" title="Nomor WhatsApp aktif untuk menerima notifikasi antrean"
                     class="w-full bg-surface border border-outline-variant py-2.5 px-3 rounded-lg text-on-surface text-sm focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all">
             </div>
             <div>
@@ -668,7 +690,12 @@ unset($_SESSION["modalError"], $_SESSION["modalSuccess"]);
     }
 
     // ── Detail Pelanggan ──
-    function showDetailPelanggan(id, nama, username) {
+    function showDetailPelanggan(id, nama, username, no_hp) {
+        const cleanWa = no_hp ? no_hp.replace(/^0/, '62').replace(/[^0-9]/g, '') : '';
+        const waDisplay = cleanWa
+            ? `<a href="https://wa.me/${cleanWa}" target="_blank" style="display:inline-flex;align-items:center;gap:6px;color:#25D366;font-size:14px;font-weight:600;text-decoration:none;"><span class="material-symbols-outlined" style="font-size:16px;">chat</span> ${no_hp}</a>`
+            : '<span style="color:#99907c;font-size:13px;font-style:italic;">Belum diatur</span>';
+
         Swal.fire({
             background: '#1e2020', color: '#e2e2e2', confirmButtonColor: '#f2ca50', confirmButtonText: 'Tutup', width: '380px',
             html: `<div style="text-align:left;font-family:Inter,sans-serif;">
@@ -693,6 +720,10 @@ unset($_SESSION["modalError"], $_SESSION["modalSuccess"]);
                     <div style="background:#282a2b;border:1px solid #4d4635;border-radius:8px;padding:12px;grid-column:1/-1;">
                         <p style="font-size:10px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:#99907c;margin:0 0 4px;">Username</p>
                         <p style="font-size:15px;font-weight:600;color:#e2e2e2;margin:0;">@${username}</p>
+                    </div>
+                    <div style="background:#282a2b;border:1px solid #4d4635;border-radius:8px;padding:12px;grid-column:1/-1;">
+                        <p style="font-size:10px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:#99907c;margin:0 0 4px;">Nomor WhatsApp</p>
+                        <div>${waDisplay}</div>
                     </div>
                 </div>
             </div>`
@@ -737,10 +768,11 @@ unset($_SESSION["modalError"], $_SESSION["modalSuccess"]);
     }
 
     // ── Open Edit Pelanggan ──
-    function openEditPelanggan(id, nama, username) {
+    function openEditPelanggan(id, nama, username, no_hp) {
         document.getElementById('editPelanggan_id').value = id;
         document.getElementById('editPelanggan_nama').value = nama;
         document.getElementById('editPelanggan_username').value = username;
+        document.getElementById('editPelanggan_no_hp').value = no_hp || '';
         document.getElementById('modalEditPelanggan').classList.remove('hidden');
     }
 
