@@ -36,40 +36,46 @@ $services = $servicesResult
 
 $today = date("Y-m-d");
 
-$queueResult = mysqli_query(
+// Antrean yang sedang dicukur (proses) hari ini
+$nowServingRes = mysqli_query(
     $conn,
-    "SELECT a.no_antrian, a.status_antrian, COALESCE(NULLIF(b.nama, ''), 'Barber tersedia') AS nama_barber, l.nama_layanan, COALESCE(l.durasi, 30) AS durasi
+    "SELECT a.no_antrian, l.nama_layanan, COALESCE(NULLIF(b.nama, ''), 'Barber') AS nama_barber
      FROM antrian a
      LEFT JOIN barber b ON b.id = a.barber_id
      LEFT JOIN layanan l ON l.id = a.layanan_id
-     WHERE a.status_antrian IN ('menunggu', 'proses')
-     ORDER BY FIELD(a.status_antrian, 'proses', 'menunggu'), a.no_antrian ASC
-     LIMIT 6",
+     WHERE (a.tanggal = '$today' OR a.tanggal = CURDATE()) AND a.status_antrian = 'proses'
+     ORDER BY a.no_antrian ASC
+     LIMIT 1",
 );
-$currentQueues = $queueResult
-    ? mysqli_fetch_all($queueResult, MYSQLI_ASSOC)
-    : [];
-$nowServing = $currentQueues[0] ?? null;
+$nowServing = $nowServingRes ? mysqli_fetch_assoc($nowServingRes) : null;
 
-$waitingCount = landing_scalar_query(
+// Antrean berikutnya yang sedang menunggu hari ini
+$nextQueueRes = mysqli_query(
     $conn,
-    "SELECT COUNT(*) AS total FROM antrian WHERE status_antrian = 'menunggu'",
+    "SELECT a.no_antrian, l.nama_layanan, COALESCE(NULLIF(b.nama, ''), 'Barber') AS nama_barber
+     FROM antrian a
+     LEFT JOIN barber b ON b.id = a.barber_id
+     LEFT JOIN layanan l ON l.id = a.layanan_id
+     WHERE (a.tanggal = '$today' OR a.tanggal = CURDATE()) AND a.status_antrian = 'menunggu'
+     ORDER BY a.no_antrian ASC
+     LIMIT 1",
 );
-$processCount = landing_scalar_query(
+$nextQueue = $nextQueueRes ? mysqli_fetch_assoc($nextQueueRes) : null;
+
+// Total antrean menunggu hari ini
+$wRes = mysqli_query(
     $conn,
-    "SELECT COUNT(*) AS total FROM antrian WHERE status_antrian = 'proses'",
+    "SELECT COUNT(*) AS total FROM antrian WHERE (tanggal = '$today' OR tanggal = CURDATE()) AND status_antrian = 'menunggu'",
 );
-$servedCount = landing_scalar_query(
-    $conn,
-    "SELECT COUNT(*) AS total FROM antrian WHERE (tanggal = '$today' OR tanggal = CURDATE()) AND status_antrian = 'selesai'",
-);
-$activeBarbers = landing_scalar_query(
-    $conn,
-    "SELECT COUNT(*) AS total FROM barber WHERE LOWER(COALESCE(status, 'aktif')) = 'aktif'",
-);
-$queueTotal = $waitingCount + $processCount + $servedCount;
-$estimatedWait = max(5, $waitingCount * 12);
-$capacity = min(100, max(12, ($waitingCount + $processCount) * 14));
+$waitingCount = $wRes ? (int) mysqli_fetch_assoc($wRes)["total"] : 0;
+
+if ($waitingCount > 0) {
+    $estimatedWait = ($waitingCount * 20) . " Min";
+} elseif ($nowServing) {
+    $estimatedWait = "15 Min";
+} else {
+    $estimatedWait = "Langsung Siap";
+}
 
 function landing_service_visual(array $service): string
 {
@@ -256,77 +262,55 @@ if (isset($_SESSION["role"])) {
                     </div>
                 </div>
 
-                <aside id="status" class="border border-outline bg-surface/90 p-5 shadow-[0_28px_80px_rgba(0,0,0,0.35)] backdrop-blur">
-                    <div class="flex items-start justify-between gap-4 border-b border-outline pb-5">
+                <aside id="status" class="border border-outline bg-surface/90 p-6 md:p-8 shadow-[0_28px_80px_rgba(0,0,0,0.35)] backdrop-blur max-w-lg w-full">
+                    <!-- Header -->
+                    <div class="flex items-center justify-between border-b border-outline pb-4">
                         <div>
-                            <p class="text-[11px] font-black uppercase tracking-[0.22em] text-primary">Now Serving</p>
-                            <div class="mt-3 flex items-end gap-3">
-                                <span id="live-now-serving" class="font-display text-6xl font-black leading-none text-on-surface">
-                                    #<?= $nowServing
-                                        ? str_pad(
-                                            (string) $nowServing["no_antrian"],
-                                            3,
-                                            "0",
-                                            STR_PAD_LEFT,
-                                        )
-                                        : "---" ?>
-                                </span>
-                                <span id="live-queue-total" class="pb-2 text-sm font-bold uppercase tracking-[0.16em] text-on-muted">
-                                    <?= $queueTotal ?> total
-                                </span>
-                            </div>
+                            <span class="text-[11px] font-black uppercase tracking-[0.22em] text-primary">Live Antrean</span>
+                            <p class="text-xs text-on-muted mt-0.5">Status antrean real-time hari ini</p>
                         </div>
-                        <span class="inline-flex items-center gap-2 border border-primary px-3 py-2 text-[10px] font-black uppercase tracking-[0.18em] text-primary">
-                            <span class="h-2 w-2 animate-pulse bg-primary"></span>
+                        <span class="inline-flex items-center gap-2 border border-primary/50 bg-primary/10 px-3 py-1.5 text-[10px] font-black uppercase tracking-[0.18em] text-primary">
+                            <span class="h-2 w-2 animate-pulse rounded-full bg-primary"></span>
                             Live
                         </span>
                     </div>
 
-                    <div class="grid gap-4 py-5 sm:grid-cols-2">
-                        <div class="border border-outline bg-background p-4">
-                            <span class="material-symbols-outlined text-primary">schedule</span>
-                            <p class="mt-3 text-[11px] font-black uppercase tracking-[0.18em] text-on-muted">Estimasi Tunggu</p>
-                            <h2 id="live-est-wait" class="mt-1 font-display text-3xl font-black text-on-surface"><?= $estimatedWait ?> Min</h2>
+                    <!-- Now Serving Main Box -->
+                    <div class="py-6 text-center border-b border-outline bg-surface-low/50 mt-4 rounded border border-outline">
+                        <p class="text-[11px] font-black uppercase tracking-[0.2em] text-on-muted">Nomor Sedang Dilayani</p>
+                        <div id="live-now-serving" class="mt-2 font-display text-6xl md:text-7xl font-black text-primary tracking-tight">
+                            #<?= $nowServing ? str_pad((string)$nowServing["no_antrian"], 3, "0", STR_PAD_LEFT) : "---" ?>
                         </div>
-                        <div class="border border-outline bg-background p-4">
-                            <span class="material-symbols-outlined text-primary">groups</span>
-                            <p class="mt-3 text-[11px] font-black uppercase tracking-[0.18em] text-on-muted">Kapasitas Toko</p>
-                            <h2 id="live-capacity-text" class="mt-1 font-display text-3xl font-black text-on-surface"><?= $capacity ?>%</h2>
-                            <div class="mt-3 h-1 bg-surface-high">
-                                <div id="live-capacity-bar" class="h-full bg-primary" style="width: <?= $capacity ?>%"></div>
-                            </div>
+                        <p id="live-serving-desc" class="mt-2 text-xs font-bold text-on-surface">
+                            <?= $nowServing ? htmlspecialchars($nowServing["nama_layanan"]) . " &middot; " . htmlspecialchars($nowServing["nama_barber"]) : "Kursi Kosong &middot; Siap Melayani" ?>
+                        </p>
+                    </div>
+
+                    <!-- 2 Simple Info Cards -->
+                    <div class="grid grid-cols-2 gap-4 py-5 border-b border-outline text-center">
+                        <div class="p-4 bg-surface-panel border border-outline">
+                            <p class="text-[10px] font-black uppercase tracking-[0.16em] text-on-muted">Antrean Berikutnya</p>
+                            <p id="live-next-queue" class="mt-1.5 font-display text-2xl font-black text-on-surface">
+                                <?= $nextQueue ? "#" . str_pad((string)$nextQueue["no_antrian"], 3, "0", STR_PAD_LEFT) : "---" ?>
+                            </p>
+                        </div>
+                        <div class="p-4 bg-surface-panel border border-outline">
+                            <p class="text-[10px] font-black uppercase tracking-[0.16em] text-on-muted">Sisa Antrean</p>
+                            <p id="live-waiting-count" class="mt-1.5 font-display text-2xl font-black text-primary">
+                                <?= $waitingCount ?> Orang
+                            </p>
                         </div>
                     </div>
 
-                    <div id="live-queue-list" class="space-y-3">
-                        <?php if ($currentQueues): ?>
-                            <?php foreach ($currentQueues as $queue): ?>
-                                <article class="flex items-center justify-between gap-4 border border-outline bg-surface-low p-4">
-                                    <div>
-                                        <p class="text-[11px] font-black uppercase tracking-[0.18em] text-primary">#<?= str_pad(
-                                            (string) $queue["no_antrian"],
-                                            3,
-                                            "0",
-                                            STR_PAD_LEFT,
-                                        ) ?></p>
-                                        <h3 class="mt-1 font-display text-base font-bold text-on-surface"><?= htmlspecialchars(
-                                            $queue["nama_layanan"] ?? "Layanan",
-                                        ) ?></h3>
-                                        <p class="mt-1 text-sm text-on-muted"><?= htmlspecialchars(
-                                            $queue["nama_barber"] ??
-                                                "Barber tersedia",
-                                        ) ?></p>
-                                    </div>
-                                    <span class="text-[11px] font-black uppercase tracking-[0.18em] text-on-muted"><?= htmlspecialchars(
-                                        $queue["status_antrian"],
-                                    ) ?></span>
-                                </article>
-                            <?php endforeach; ?>
-                        <?php else: ?>
-                            <div class="border border-dashed border-outline p-6 text-sm leading-7 text-on-muted">
-                                Belum ada antrean aktif hari ini. Jadilah pelanggan pertama yang masuk ke kursi.
-                            </div>
-                        <?php endif; ?>
+                    <!-- Footer: Estimasi & CTA -->
+                    <div class="pt-5 flex items-center justify-between gap-4">
+                        <div class="flex items-center gap-2 text-on-muted text-xs">
+                            <span class="material-symbols-outlined text-primary text-lg">schedule</span>
+                            <span>Est. Waktu: <strong id="live-est-wait" class="text-on-surface font-bold"><?= $estimatedWait ?></strong></span>
+                        </div>
+                        <button onclick="handleBookNow()" class="border border-primary bg-primary px-5 py-3 text-[11px] font-black uppercase tracking-[0.16em] text-on-primary transition hover:bg-transparent hover:text-primary">
+                            Ambil Antrean
+                        </button>
                     </div>
                 </aside>
             </div>
@@ -600,49 +584,27 @@ if (isset($_SESSION["role"])) {
             nextButton.addEventListener('click', () => carousel.scrollBy({ left: 380, behavior: 'smooth' }));
         }
 
-        // Real-time polling Live Queue di Landing Page
+        // Real-time polling Live Queue di Landing Page (Simpel & Cepat)
         function fetchLiveQueue() {
             fetch('api_live_status.php')
                 .then(res => res.json())
                 .then(data => {
                     if (!data || !data.success) return;
 
-                    const elNowServing = document.getElementById('live-now-serving');
-                    if (elNowServing) elNowServing.textContent = '#' + data.now_serving;
+                    const elNow = document.getElementById('live-now-serving');
+                    if (elNow) elNow.textContent = (data.now_serving !== '---' ? '#' : '') + data.now_serving;
 
-                    const elTotal = document.getElementById('live-queue-total');
-                    if (elTotal) elTotal.textContent = data.queue_total + ' total';
+                    const elDesc = document.getElementById('live-serving-desc');
+                    if (elDesc) elDesc.textContent = data.now_serving_desc;
 
-                    const elWait = document.getElementById('live-est-wait');
-                    if (elWait) elWait.textContent = data.estimated_wait + ' Min';
+                    const elNext = document.getElementById('live-next-queue');
+                    if (elNext) elNext.textContent = data.next_queue;
 
-                    const elCapText = document.getElementById('live-capacity-text');
-                    if (elCapText) elCapText.textContent = data.capacity + '%';
+                    const elWaitCount = document.getElementById('live-waiting-count');
+                    if (elWaitCount) elWaitCount.textContent = data.waiting_count;
 
-                    const elCapBar = document.getElementById('live-capacity-bar');
-                    if (elCapBar) elCapBar.style.width = data.capacity + '%';
-
-                    const elList = document.getElementById('live-queue-list');
-                    if (elList) {
-                        if (data.queues && data.queues.length > 0) {
-                            elList.innerHTML = data.queues.map(q => {
-                                const qNo = String(q.no_antrian).padStart(3, '0');
-                                const svc = q.nama_layanan ? q.nama_layanan : 'Layanan';
-                                const barber = q.nama_barber ? q.nama_barber : 'Barber tersedia';
-                                const stts = q.status_antrian ? q.status_antrian : 'menunggu';
-                                return `<article class="flex items-center justify-between gap-4 border border-outline bg-surface-low p-4">
-                                    <div>
-                                        <p class="text-[11px] font-black uppercase tracking-[0.18em] text-primary">#${qNo}</p>
-                                        <h3 class="mt-1 font-display text-base font-bold text-on-surface">${svc}</h3>
-                                        <p class="mt-1 text-sm text-on-muted">${barber}</p>
-                                    </div>
-                                    <span class="text-[11px] font-black uppercase tracking-[0.18em] text-on-muted">${stts}</span>
-                                </article>`;
-                            }).join('');
-                        } else {
-                            elList.innerHTML = `<div class="border border-dashed border-outline p-6 text-sm leading-7 text-on-muted">Belum ada antrean aktif hari ini. Jadilah pelanggan pertama yang masuk ke kursi.</div>`;
-                        }
-                    }
+                    const elWaitTime = document.getElementById('live-est-wait');
+                    if (elWaitTime) elWaitTime.textContent = data.estimated_wait;
                 })
                 .catch(() => {});
         }

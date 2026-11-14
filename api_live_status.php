@@ -6,45 +6,56 @@ require_once __DIR__ . '/config/helper.php';
 
 $today = date("Y-m-d");
 
-$queueResult = mysqli_query(
+// Antrean yang sedang dicukur (proses) hari ini
+$nowServingRes = mysqli_query(
     $conn,
-    "SELECT a.no_antrian, a.status_antrian, COALESCE(NULLIF(b.nama, ''), 'Barber tersedia') AS nama_barber, l.nama_layanan, COALESCE(l.durasi, 30) AS durasi
+    "SELECT a.no_antrian, l.nama_layanan, COALESCE(NULLIF(b.nama, ''), 'Barber tersedia') AS nama_barber
      FROM antrian a
      LEFT JOIN barber b ON b.id = a.barber_id
      LEFT JOIN layanan l ON l.id = a.layanan_id
-     WHERE a.status_antrian IN ('menunggu', 'proses')
-     ORDER BY FIELD(a.status_antrian, 'proses', 'menunggu'), a.no_antrian ASC
-     LIMIT 6"
+     WHERE (a.tanggal = '$today' OR a.tanggal = CURDATE()) AND a.status_antrian = 'proses'
+     ORDER BY a.no_antrian ASC
+     LIMIT 1"
 );
-$currentQueues = $queueResult ? mysqli_fetch_all($queueResult, MYSQLI_ASSOC) : [];
-$nowServing = $currentQueues[0] ?? null;
+$nowServing = $nowServingRes ? mysqli_fetch_assoc($nowServingRes) : null;
 
-$wRes = mysqli_query($conn, "SELECT COUNT(*) AS total FROM antrian WHERE status_antrian = 'menunggu'");
+// Antrean berikutnya yang sedang menunggu hari ini
+$nextQueueRes = mysqli_query(
+    $conn,
+    "SELECT a.no_antrian, l.nama_layanan, COALESCE(NULLIF(b.nama, ''), 'Barber tersedia') AS nama_barber
+     FROM antrian a
+     LEFT JOIN barber b ON b.id = a.barber_id
+     LEFT JOIN layanan l ON l.id = a.layanan_id
+     WHERE (a.tanggal = '$today' OR a.tanggal = CURDATE()) AND a.status_antrian = 'menunggu'
+     ORDER BY a.no_antrian ASC
+     LIMIT 1"
+);
+$nextQueue = $nextQueueRes ? mysqli_fetch_assoc($nextQueueRes) : null;
+
+// Total antrean menunggu hari ini
+$wRes = mysqli_query(
+    $conn,
+    "SELECT COUNT(*) AS total FROM antrian WHERE (tanggal = '$today' OR tanggal = CURDATE()) AND status_antrian = 'menunggu'"
+);
 $waitingCount = $wRes ? (int)mysqli_fetch_assoc($wRes)['total'] : 0;
 
-$pRes = mysqli_query($conn, "SELECT COUNT(*) AS total FROM antrian WHERE status_antrian = 'proses'");
-$processCount = $pRes ? (int)mysqli_fetch_assoc($pRes)['total'] : 0;
+if ($waitingCount > 0) {
+    $estimatedWait = ($waitingCount * 20) . " Min";
+} elseif ($nowServing) {
+    $estimatedWait = "15 Min";
+} else {
+    $estimatedWait = "Langsung Siap";
+}
 
-$sRes = mysqli_query($conn, "SELECT COUNT(*) AS total FROM antrian WHERE (tanggal = '$today' OR tanggal = CURDATE()) AND status_antrian = 'selesai'");
-$servedCount = $sRes ? (int)mysqli_fetch_assoc($sRes)['total'] : 0;
-
-$bRes = mysqli_query($conn, "SELECT COUNT(*) AS total FROM barber WHERE LOWER(COALESCE(status, 'aktif')) = 'aktif'");
-$activeBarbers = $bRes ? (int)mysqli_fetch_assoc($bRes)['total'] : 0;
-
-$queueTotal = $waitingCount + $processCount + $servedCount;
-$estimatedWait = max(5, $waitingCount * 12);
-$capacity = min(100, max(12, ($waitingCount + $processCount) * 14));
+$nowServingNum = $nowServing ? str_pad((string)$nowServing['no_antrian'], 3, '0', STR_PAD_LEFT) : '---';
+$nowServingDesc = $nowServing ? ($nowServing['nama_layanan'] . ' · ' . $nowServing['nama_barber']) : 'Kursi Kosong · Siap Melayani';
+$nextQueueNum = $nextQueue ? ('#' . str_pad((string)$nextQueue['no_antrian'], 3, '0', STR_PAD_LEFT)) : '---';
 
 echo json_encode([
     'success' => true,
-    'now_serving' => $nowServing ? str_pad((string)$nowServing['no_antrian'], 3, '0', STR_PAD_LEFT) : '---',
-    'queue_total' => $queueTotal,
-    'waiting_count' => $waitingCount,
-    'process_count' => $processCount,
-    'served_count' => $servedCount,
-    'active_barbers' => $activeBarbers,
-    'estimated_wait' => $estimatedWait,
-    'capacity' => $capacity,
-    'queues' => $currentQueues
+    'now_serving' => $nowServingNum,
+    'now_serving_desc' => $nowServingDesc,
+    'next_queue' => $nextQueueNum,
+    'waiting_count' => $waitingCount . ' Orang',
+    'estimated_wait' => $estimatedWait
 ]);
-
