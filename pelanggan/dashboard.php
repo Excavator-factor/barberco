@@ -2,22 +2,31 @@
 include "_bootstrap.php";
 include "_chrome.php";
 
+$targetQueue = $unpaid_queue ?: $active_queue;
+
 $queueNoValue =
-    $active_queue && $col_a_no && isset($active_queue[$col_a_no])
-        ? $active_queue[$col_a_no]
+    $targetQueue && $col_a_no && isset($targetQueue[$col_a_no])
+        ? $targetQueue[$col_a_no]
         : null;
 $queueNo =
     $queueNoValue !== null
         ? str_pad((string) $queueNoValue, 3, "0", STR_PAD_LEFT)
         : "---";
-$queueStatus =
-    $active_queue && $col_a_status && isset($active_queue[$col_a_status])
-        ? strtoupper((string) $active_queue[$col_a_status])
-        : "BELUM ADA";
-$serviceName = $active_queue["nama_layanan"] ?? "Belum memilih layanan";
-$barberName = $active_queue["nama_barber"] ?? "Barber tersedia";
-$priceLabel = isset($active_queue["harga_layanan"])
-    ? "Rp " . number_format((int) $active_queue["harga_layanan"], 0, ",", ".")
+
+$queueStatus = "BELUM ADA";
+if ($unpaid_queue) {
+    $queueStatus = "SELESAI (MENUNGGU BAYAR)";
+} elseif ($active_queue && $col_a_status && isset($active_queue[$col_a_status])) {
+    $queueStatus = strtoupper((string) $active_queue[$col_a_status]);
+}
+
+$serviceName = $targetQueue["nama_layanan"] ?? "Belum memilih layanan";
+$barberName = $targetQueue["nama_barber"] ?? "Barber tersedia";
+$priceVal = isset($targetQueue["harga_layanan"])
+    ? (int) $targetQueue["harga_layanan"]
+    : 0;
+$priceLabel = $priceVal > 0
+    ? "Rp " . number_format($priceVal, 0, ",", ".")
     : "Menunggu detail";
 $waitEstimate = "0 min";
 $shopLoad = 1;
@@ -36,9 +45,9 @@ if ($active_queue) {
     // Each person ahead might take around 25 mins
     $estMins = max(0, $peopleAhead * 25);
     if (strtolower((string) $active_queue["status_antrian"]) === "proses") {
-        $waitEstimate = "Sekarang";
+        $waitEstimate = "Sedang Cukur";
     } else {
-        $waitEstimate = $estMins > 0 ? $estMins . " min" : "15 min"; // if they are next, give 15 min buffer or similar
+        $waitEstimate = $estMins > 0 ? $estMins . " min" : "15 min";
     }
 
     // Shop Load calculation (1-5)
@@ -60,14 +69,9 @@ if ($active_queue) {
     } else {
         $shopLoad = 5;
     }
-
-    // Check if payment is done
-    $qId = (int) $active_queue["id"];
-    $trxCheck = mysqli_query(
-        $conn,
-        "SELECT id FROM transaksi WHERE antrian_id = '$qId' LIMIT 1",
-    );
-    $hasUnpaidTrx = mysqli_num_rows($trxCheck) === 0;
+} elseif ($unpaid_queue) {
+    $waitEstimate = "Selesai";
+    $shopLoad = 1;
 }
 $recentHistory = array_slice($history_queues, 0, 4);
 ?>
@@ -82,10 +86,34 @@ $recentHistory = array_slice($history_queues, 0, 4);
         <?php pelanggan_topbar("Client Portal"); ?>
 
         <div class="mx-auto w-full max-w-[1440px] space-y-10 p-5 pb-28 md:p-8">
-            <?php if ($status_msg === "success"): ?>
-                <div class="customer-card flex items-center justify-between gap-4 border-primary bg-primary/10 p-4 text-sm font-bold uppercase tracking-[0.14em] text-primary">
-                    <span>Antrean Anda berhasil terdaftar ke dalam sistem.</span>
-                    <button type="button" onclick="this.parentElement.remove()" class="material-symbols-outlined">close</button>
+            <?php if ($status_msg === "booking_success" || $status_msg === "success"): ?>
+                <div class="customer-card flex items-center justify-between gap-4 border border-primary/50 bg-primary/10 p-4 text-sm font-bold tracking-[0.04em] text-primary">
+                    <div class="flex items-center gap-3">
+                        <span class="material-symbols-outlined text-xl">check_circle</span>
+                        <span>Antrean Anda berhasil terdaftar! Silakan menunggu giliran dipanggil oleh barber. Pembayaran dilakukan setelah proses cukur selesai.</span>
+                    </div>
+                    <button type="button" onclick="this.parentElement.remove()" class="material-symbols-outlined hover:text-white">close</button>
+                </div>
+            <?php endif; ?>
+
+            <?php if ($unpaid_queue): ?>
+                <div class="customer-card flex flex-col md:flex-row items-center justify-between gap-4 border-2 border-primary bg-primary/10 p-5 shadow-lg">
+                    <div class="flex items-center gap-4">
+                        <div class="flex h-12 w-12 shrink-0 items-center justify-center rounded bg-primary text-black">
+                            <span class="material-symbols-outlined text-2xl font-bold">check_circle</span>
+                        </div>
+                        <div>
+                            <div class="flex items-center gap-2">
+                                <span class="bg-primary text-black text-[10px] font-black uppercase px-2 py-0.5 rounded font-mono">Selesai Cukur</span>
+                                <h3 class="font-display text-lg font-black text-on-surface">Cukur Selesai! Silakan Lakukan Pembayaran</h3>
+                            </div>
+                            <p class="text-xs text-on-muted mt-1">Layanan <strong class="text-on-surface"><?= htmlspecialchars($unpaid_queue['nama_layanan']) ?></strong> bersama <strong class="text-on-surface"><?= htmlspecialchars($unpaid_queue['nama_barber'] ?: 'Barber') ?></strong> telah selesai. Total tagihan: <strong class="text-primary font-bold">Rp <?= number_format((int)$unpaid_queue['harga_layanan'], 0, ',', '.') ?></strong></p>
+                        </div>
+                    </div>
+                    <button type="button" onclick="openPaymentModal()" class="w-full md:w-auto inline-flex items-center justify-center gap-2 border border-primary bg-primary px-6 py-3 text-[12px] font-black uppercase tracking-[0.16em] text-on-primary transition hover:bg-transparent hover:text-primary">
+                        <span class="material-symbols-outlined text-base">payments</span>
+                        Bayar Sekarang
+                    </button>
                 </div>
             <?php endif; ?>
 
@@ -160,9 +188,11 @@ $recentHistory = array_slice($history_queues, 0, 4);
                         <h2 class="mt-5 font-display text-2xl font-black text-on-surface"><?= htmlspecialchars(
                             $serviceName,
                         ) ?></h2>
-                        <p class="mt-3 text-sm leading-7 text-on-muted"><?= $active_queue
-                            ? "Detail layanan aktif Anda siap dipantau dari dashboard ini."
-                            : "Belum ada antrean aktif. Pilih layanan untuk mulai booking." ?></p>
+                        <p class="mt-3 text-sm leading-7 text-on-muted"><?= $unpaid_queue 
+                            ? "Sesi cukur Anda telah selesai. Silakan lakukan pembayaran di bawah ini."
+                            : ($active_queue
+                                ? "Detail layanan aktif Anda siap dipantau dari dashboard ini."
+                                : "Belum ada antrean aktif. Pilih layanan untuk mulai booking.") ?></p>
                     </div>
                     <div class="mt-8">
                         <div class="mb-5 flex items-end justify-between gap-4">
@@ -173,12 +203,27 @@ $recentHistory = array_slice($history_queues, 0, 4);
                                 $history_queues,
                             ) ?> kunjungan</span>
                         </div>
-                        <?php if ($active_queue && !empty($hasUnpaidTrx)): ?>
-                            <a href="#" onclick="openPaymentModal(); return false;" class="block w-full border border-primary bg-primary py-3 text-center text-[12px] font-black uppercase tracking-[0.16em] text-on-primary transition hover:bg-transparent hover:text-primary">Bayar Sekarang</a>
-                        <?php elseif (!$active_queue): ?>
-                            <a href="#" onclick="openBookingModal(); return false;" class="block w-full border border-on-surface bg-on-surface py-3 text-center text-[12px] font-black uppercase tracking-[0.16em] text-background transition hover:border-primary hover:bg-primary hover:text-on-primary">Pilih Layanan</a>
+                        <?php if ($unpaid_queue): ?>
+                            <a href="#" onclick="openPaymentModal(); return false;" class="block w-full border border-primary bg-primary py-3 text-center text-[12px] font-black uppercase tracking-[0.16em] text-on-primary transition hover:bg-transparent hover:text-primary">
+                                <span class="material-symbols-outlined align-middle text-sm mr-1">payments</span>
+                                Bayar Sekarang
+                            </a>
+                            <p class="mt-2 text-center text-[11px] text-primary">Cukur selesai! Silakan selesaikan transaksi</p>
+                        <?php elseif ($active_queue): ?>
+                            <?php $actStatus = strtolower((string)($active_queue['status_antrian'] ?? '')); ?>
+                            <?php if ($actStatus === 'proses'): ?>
+                                <div class="block w-full border border-primary/50 bg-primary/10 py-3 text-center text-[12px] font-black uppercase tracking-[0.16em] text-primary">
+                                    <span class="material-symbols-outlined align-middle text-sm mr-1">content_cut</span> Sedang Dicukur
+                                </div>
+                                <p class="mt-2 text-center text-[11px] text-on-muted">Menu pembayaran akan muncul setelah cukur selesai</p>
+                            <?php else: ?>
+                                <div class="block w-full border border-outline bg-surface-panel py-3 text-center text-[12px] font-black uppercase tracking-[0.16em] text-on-muted">
+                                    <span class="material-symbols-outlined align-middle text-sm mr-1">hourglass_top</span> Menunggu Giliran Cukur
+                                </div>
+                                <p class="mt-2 text-center text-[11px] text-on-muted">Pembayaran dilakukan setelah proses cukur selesai</p>
+                            <?php endif; ?>
                         <?php else: ?>
-                            <span class="block w-full border border-primary bg-primary/10 py-3 text-center text-[12px] font-black uppercase tracking-[0.16em] text-primary">Pembayaran Selesai</span>
+                            <a href="#" onclick="openBookingModal(); return false;" class="block w-full border border-on-surface bg-on-surface py-3 text-center text-[12px] font-black uppercase tracking-[0.16em] text-background transition hover:border-primary hover:bg-primary hover:text-on-primary">Pilih Layanan</a>
                         <?php endif; ?>
                     </div>
                 </article>
@@ -297,14 +342,46 @@ $recentHistory = array_slice($history_queues, 0, 4);
     </main>
     <?php pelanggan_mobile_nav("ringkasan"); ?>
     <?php pelanggan_booking_modal(); ?>
-    <?php if ($active_queue) {
-        pelanggan_payment_modal($active_queue);
-    } ?>
-    <?php if (
-        isset($_GET["open_modal"])
-    ): ?><script>window.addEventListener('DOMContentLoaded', () => { openBookingModal(); window.history.replaceState({}, document.title, window.location.pathname); });</script><?php endif; ?>
-    <?php if (
-        isset($_GET["open_payment_modal"])
-    ): ?><script>window.addEventListener('DOMContentLoaded', () => { openPaymentModal(); window.history.replaceState({}, document.title, window.location.pathname); });</script><?php endif; ?>
+    <?php if ($unpaid_queue): ?>
+        <?php pelanggan_payment_modal($unpaid_queue); ?>
+    <?php elseif ($active_queue): ?>
+        <?php pelanggan_payment_modal($active_queue); ?>
+    <?php endif; ?>
+
+    <?php if (isset($_GET["open_modal"])): ?>
+        <script>
+            window.addEventListener('DOMContentLoaded', () => { 
+                openBookingModal(); 
+                window.history.replaceState({}, document.title, window.location.pathname); 
+            });
+        </script>
+    <?php endif; ?>
+
+    <?php if ($unpaid_queue || isset($_GET["open_payment_modal"])): ?>
+        <script>
+            window.addEventListener('DOMContentLoaded', () => { 
+                openPaymentModal(); 
+                if (window.location.search.includes('open_payment_modal')) {
+                    window.history.replaceState({}, document.title, window.location.pathname);
+                }
+            });
+        </script>
+    <?php endif; ?>
+
+    <?php if ($active_queue && !empty($active_queue['id'])): ?>
+        <script>
+            // Real-time polling untuk mengecek apakah kapster sudah menyelesaikan cukur
+            setInterval(() => {
+                fetch('api_check_status.php?queue_id=<?= (int)$active_queue["id"] ?>')
+                    .then(res => res.json())
+                    .then(data => {
+                        if (data && (data.need_payment || data.status_antrian === 'selesai')) {
+                            window.location.reload();
+                        }
+                    })
+                    .catch(() => {});
+            }, 4000);
+        </script>
+    <?php endif; ?>
 </body>
 </html>

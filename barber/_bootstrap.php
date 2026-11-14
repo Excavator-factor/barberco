@@ -155,7 +155,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
                     $layananRes = mysqli_query($conn, "SELECT l.harga FROM antrian a JOIN layanan l ON l.id = a.layanan_id WHERE a.id = $queueId LIMIT 1");
                     if ($layananRes && ($lRow = mysqli_fetch_assoc($layananRes))) {
                         $price = (int) $lRow["harga"];
-                        $insTrx = mysqli_prepare($conn, "INSERT INTO transaksi (antrian_id, total_harga, metode_pembayaran, status_pembayaran, waktu_bayar) VALUES (?, ?, 'cash', 'lunas', NOW(6))");
+                        $insTrx = mysqli_prepare($conn, "INSERT INTO transaksi (antrian_id, total_harga, metode_pembayaran, status_pembayaran, waktu_bayar) VALUES (?, ?, 'pending', 'pending', NOW(6))");
                         mysqli_stmt_bind_param($insTrx, "ii", $queueId, $price);
                         mysqli_stmt_execute($insTrx);
                         $transaksi_id = mysqli_insert_id($conn);
@@ -163,7 +163,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
                     }
                 }
 
-                barber_flash("Antrean telah diselesaikan. Sesi berhasil ditutup!", "success");
+                barber_flash("Antrean telah diselesaikan. Menunggu pelanggan menyelesaikan pembayaran.", "success");
 
                 require_once __DIR__ . "/../functions/whatsapp.php";
                 $detailQ = mysqli_query($conn, "SELECT a.no_antrian, u.nama, u.username, u.no_hp, l.nama_layanan, l.harga, b.nama as barber_name, t.total_harga, t.metode_pembayaran 

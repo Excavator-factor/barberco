@@ -580,7 +580,10 @@ function pelanggan_payment_modal($active_queue)
     if (!$active_queue) {
         return;
     }
-    $harga = (int) $active_queue["harga_layanan"];
+    $harga = (int) ($active_queue["harga_layanan"] ?? ($active_queue["harga"] ?? ($active_queue["total_harga"] ?? 0)));
+    $namaLayanan = $active_queue["nama_layanan"] ?? "Layanan Pangkas";
+    $namaBarber = $active_queue["nama_barber"] ?? "Kapster";
+    $antrianId = (int) ($active_queue["id"] ?? ($active_queue["id_antrian"] ?? 0));
     ?>
     <div id="paymentModal" class="fixed inset-0 z-[110] hidden flex items-center justify-center p-4">
         <!-- Backdrop -->
@@ -599,11 +602,18 @@ function pelanggan_payment_modal($active_queue)
             </div>
             
             <form action="proses_pembayaran.php" method="POST" enctype="multipart/form-data" class="flex flex-col overflow-hidden min-h-0 flex-1">
-                <input type="hidden" name="antrian_id" value="<?= (int) $active_queue[
-                    "id"
-                ] ?>">
+                <input type="hidden" name="antrian_id" value="<?= $antrianId ?>">
                 
                 <div class="overflow-y-auto p-6 customer-scroll relative flex-1 space-y-6">
+                    <div class="border border-outline bg-surface-high p-4 flex items-center justify-between">
+                        <div>
+                            <span class="text-[10px] font-black uppercase tracking-[0.16em] text-primary">Layanan Selesai</span>
+                            <h4 class="font-bold text-on-surface text-base mt-0.5"><?= htmlspecialchars($namaLayanan) ?></h4>
+                            <p class="text-xs text-on-muted mt-0.5">Kapster: <?= htmlspecialchars($namaBarber) ?></p>
+                        </div>
+                        <span class="material-symbols-outlined text-3xl text-primary">content_cut</span>
+                    </div>
+
                     <div class="flex justify-between items-end pb-4 border-b-2 border-primary">
                         <span class="text-[11px] font-black uppercase tracking-[0.18em] text-on-muted">Total Tagihan</span>
                         <span class="font-display text-2xl font-black text-primary">Rp <?= number_format(

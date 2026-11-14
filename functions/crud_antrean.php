@@ -111,7 +111,7 @@ if ($action === "book_queue") {
                 @kirim_notifikasi_wa('booking_admin', $waData);
 
                 header(
-                    "Location: ../pelanggan/dashboard.php?open_payment_modal=1",
+                    "Location: ../pelanggan/dashboard.php?status=booking_success",
                 );
                 exit();
             }
@@ -260,7 +260,7 @@ if ($action === "start" || $action === "finish") {
                         $price = (int) $lRow["harga"];
                         $insTrx = mysqli_prepare(
                             $conn,
-                            "INSERT INTO transaksi (antrian_id, total_harga, metode_pembayaran, status_pembayaran, waktu_bayar) VALUES (?, ?, 'cash', 'lunas', NOW(6))",
+                            "INSERT INTO transaksi (antrian_id, total_harga, metode_pembayaran, status_pembayaran, waktu_bayar) VALUES (?, ?, 'pending', 'pending', NOW(6))",
                         );
                         mysqli_stmt_bind_param($insTrx, "ii", $queueId, $price);
                         mysqli_stmt_execute($insTrx);
@@ -270,7 +270,7 @@ if ($action === "start" || $action === "finish") {
                 }
                 $_SESSION["barber_flash"] = [
                     "text" =>
-                        "Antrean telah diselesaikan. Sesi berhasil ditutup!",
+                        "Antrean telah diselesaikan. Menunggu pelanggan menyelesaikan pembayaran.",
                     "type" => "success",
                 ];
 

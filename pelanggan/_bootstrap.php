@@ -61,6 +61,41 @@ if (!empty($col_a_user)) {
     }
 }
 
+$unpaid_queue = null;
+if (!empty($col_a_user)) {
+    $select_fields_unpaid = ["a.*"];
+    $joins_unpaid = [];
+
+    if (!empty($col_a_barber) && !empty($pk_barber) && !empty($col_b_nama)) {
+        $select_fields_unpaid[] = "b.`$col_b_nama` as nama_barber";
+        $joins_unpaid[] = "LEFT JOIN barber b ON a.`$col_a_barber` = b.`$pk_barber`";
+    }
+    if (!empty($col_a_layanan) && !empty($pk_layanan) && !empty($col_l_nama)) {
+        $select_fields_unpaid[] = "l.`$col_l_nama` as nama_layanan";
+        if (!empty($col_l_harga)) {
+            $select_fields_unpaid[] = "l.`$col_l_harga` as harga_layanan";
+        }
+        $joins_unpaid[] = "LEFT JOIN layanan l ON a.`$col_a_layanan` = l.`$pk_layanan`";
+    }
+    $select_fields_unpaid[] = "t.id AS transaksi_id, t.status_pembayaran, t.metode_pembayaran";
+    $joins_unpaid[] = "LEFT JOIN transaksi t ON t.antrian_id = a.`" . (!empty($pk_antrian) ? $pk_antrian : 'id') . "`";
+
+    $sql_unpaid =
+        "SELECT " .
+        implode(", ", $select_fields_unpaid) .
+        " FROM antrian a " .
+        implode(" ", $joins_unpaid) .
+        " WHERE a.`$col_a_user` = '$user_id' " .
+        (!empty($col_a_status) ? "AND LOWER(a.`$col_a_status`) = 'selesai' " : "") .
+        "AND (t.id IS NULL OR LOWER(t.status_pembayaran) != 'lunas') " .
+        (!empty($pk_antrian) ? "ORDER BY a.`$pk_antrian` DESC " : "") .
+        "LIMIT 1";
+    $res_unpaid = @mysqli_query($conn, $sql_unpaid);
+    if ($res_unpaid && mysqli_num_rows($res_unpaid) > 0) {
+        $unpaid_queue = mysqli_fetch_assoc($res_unpaid);
+    }
+}
+
 $history_queues = [];
 if (!empty($col_a_user)) {
     $select_fields = ["a.*"];

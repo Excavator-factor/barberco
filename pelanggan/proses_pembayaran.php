@@ -113,6 +113,33 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
             $transactionId = $existingRow
                 ? (int) $existingRow["id"]
                 : (int) mysqli_insert_id($conn);
+
+            // Kirim notifikasi WA selesai & struk pembayaran
+            require_once __DIR__ . "/../functions/whatsapp.php";
+            $detailQ = mysqli_query($conn, "SELECT a.no_antrian, u.nama, u.username, u.no_hp, l.nama_layanan, b.nama as barber_name 
+                FROM antrian a 
+                JOIN users u ON a.pelanggan_id = u.id_user 
+                JOIN layanan l ON a.layanan_id = l.id 
+                LEFT JOIN barber b ON a.barber_id = b.id 
+                WHERE a.id = $antrian_id LIMIT 1");
+            if ($detailQ && ($qRow = mysqli_fetch_assoc($detailQ))) {
+                $protocol = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? "https" : "http";
+                $host = $_SERVER['HTTP_HOST'] ?? 'localhost';
+                $urlStruk = "{$protocol}://{$host}/pelanggan/struk.php?id={$transactionId}";
+
+                $waData = [
+                    'nama_pelanggan' => $qRow['nama'] ?: $qRow['username'],
+                    'no_hp_pelanggan' => $qRow['no_hp'],
+                    'no_antrian' => $qRow['no_antrian'],
+                    'nama_layanan' => $qRow['nama_layanan'],
+                    'harga' => $harga,
+                    'nama_barber' => $qRow['barber_name'] ?: 'Kapster Bertugas',
+                    'metode_pembayaran' => $metode,
+                    'url_struk' => $urlStruk
+                ];
+                @kirim_notifikasi_wa('selesai_antrean', $waData);
+            }
+
             header("Location: struk.php?id=" . $transactionId);
             exit();
         }
