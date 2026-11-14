@@ -274,41 +274,8 @@ if ($action === "start" || $action === "finish") {
                     "type" => "success",
                 ];
 
-                // Kirim Notifikasi WhatsApp Selesai & Struk ke Pelanggan
-                require_once __DIR__ . "/whatsapp.php";
-                $detailQ = mysqli_query($conn, "SELECT a.no_antrian, u.nama, u.username, u.no_hp, l.nama_layanan, l.harga, b.nama as barber_name, t.total_harga, t.metode_pembayaran 
-                    FROM antrian a 
-                    JOIN users u ON a.pelanggan_id = u.id_user 
-                    JOIN layanan l ON a.layanan_id = l.id 
-                    LEFT JOIN barber b ON a.barber_id = b.id 
-                    LEFT JOIN transaksi t ON t.antrian_id = a.id 
-                    WHERE a.id = $queueId LIMIT 1");
-                if ($detailQ && ($qRow = mysqli_fetch_assoc($detailQ))) {
-                    $protocol = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? "https" : "http";
-                    $host = $_SERVER['HTTP_HOST'] ?? 'localhost';
-                    $urlStruk = $transaksi_id > 0 ? "{$protocol}://{$host}/pelanggan/struk.php?id={$transaksi_id}" : "";
-
-                    $waData = [
-                        'nama_pelanggan' => $qRow['nama'] ?: $qRow['username'],
-                        'no_hp_pelanggan' => $qRow['no_hp'],
-                        'no_antrian' => $qRow['no_antrian'],
-                        'nama_layanan' => $qRow['nama_layanan'],
-                        'harga' => $qRow['total_harga'] ?: $qRow['harga'],
-                        'nama_barber' => $qRow['barber_name'] ?: 'Kapster Bertugas',
-                        'metode_pembayaran' => $qRow['metode_pembayaran'] ?: 'Tunai',
-                        'url_struk' => $urlStruk
-                    ];
-                    @kirim_notifikasi_wa('selesai_antrean', $waData);
-                }
-
-                if ($transaksi_id > 0) {
-                    header(
-                        "Location: ../barber/struk.php?id=" .
-                            $transaksi_id .
-                            "&auto_print=1",
-                    );
-                    exit();
-                }
+                header("Location: ../barber/dashboard.php");
+                exit();
             } else {
                 $_SESSION["barber_flash"] = [
                     "text" => "Antrean tidak dapat diselesaikan.",
